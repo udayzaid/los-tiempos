@@ -1,65 +1,61 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
-
-import '@/global.css';
-
 import { Platform } from 'react-native';
 
-export const Colors = {
-  light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
-  },
-  dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
-  },
-} as const;
+// Colores base de cada modo (claro/oscuro).
+// Las claves deben coincidir con todo lo que usan ThemedText / ThemedView:
+// 'text', 'textSecondary', 'background', 'backgroundElement', 'backgroundSelected'.
+const light = {
+  text: '#11181C',
+  textSecondary: '#687076',
+  background: '#FFFFFF',
+  backgroundElement: '#F2F2F2',
+  backgroundSelected: '#E4E4E4',
+  tint: '#0a7ea4',
+  icon: '#687076',
+  border: '#E5E5E5',
+};
 
-export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
+const dark = {
+  text: '#ECEDEE',
+  textSecondary: '#9BA1A6',
+  background: '#151718',
+  backgroundElement: '#1F2223',
+  backgroundSelected: '#2A2D2E',
+  tint: '#FFFFFF',
+  icon: '#9BA1A6',
+  border: '#2A2D2E',
+};
+
+export const Colors = { light, dark };
+
+// Tipo de clave de color válida, usado por ThemedText (themeColor) y ThemedView (type)
+export type ThemeColor = keyof typeof light;
 
 export const Fonts = Platform.select({
   ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
+    mono: 'Menlo',
+  },
+  android: {
+    mono: 'monospace',
   },
   default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
     mono: 'monospace',
   },
   web: {
-    sans: 'var(--font-display)',
-    serif: 'var(--font-serif)',
-    rounded: 'var(--font-rounded)',
-    mono: 'var(--font-mono)',
+    mono: "'SFMono-Regular', Menlo, Consolas, 'Liberation Mono', monospace",
   },
 });
 
+// Escala de espaciado usada en paddings/gaps/border-radius (app-tabs, explore, etc.)
 export const Spacing = {
-  half: 2,
   one: 4,
   two: 8,
-  three: 16,
-  four: 24,
-  five: 32,
-  six: 64,
-} as const;
+  three: 12,
+  four: 16,
+  five: 24,
+};
 
-export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
-export const MaxContentWidth = 800;
+// Ancho máximo de contenido centrado (usado en la barra de tabs y en explore)
+export const MaxContentWidth = 960;
+
+// Espacio inferior reservado para no chocar con la barra de tabs flotante en móvil
+export const BottomTabInset = 80;
