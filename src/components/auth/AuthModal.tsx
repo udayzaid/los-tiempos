@@ -1,15 +1,15 @@
 import { LiveTheme } from '@/constants/live-theme';
 import { api } from '@/services/api';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Modal,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    TouchableWithoutFeedback,
-    View,
+  ActivityIndicator,
+  Modal,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
 } from 'react-native';
 
 type AuthModalProps = {
@@ -32,6 +32,13 @@ export function AuthModal({ visible, onClose, initialRegister = false }: AuthMod
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // 🔹 SOLUCIÓN: Sincroniza el estado 'isRegister' cada vez que el modal abre o cambia la prop
+  useEffect(() => {
+    if (visible) {
+      setIsRegister(initialRegister);
+    }
+  }, [visible, initialRegister]);
 
   const resetForm = () => {
     setNombre('');
@@ -78,10 +85,9 @@ export function AuthModal({ visible, onClose, initialRegister = false }: AuthMod
 
     try {
       if (isRegister) {
-        // Se envía la estructura exacta requerida por la API del backend
         await api.singIn({
           nombre,
-          apellido: apellido || nombre, // Si no pone apellido, repetimos el nombre
+          apellido: apellido || nombre,
           email,
           password,
           passwordConfir,

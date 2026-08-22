@@ -9,18 +9,22 @@ export function VideoPlayer({
 }: VideoPlayerProps) {
 
   const getEmbedUrl = (url: string) => {
-    if (!url) return '';
-    
-    // Si ya viene formateado como embed
-    if (url.includes('youtube.com/embed/')) return url;
+    if (!url) return 'https://www.youtube.com/embed/2FrvoWyV9o8?autoplay=1';
 
-    // Extrae el ID (funciona con links cortos como https://youtu.be/2FrvoWyV9o8)
-    const match = url.match(/(?:youtu\.be\/|watch\?v=|\/live\/|embed\/)([^#\&\?]+)/);
+    // Expresión regular mejorada para extraer exactamente los 11 caracteres del ID de YouTube
+    const match = url.match(/(?:youtu\.be\/|watch\?v=|\/live\/|embed\/)([^#\&\?\/]{11})/);
     const videoId = match ? match[1] : '';
 
-    return videoId
-      ? `https://www.youtube.com/embed/${videoId}?autoplay=1`
-      : url;
+    if (videoId) {
+      return `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+    }
+
+    // Si por alguna razón no extrae la ID pero el string contiene embed, se asegura de incluir autoplay
+    if (url.includes('youtube.com/embed/')) {
+      return url.includes('?') ? `${url}&autoplay=1` : `${url}?autoplay=1`;
+    }
+
+    return url;
   };
 
   return (

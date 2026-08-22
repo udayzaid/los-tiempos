@@ -14,25 +14,35 @@ export default function LiveScreen() {
   const [mensajeApi, setMensajeApi] = useState<string>('Cargando conexion con la api...');
   const [authVisible, setAuthVisible] = useState<boolean>(false);
   const [initialRegisterMode, setInitialRegisterMode] = useState<boolean>(false);
+  // Apartado para el estado del stream url
+  const [StreamUrl, setStreamUrl] = useState<string>(''); 
 
   useEffect(() => {
     api.getPrimer()
+      .then((data) => setMensajeApi(data))
+      .catch(() => setMensajeApi('Error al conectar con el servidor'));
+
+    api.getStream()
       .then((data) => {
-        setMensajeApi(data);
+        console.log('📌 LINK DESDE LA API:', data);
+        
+        // Si la API devuelve el objeto directo o el string extraído
+        const urlFinal = typeof data === 'string' ? data : data?.link;
+
+        if (urlFinal) {
+          setStreamUrl(urlFinal);
+        }
       })
-      .catch((error) => {
-        console.error('Error al conectar con la API:', error);
-        setMensajeApi('Error al conectar con el servidor');
-      });
+      .catch((err) => console.error('Error cargando Stream:', err));
   }, []);
 
   const handleOpenLogin = () => {
-    setInitialRegisterMode(false);
+    setInitialRegisterMode(false); // Fuerza pestaña Iniciar Sesión
     setAuthVisible(true);
   };
 
   const handleOpenRegister = () => {
-    setInitialRegisterMode(true);
+    setInitialRegisterMode(true); // Fuerza pestaña Registrarse
     setAuthVisible(true);
   };
 
@@ -49,9 +59,10 @@ export default function LiveScreen() {
       </View>
 
       <View style={styles.content}>
-       <View style={styles.videoArea}>
-             <VideoPlayer videoUrl="https://youtu.be/2FrvoWyV9o8" />
-            </View>
+        <View style={styles.videoArea}>
+          {/* AHORA SÍ USA LA URL DE LA API */}
+          <VideoPlayer videoUrl={StreamUrl || 'https://youtu.be/2FrvoWyV9o8'} />
+        </View>
         <View style={styles.chatArea}>
           <LiveChat />
         </View>
@@ -65,7 +76,6 @@ export default function LiveScreen() {
       <PromoCardsRow />
       <SiteFooter />
 
-      {/* Al estar en uso aquí, el editor NUNCA más te borrará el import de arriba */}
       <AuthModal
         visible={authVisible}
         onClose={() => setAuthVisible(false)}
