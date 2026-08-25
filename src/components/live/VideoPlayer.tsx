@@ -9,7 +9,7 @@ export function VideoPlayer({
 }: VideoPlayerProps) {
 
   const getEmbedUrl = (url: string) => {
-    if (!url) return 'https://www.youtube.com/embed/2FrvoWyV9o8?autoplay=1';
+    if (!url) return 'https://www.youtube.com/embed/2FrvoWyV9o8?autoplay=1&mute=1';
 
     // Expresión regular mejorada para extraer exactamente los 11 caracteres del ID de YouTube
     const match = url.match(/(?:youtu\.be\/|watch\?v=|\/live\/|embed\/)([^#\&\?\/]{11})/);
