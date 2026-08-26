@@ -1,3 +1,9 @@
+import {
+  generateCodeChallenge,
+  generateCodeVerifier,
+  generateState,
+} from './pkce';
+
 const BASE_URL = 'https://lostiemposapi20260817104248-avbkfhcfcucgf9e0.centralus-01.azurewebsites.net';
 
 export const AUTHORIZE_ENDPOINT = `${BASE_URL}/connect/authorize`;
@@ -21,8 +27,7 @@ export async function startLogin(): Promise<void> {
     throw new Error('El inicio de sesión solo está disponible en el navegador.');
   }
 
-  const { generateCodeVerifier, generateCodeChallenge, generateState } = await import('./pkce');
-
+  // Mismo flujo PKCE utilizado por el harness de pruebas del backend.
   const codeVerifier = generateCodeVerifier();
   const codeChallenge = await generateCodeChallenge(codeVerifier);
   const state = generateState();
@@ -30,17 +35,33 @@ export async function startLogin(): Promise<void> {
   sessionStorage.setItem('pkce_code_verifier', codeVerifier);
   sessionStorage.setItem('oauth_state', state);
 
-  const params = new URLSearchParams({
-    client_id: CLIENT_ID,
-    redirect_uri: getRedirectUri(),
-    response_type: 'code',
+  const redirectUri = getRedirectUri();
+
+  const params = new URLSearchParams();
+  params.set('client_id', CLIENT_ID);
+  params.set('redirect_uri', redirectUri);
+  params.set('response_type', 'code');
+  params.set('scope', SCOPES);
+  params.set('code_challenge', codeChallenge);
+  params.set('code_challenge_method', 'S256');
+  params.set('state', state);
+
+  const authorizeUrl = `${AUTHORIZE_ENDPOINT}?${params.toString()}`;
+
+  console.info('[OAuth] Iniciando autorización:', {
+    authorizeEndpoint: AUTHORIZE_ENDPOINT,
+    clientId: CLIENT_ID,
+    redirectUri,
+    responseType: 'code',
     scope: SCOPES,
-    code_challenge: codeChallenge,
-    code_challenge_method: 'S256',
+    codeChallengeMethod: 'S256',
     state,
   });
+  console.info('[OAuth] URL completa:', authorizeUrl);
 
-  window.location.href = `${AUTHORIZE_ENDPOINT}?${params.toString()}`;
+  // Igual que el harness del backend: navegación del navegador al endpoint
+  // /connect/authorize. No se envía fetch ni se agrega Content-Type manualmente.
+  window.location.href = authorizeUrl;
 }
 
 export async function exchangeCodeForTokens(code: string, codeVerifier: string): Promise<void> {
