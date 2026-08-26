@@ -1,15 +1,18 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-// Importamos apuntando a la carpeta components/auth donde están los utilitarios
-import { exchangeCodeForTokens } from '../../components/auth/authService';
+import {
+  exchangeCodeForTokens,
+  getProfile,
+  logout,
+} from '../../components/auth/authService';
+
 export default function AuthCallbackScreen() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function processCallback() {
-      // Verificamos que se ejecute únicamente en entorno web
       if (typeof window === 'undefined') return;
 
       const urlParams = new URLSearchParams(window.location.search);
@@ -17,26 +20,22 @@ export default function AuthCallbackScreen() {
       const state = urlParams.get('state');
       const errorParam = urlParams.get('error');
 
-      // 1. Manejar error retornado por Azure
       if (errorParam) {
         setError(`Error de autenticación: ${errorParam}`);
         return;
       }
 
-      // 2. Validar presencia de parámetros obligatorios
       if (!code || !state) {
         setError('Faltan parámetros de respuesta en la URL (code/state).');
         return;
       }
 
-      // 3. Validación Anti-CSRF (State Mismatch)
       const savedState = sessionStorage.getItem('oauth_state');
       if (state !== savedState) {
         setError('Validación de seguridad fallida (State mismatch).');
         return;
       }
 
-      // 4. Validar el verifiador PKCE
       const codeVerifier = sessionStorage.getItem('pkce_code_verifier');
       if (!codeVerifier) {
         setError('La sesión de inicio expiró. Intenta iniciar sesión nuevamente.');
@@ -44,45 +43,65 @@ export default function AuthCallbackScreen() {
       }
 
       try {
-        // 5. Intercambio del código por cookies HttpOnly en Backend
+        // 1. Intercambiar el código OAuth por las cookies HttpOnly.
         await exchangeCodeForTokens(code, codeVerifier);
 
-        // 6. Limpieza de claves temporales de sesión
+        // 2. Las claves PKCE ya no son necesarias después del exchange.
         sessionStorage.removeItem('pkce_code_verifier');
         sessionStorage.removeItem('oauth_state');
 
-        // 👈 REDIRECCIÓN DE PRUEBA: Mandamos a /auth-test para verificar las cookies en la tarjeta
-        // (Cuando confirmes que todo funciona, cambia esto por: router.replace('/admin'))
-        router.replace('/auth-test');
+        // 3. Verificar quién acaba de iniciar sesión y, especialmente, su rol.
+        const profileResponse = await getProfile();
+
+        if (!profileResponse.ok) {
+          throw new Error(`No se pudo verificar el perfil (HTTP ${profileResponse.status}).`);
+        }
+
+        const profile = await profileResponse.json();
+
+        // El backend actualmente devuelve role: "Admin".
+        // También soportamos roles por compatibilidad con posibles respuestas futuras.
+        const role = typeof profile?.role === 'string'
+          ? profile.role
+          : Array.isArray(profile?.roles)
+            ? profile.roles[0]
+            : '';
+
+        if (role.toLowerCase() !== 'admin') {
+          await logout();
+          setError('Tu cuenta está autenticada, pero no tiene permisos de administrador.');
+          return;
+        }
+
+        // 4. Usuario autenticado y con rol Admin: entrar directamente al panel.
+        router.replace('/admin');
       } catch (err: any) {
-        setError(err?.message || 'Error al completar el intercambio de sesión.');
+        setError(err?.message || 'Error al completar el inicio de sesión.');
       }
     }
 
     processCallback();
   }, [router]);
 
-  // Si ocurre algún fallo en el proceso de autenticación
   if (error) {
     return (
       <View style={styles.container}>
         <View style={styles.errorCard}>
-          <Text style={styles.errorTitle}>❌ Error de Autenticación</Text>
+          <Text style={styles.errorTitle}>❌ No se pudo iniciar sesión</Text>
           <Text style={styles.errorText}>{error}</Text>
-          <Pressable style={styles.retryButton} onPress={() => router.replace('/auth-test')}>
-            <Text style={styles.retryText}>Volver a intentar</Text>
+          <Pressable style={styles.retryButton} onPress={() => router.replace('/')}>
+            <Text style={styles.retryText}>Volver al inicio</Text>
           </Pressable>
         </View>
       </View>
     );
   }
 
-  // Pantalla de carga mientras se realiza la validación invisible de tokens
   return (
     <View style={styles.container}>
       <ActivityIndicator size="large" color="#e50914" />
-      <Text style={styles.loadingText}>Procesando credenciales de sesión...</Text>
-      <Text style={styles.subText}>Guardando cookies seguras en el navegador</Text>
+      <Text style={styles.loadingText}>Verificando tu sesión...</Text>
+      <Text style={styles.subText}>Validando permisos de administrador</Text>
     </View>
   );
 }
@@ -127,6 +146,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     marginBottom: 20,
+    textAlignVertical: 'center',
   },
   retryButton: {
     backgroundColor: '#e50914',
