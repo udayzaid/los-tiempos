@@ -11,12 +11,12 @@ function extractRole(profile: any): string {
   // El backend actualmente devuelve { role: "Admin" }.
   // Soportamos también variantes para evitar que un cambio de serialización
   // rompa el acceso del administrador.
-  const directRole = profile?.role ?? profile?.Role;
+ const directRole = profile?.rol ?? profile?.role ?? profile?.Rol ?? profile?.Role;
   if (typeof directRole === 'string') return directRole.trim();
 
-  const roles = profile?.roles ?? profile?.Roles;
+ const roles = profile?.rol ?? profile?.roles ?? profile?.Rol ?? profile?.Roles;
   if (typeof roles === 'string') return roles.trim();
-
+  
   if (Array.isArray(roles)) {
     const firstRole = roles.find((value) => typeof value === 'string');
     if (typeof firstRole === 'string') return firstRole.trim();
