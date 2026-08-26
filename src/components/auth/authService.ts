@@ -8,6 +8,7 @@ const BASE_URL = 'https://lostiemposapi20260817104248-avbkfhcfcucgf9e0.centralus
 
 export const AUTHORIZE_ENDPOINT = `${BASE_URL}/connect/authorize`;
 export const EXCHANGE_ENDPOINT = `${BASE_URL}/api/auth/exchange`;
+export const PROFILE_ENDPOINT = `${BASE_URL}/api/Profile`;
 export const REFRESH_ENDPOINT = `${BASE_URL}/api/auth/refresh`;
 export const LOGOUT_ENDPOINT = `${BASE_URL}/api/auth/logout`;
 
@@ -59,8 +60,6 @@ export async function startLogin(): Promise<void> {
   });
   console.info('[OAuth] URL completa:', authorizeUrl);
 
-  // Igual que el harness del backend: navegación del navegador al endpoint
-  // /connect/authorize. No se envía fetch ni se agrega Content-Type manualmente.
   window.location.href = authorizeUrl;
 }
 
@@ -81,6 +80,14 @@ export async function exchangeCodeForTokens(code: string, codeVerifier: string):
     console.error('Error al intercambiar el código:', errorBody);
     throw new Error('No se pudo completar el inicio de sesión.');
   }
+}
+
+export async function getProfile(): Promise<Response> {
+  return fetch(PROFILE_ENDPOINT, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { Accept: 'application/json' },
+  });
 }
 
 export async function refreshSession(): Promise<boolean> {
