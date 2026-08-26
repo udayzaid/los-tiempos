@@ -12,7 +12,7 @@ export function getRedirectUri(): string {
   if (typeof window !== 'undefined') {
     return `${window.location.origin}/auth/callback`;
   }
-  return 'http://localhost:8081/auth/callback';
+  return 'http://localhost:8081/auth/callback.tsx';
 }
 
 
