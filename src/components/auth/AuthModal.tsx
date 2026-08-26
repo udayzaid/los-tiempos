@@ -1,5 +1,6 @@
 import { LiveTheme } from '@/constants/live-theme';
 import { api } from '@/services/api';
+import { startLogin } from '@/components/auth/authService';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -21,7 +22,7 @@ type AuthModalProps = {
 export function AuthModal({ visible, onClose, initialRegister = false }: AuthModalProps) {
   const [isRegister, setIsRegister] = useState(initialRegister);
 
-  // Campos de formulario
+  // Campos de registro
   const [nombre, setNombre] = useState('');
   const [apellido, setApellido] = useState('');
   const [email, setEmail] = useState('');
@@ -33,10 +34,11 @@ export function AuthModal({ visible, onClose, initialRegister = false }: AuthMod
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // 🔹 SOLUCIÓN: Sincroniza el estado 'isRegister' cada vez que el modal abre o cambia la prop
   useEffect(() => {
     if (visible) {
       setIsRegister(initialRegister);
+      setErrorMessage(null);
+      setSuccessMessage(null);
     }
   }, [visible, initialRegister]);
 
@@ -65,50 +67,44 @@ export function AuthModal({ visible, onClose, initialRegister = false }: AuthMod
     setErrorMessage(null);
     setSuccessMessage(null);
 
-    if (isRegister) {
-      if (!nombre || !email || !password || !passwordConfir) {
-        setErrorMessage('Por favor, completa todos los campos requeridos.');
-        return;
+    // LOGIN: el backend maneja las credenciales mediante OAuth/OpenID Connect.
+    // No enviamos email/password directamente desde React.
+    if (!isRegister) {
+      setLoading(true);
+      try {
+        await startLogin();
+      } catch (err: any) {
+        setErrorMessage(err?.message || 'No se pudo iniciar el proceso de autenticación.');
+        setLoading(false);
       }
-      if (password !== passwordConfir) {
-        setErrorMessage('Las contraseñas no coinciden.');
-        return;
-      }
-    } else {
-      if (!email || !password) {
-        setErrorMessage('Por favor, ingresa tu correo y contraseña.');
-        return;
-      }
+      return;
+    }
+
+    // REGISTRO: conserva el endpoint de registro existente.
+    if (!nombre || !email || !password || !passwordConfir) {
+      setErrorMessage('Por favor, completa todos los campos requeridos.');
+      return;
+    }
+
+    if (password !== passwordConfir) {
+      setErrorMessage('Las contraseñas no coinciden.');
+      return;
     }
 
     setLoading(true);
 
     try {
-      if (isRegister) {
-        await api.singIn({
-          nombre,
-          apellido: apellido || nombre,
-          email,
-          password,
-          passwordConfir,
-        });
-        setSuccessMessage('¡Cuenta creada con éxito!');
-        setTimeout(() => {
-          setIsRegister(false);
-        }, 1200);
-      } else {
-        await api.singIn({
-          nombre: '',
-          apellido: '',
-          email,
-          password,
-          passwordConfir: '',
-        });
-        setSuccessMessage('¡Inicio de sesión exitoso!');
-        setTimeout(() => {
-          handleClose();
-        }, 1200);
-      }
+      await api.singIn({
+        nombre,
+        apellido: apellido || nombre,
+        email,
+        password,
+        passwordConfir,
+      });
+      setSuccessMessage('¡Cuenta creada con éxito!');
+      setTimeout(() => {
+        setIsRegister(false);
+      }, 1200);
     } catch (err: any) {
       setErrorMessage(err.message || 'Error de conexión con el servidor.');
     } finally {
@@ -128,14 +124,13 @@ export function AuthModal({ visible, onClose, initialRegister = false }: AuthMod
               <Text style={styles.subtitle}>
                 {isRegister
                   ? 'Únete para participar en la transmisión en vivo'
-                  : 'Ingresa a tu cuenta para comentar'}
+                  : 'Serás dirigido al sistema seguro de autenticación de Los Tiempos'}
               </Text>
 
               {errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
               {successMessage && <Text style={styles.successText}>{successMessage}</Text>}
 
-              {/* Formulario de Registro */}
-              {isRegister && (
+              {isRegister ? (
                 <>
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>Nombre</Text>
@@ -156,49 +151,49 @@ export function AuthModal({ visible, onClose, initialRegister = false }: AuthMod
                       onChangeText={setApellido}
                     />
                   </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Correo electrónico</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="ejemplo@correo.com"
+                      value={email}
+                      onChangeText={setEmail}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                    />
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Contraseña</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="••••••••"
+                      value={password}
+                      onChangeText={setPassword}
+                      secureTextEntry
+                    />
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Confirmar Contraseña</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="••••••••"
+                      value={passwordConfir}
+                      onChangeText={setPasswordConfir}
+                      secureTextEntry
+                    />
+                  </View>
                 </>
-              )}
-
-              {/* Correo */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Correo electrónico</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="ejemplo@correo.com"
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
-              </View>
-
-              {/* Contraseña */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Contraseña</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="••••••••"
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry
-                />
-              </View>
-
-              {/* Confirmar Contraseña (Solo en registro) */}
-              {isRegister && (
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Confirmar Contraseña</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="••••••••"
-                    value={passwordConfir}
-                    onChangeText={setPasswordConfir}
-                    secureTextEntry
-                  />
+              ) : (
+                <View style={styles.loginInfo}>
+                  <Text style={styles.loginInfoText}>
+                    Tu correo y contraseña se solicitarán en la pantalla segura de autenticación.
+                  </Text>
                 </View>
               )}
 
-              {/* Botón Principal */}
               <TouchableOpacity
                 style={styles.submitBtn}
                 onPress={handleSubmit}
@@ -208,7 +203,7 @@ export function AuthModal({ visible, onClose, initialRegister = false }: AuthMod
                   <ActivityIndicator color="#FFF" />
                 ) : (
                   <Text style={styles.submitBtnText}>
-                    {isRegister ? 'Registrarme' : 'Entrar'}
+                    {isRegister ? 'Registrarme' : 'Continuar con el inicio de sesión'}
                   </Text>
                 )}
               </TouchableOpacity>
@@ -298,6 +293,17 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 6,
     fontSize: 14,
+  },
+  loginInfo: {
+    backgroundColor: '#F5F5F5',
+    borderRadius: 6,
+    padding: 12,
+    marginBottom: 8,
+  },
+  loginInfoText: {
+    color: LiveTheme.textMuted,
+    fontSize: 12,
+    lineHeight: 18,
   },
   submitBtn: {
     backgroundColor: LiveTheme.black,
