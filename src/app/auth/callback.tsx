@@ -7,6 +7,30 @@ import {
   logout,
 } from '../../components/auth/authService';
 
+function extractRole(profile: any): string {
+  // El backend actualmente devuelve { role: "Admin" }.
+  // Soportamos también variantes para evitar que un cambio de serialización
+  // rompa el acceso del administrador.
+  const directRole = profile?.role ?? profile?.Role;
+  if (typeof directRole === 'string') return directRole.trim();
+
+  const roles = profile?.roles ?? profile?.Roles;
+  if (typeof roles === 'string') return roles.trim();
+
+  if (Array.isArray(roles)) {
+    const firstRole = roles.find((value) => typeof value === 'string');
+    if (typeof firstRole === 'string') return firstRole.trim();
+
+    const roleObject = roles.find((value) => value && typeof value === 'object');
+    if (roleObject) {
+      const objectRole = roleObject.role ?? roleObject.Role ?? roleObject.name ?? roleObject.Name;
+      if (typeof objectRole === 'string') return objectRole.trim();
+    }
+  }
+
+  return '';
+}
+
 export default function AuthCallbackScreen() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +74,7 @@ export default function AuthCallbackScreen() {
         sessionStorage.removeItem('pkce_code_verifier');
         sessionStorage.removeItem('oauth_state');
 
-        // 3. Verificar quién acaba de iniciar sesión y, especialmente, su rol.
+        // 3. Verificar la sesión y obtener el rol real desde el backend.
         const profileResponse = await getProfile();
 
         if (!profileResponse.ok) {
@@ -58,18 +82,16 @@ export default function AuthCallbackScreen() {
         }
 
         const profile = await profileResponse.json();
+        const role = extractRole(profile);
 
-        // El backend actualmente devuelve role: "Admin".
-        // También soportamos roles por compatibilidad con posibles respuestas futuras.
-        const role = typeof profile?.role === 'string'
-          ? profile.role
-          : Array.isArray(profile?.roles)
-            ? profile.roles[0]
-            : '';
+        console.info('[OAuth] Perfil recibido:', profile);
+        console.info('[OAuth] Rol detectado:', role);
 
         if (role.toLowerCase() !== 'admin') {
           await logout();
-          setError('Tu cuenta está autenticada, pero no tiene permisos de administrador.');
+          setError(
+            `Tu cuenta está autenticada, pero no tiene permisos de administrador. Rol recibido: ${role || 'no informado'}`
+          );
           return;
         }
 
