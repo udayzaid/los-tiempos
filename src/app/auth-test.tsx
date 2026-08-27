@@ -11,7 +11,7 @@ import { generateCodeChallenge, generateCodeVerifier, generateState } from '../c
 
 const BASE_URL = 'https://lostiemposapi20260817104248-avbkfhcfcucgf9e0.centralus-01.azurewebsites.net';
 const AUTHORIZE_URL = `${BASE_URL}/connect/authorize`;
-const CLIENT_ID = 'react-client';
+const CLIENT_ID = 'react-client-tiempos';
 const SCOPES = 'openid profile email offline_access users:read users:write';
 const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 
