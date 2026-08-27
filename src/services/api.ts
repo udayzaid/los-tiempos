@@ -1,6 +1,8 @@
 const BASE_URL = 'https://lostiemposapi20260817104248-avbkfhcfcucgf9e0.centralus-01.azurewebsites.net';
 
-// Helper para obtener encabezados y Token de sesión
+// Helper para obtener encabezados y Token de sesión.
+// Durante la migración mantenemos el token antiguo como compatibilidad,
+// pero las peticiones también envían las cookies HttpOnly mediante include.
 const getHeaders = (requireAuth = false) => {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -16,13 +18,20 @@ const getHeaders = (requireAuth = false) => {
   return headers;
 };
 
+// Configuración común para que el navegador envíe las cookies HttpOnly
+// de la sesión con las peticiones al backend.
+const fetchOptions = (requireAuth = false): RequestInit => ({
+  credentials: 'include',
+  headers: getHeaders(requireAuth),
+});
+
 export const api = {
   // 0. GET / -> Endpoint base de salud/inicio
   getPrimer: async () => {
     try {
       const res = await fetch(`${BASE_URL}/`, {
+        ...fetchOptions(false),
         method: 'GET',
-        headers: getHeaders(false),
       });
       if (!res.ok) throw new Error(`Status: ${res.status}`);
       return await res.text();
@@ -35,20 +44,17 @@ export const api = {
   // 1. GET /api/Stream -> Consulta el estado activo del streaming en Azure
   getStream: async () => {
     try {
-      // CORREGIDO: Se agregó /api/Stream
       const res = await fetch(`${BASE_URL}/api/Stream`, {
+        ...fetchOptions(true),
         method: 'GET',
-        headers: getHeaders(false),
       });
 
       if (!res.ok) {
-        // Si responde 404/400 es porque no hay transmisión activa
         return { url: '', raw: null, hasActiveStream: false };
       }
 
       const data = await res.json();
 
-      // CORREGIDO: 'embedUrl' corregido con la letra 'd'
       const videoUrl =
         data?.embedUrl ||
         data?.embeUrl ||
@@ -71,8 +77,8 @@ export const api = {
   // 2. POST /api/Stream -> Crea e inicia la transmisión
   createStream: async (data: { titulo: string; descripcion: string }) => {
     const res = await fetch(`${BASE_URL}/api/Stream`, {
+      ...fetchOptions(true),
       method: 'POST',
-      headers: getHeaders(true),
       body: JSON.stringify({
         titulo: data.titulo,
         descripcion: data.descripcion,
@@ -88,16 +94,11 @@ export const api = {
     return resData;
   },
 
-  // 3. Alias postStream
-  postStream: async (data: { titulo: string; descripcion: string }) => {
-    return await api.createStream(data);
-  },
-
-  // 4. DELETE /api/Stream -> Finaliza y borra la transmisión activa
+  // 3. DELETE /api/Stream -> Finaliza y borra la transmisión activa
   deleteStream: async () => {
     const res = await fetch(`${BASE_URL}/api/Stream`, {
+      ...fetchOptions(true),
       method: 'DELETE',
-      headers: getHeaders(true),
     });
 
     const resData = await res.json().catch(() => ({}));
