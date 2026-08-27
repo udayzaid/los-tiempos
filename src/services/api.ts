@@ -94,6 +94,12 @@ export const api = {
     return resData;
   },
 
+  // Compatibilidad temporal: admin/index.tsx todavía utiliza postStream.
+  // Lo migraremos a createStream cuando refactoricemos la funcionalidad Stream.
+  postStream: async (data: { titulo: string; descripcion: string }) => {
+    return api.createStream(data);
+  },
+
   // 3. DELETE /api/Stream -> Finaliza y borra la transmisión activa
   deleteStream: async () => {
     const res = await fetch(`${BASE_URL}/api/Stream`, {
