@@ -12,7 +12,7 @@ export const PROFILE_ENDPOINT = `${BASE_URL}/api/Profile`;
 export const REFRESH_ENDPOINT = `${BASE_URL}/api/auth/refresh`;
 export const LOGOUT_ENDPOINT = `${BASE_URL}/api/auth/logout`;
 
-const CLIENT_ID = 'react-client';
+const CLIENT_ID = 'react-client-tiempos';
 const SCOPES = 'openid profile email offline_access users:read users:write';
 
 export function getRedirectUri(): string {
