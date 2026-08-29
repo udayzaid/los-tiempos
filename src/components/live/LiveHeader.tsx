@@ -15,13 +15,11 @@ export function LiveHeader({ headline, onOpenLogin, onOpenRegister }: Props) {
     <View style={styles.wrapper}>
       <View style={[styles.topRow, isMobile && styles.topRowMobile]}>
         <View style={[styles.brandFrame, isMobile && styles.brandFrameMobile]} pointerEvents="none">
-          <View style={styles.cornerTopLeft} />
           <Image
             source={require('../../../imagenes/logo 1 (1).png')}
             style={[styles.logo, isMobile && styles.logoMobile]}
             resizeMode="contain"
           />
-          <View style={styles.cornerBottomRight} />
         </View>
 
         <View style={[styles.authButtonsContainer, isMobile && styles.authButtonsMobile]}>
@@ -51,80 +49,57 @@ const styles = StyleSheet.create({
     backgroundColor: LiveTheme.offWhite,
   },
   topRow: {
-    minHeight: 116,
+    minHeight: 92,
     position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#E7E0D2',
+    borderBottomColor: LiveTheme.border,
   },
   topRowMobile: {
-    minHeight: 104,
-    paddingHorizontal: 12,
-    paddingBottom: 42,
+    minHeight: 86,
+    paddingHorizontal: 10,
+    paddingBottom: 36,
   },
   brandFrame: {
-    position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 280,
-    minHeight: 82,
-    paddingHorizontal: 26,
+    width: 250,
+    height: 78,
   },
   brandFrameMobile: {
-    minWidth: 210,
-    minHeight: 68,
-    paddingHorizontal: 18,
+    width: 200,
+    height: 62,
   },
   logo: {
-    width: 245,
-    height: 70,
+    width: 230,
+    height: 66,
   },
   logoMobile: {
-    width: 190,
-    height: 56,
-  },
-  cornerTopLeft: {
-    position: 'absolute',
-    width: 18,
-    height: 18,
-    left: 0,
-    top: 1,
-    borderLeftWidth: 3,
-    borderTopWidth: 3,
-    borderColor: LiveTheme.gold,
-  },
-  cornerBottomRight: {
-    position: 'absolute',
-    width: 18,
-    height: 18,
-    right: 0,
-    bottom: 1,
-    borderRightWidth: 3,
-    borderBottomWidth: 3,
-    borderColor: LiveTheme.gold,
+    width: 185,
+    height: 54,
   },
   authButtonsContainer: {
     position: 'absolute',
     right: 20,
-    bottom: 20,
+    bottom: 18,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
   authButtonsMobile: {
-    right: 12,
-    left: 12,
-    bottom: 9,
+    right: 10,
+    left: 10,
+    bottom: 7,
     justifyContent: 'flex-end',
   },
   loginBtn: {
     backgroundColor: LiveTheme.black,
     paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 3,
+    paddingVertical: 7,
+    borderRadius: LiveTheme.radius.sm,
   },
   loginBtnText: {
     color: LiveTheme.white,
@@ -134,8 +109,8 @@ const styles = StyleSheet.create({
   registerBtn: {
     backgroundColor: LiveTheme.gold,
     paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 3,
+    paddingVertical: 7,
+    borderRadius: LiveTheme.radius.sm,
   },
   registerBtnText: {
     color: LiveTheme.black,
