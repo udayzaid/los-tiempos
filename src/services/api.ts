@@ -41,11 +41,11 @@ export const api = {
     }
   },
 
-  // 1. GET /api/Stream -> Consulta el estado activo del streaming en Azure
+  // 1. GET /stream -> Consulta la transmisión disponible para la vista pública.
   getStream: async () => {
     try {
-      const res = await fetch(`${BASE_URL}/api/Stream`, {
-        ...fetchOptions(true),
+      const res = await fetch(`${BASE_URL}/stream`, {
+        ...fetchOptions(false),
         method: 'GET',
       });
 
@@ -74,7 +74,7 @@ export const api = {
     }
   },
 
-  // 2. POST /api/Stream -> Crea e inicia la transmisión
+  // 2. POST /api/Stream -> Crea e inicia la transmisión.
   createStream: async (data: { titulo: string; descripcion: string }) => {
     const res = await fetch(`${BASE_URL}/api/Stream`, {
       ...fetchOptions(true),
@@ -95,12 +95,11 @@ export const api = {
   },
 
   // Compatibilidad temporal: admin/index.tsx todavía utiliza postStream.
-  // Lo migraremos a createStream cuando refactoricemos la funcionalidad Stream.
   postStream: async (data: { titulo: string; descripcion: string }) => {
     return api.createStream(data);
   },
 
-  // 3. DELETE /api/Stream -> Finaliza y borra la transmisión activa
+  // 3. DELETE /api/Stream -> Finaliza y borra la transmisión activa.
   deleteStream: async () => {
     const res = await fetch(`${BASE_URL}/api/Stream`, {
       ...fetchOptions(true),
