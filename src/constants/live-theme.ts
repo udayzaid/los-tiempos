@@ -1,8 +1,9 @@
 export const LiveTheme = {
   // Identidad visual de Los Tiempos
-  gold: '#D9A441',
-  goldLight: '#F2C14E',
-  goldDark: '#B8892F',
+  // Amarillo principal: Rubber Ducky (#FFD801)
+  gold: '#FFD801',
+  goldLight: '#FFE54D',
+  goldDark: '#D9B700',
 
   // Fondos
   pageBackground: '#FFFFFF',
