@@ -1,5 +1,5 @@
+import { Image, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { LiveTheme } from '@/constants/live-theme';
-import { StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 
 type Props = {
   headline: string;
@@ -13,11 +13,15 @@ export function LiveHeader({ headline, onOpenLogin, onOpenRegister }: Props) {
 
   return (
     <View style={styles.wrapper}>
-      <View style={styles.topRow}>
-        <View style={styles.brandFrame} pointerEvents="none">
+      <View style={[styles.topRow, isMobile && styles.topRowMobile]}>
+        <View style={[styles.brandFrame, isMobile && styles.brandFrameMobile]} pointerEvents="none">
           <View style={styles.cornerTopLeft} />
+          <Image
+            source={require('../../../imagenes/logo 1 (1).png')}
+            style={[styles.logo, isMobile && styles.logoMobile]}
+            resizeMode="contain"
+          />
           <View style={styles.cornerBottomRight} />
-          <Text style={[styles.brand, isMobile && styles.brandMobile]}>Los Tiempos</Text>
         </View>
 
         <View style={[styles.authButtonsContainer, isMobile && styles.authButtonsMobile]}>
@@ -35,7 +39,7 @@ export function LiveHeader({ headline, onOpenLogin, onOpenRegister }: Props) {
         <Text style={styles.headlineText} numberOfLines={1}>
           {headline}
         </Text>
-        <Text style={styles.dateText}>Martes, 30 de Noviembre de 2026</Text>
+        {!isMobile && <Text style={styles.dateText}>Martes, 30 de Noviembre de 2026</Text>}
       </View>
     </View>
   );
@@ -47,38 +51,47 @@ const styles = StyleSheet.create({
     backgroundColor: LiveTheme.offWhite,
   },
   topRow: {
-    minHeight: 106,
+    minHeight: 116,
     position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 14,
+    paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#E7E0D2',
+  },
+  topRowMobile: {
+    minHeight: 104,
+    paddingHorizontal: 12,
+    paddingBottom: 42,
   },
   brandFrame: {
     position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 230,
-    minHeight: 76,
+    minWidth: 280,
+    minHeight: 82,
+    paddingHorizontal: 26,
   },
-  brand: {
-    color: LiveTheme.black,
-    fontFamily: 'serif',
-    fontSize: 38,
-    fontWeight: '700',
-    letterSpacing: -1.5,
+  brandFrameMobile: {
+    minWidth: 210,
+    minHeight: 68,
+    paddingHorizontal: 18,
   },
-  brandMobile: {
-    fontSize: 28,
+  logo: {
+    width: 245,
+    height: 70,
+  },
+  logoMobile: {
+    width: 190,
+    height: 56,
   },
   cornerTopLeft: {
     position: 'absolute',
     width: 18,
     height: 18,
     left: 0,
-    top: 2,
+    top: 1,
     borderLeftWidth: 3,
     borderTopWidth: 3,
     borderColor: LiveTheme.gold,
@@ -88,7 +101,7 @@ const styles = StyleSheet.create({
     width: 18,
     height: 18,
     right: 0,
-    bottom: 2,
+    bottom: 1,
     borderRightWidth: 3,
     borderBottomWidth: 3,
     borderColor: LiveTheme.gold,
@@ -102,38 +115,39 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   authButtonsMobile: {
-    right: 10,
-    bottom: 8,
+    right: 12,
+    left: 12,
+    bottom: 9,
+    justifyContent: 'flex-end',
   },
   loginBtn: {
     backgroundColor: LiveTheme.black,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     borderRadius: 3,
   },
   loginBtnText: {
     color: LiveTheme.white,
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   registerBtn: {
     backgroundColor: LiveTheme.gold,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     borderRadius: 3,
   },
   registerBtnText: {
     color: LiveTheme.black,
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   headlineBar: {
     backgroundColor: LiveTheme.gold,
-    minHeight: 31,
+    minHeight: 34,
     paddingHorizontal: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     gap: 12,
   },
   headlineText: {
