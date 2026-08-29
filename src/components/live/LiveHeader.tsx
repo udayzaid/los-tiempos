@@ -14,6 +14,14 @@ export function LiveHeader({ headline, onOpenLogin, onOpenRegister }: Props) {
   return (
     <View style={styles.wrapper}>
       <View style={[styles.topRow, isMobile && styles.topRowMobile]}>
+        <View style={[styles.buildingFrame, isMobile && styles.buildingFrameMobile]} pointerEvents="none">
+          <Image
+            source={require('../../../imagenes/logo 2.png')}
+            style={styles.buildingLogo}
+            resizeMode="contain"
+          />
+        </View>
+
         <View style={[styles.brandFrame, isMobile && styles.brandFrameMobile]} pointerEvents="none">
           <Image
             source={require('../../../imagenes/logo 1 (1).png')}
@@ -49,42 +57,60 @@ const styles = StyleSheet.create({
     backgroundColor: LiveTheme.offWhite,
   },
   topRow: {
-    minHeight: 92,
+    height: 142,
     position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 8,
     borderBottomWidth: 1,
     borderBottomColor: LiveTheme.border,
   },
   topRowMobile: {
-    minHeight: 86,
+    height: 112,
     paddingHorizontal: 10,
-    paddingBottom: 36,
+    paddingBottom: 30,
+  },
+  buildingFrame: {
+    position: 'absolute',
+    left: 15,
+    top: 0,
+    width: 446,
+    height: 142,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+    overflow: 'hidden',
+  },
+  buildingFrameMobile: {
+    left: 8,
+    width: 180,
+    height: 80,
+  },
+  buildingLogo: {
+    width: 180,
+    height: 72,
   },
   brandFrame: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: 250,
-    height: 78,
+    width: 365,
+    height: 128,
   },
   brandFrameMobile: {
-    width: 200,
-    height: 62,
+    width: 250,
+    height: 88,
   },
   logo: {
-    width: 230,
-    height: 66,
+    width: 365,
+    height: 128,
   },
   logoMobile: {
-    width: 185,
-    height: 54,
+    width: 250,
+    height: 88,
   },
   authButtonsContainer: {
     position: 'absolute',
     right: 20,
-    bottom: 18,
+    bottom: 20,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
