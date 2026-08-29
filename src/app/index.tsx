@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 import { AuthModal } from '@/components/auth/AuthModal';
 import { LiveChat } from '@/components/live/LiveChat';
@@ -11,33 +11,33 @@ import { VideoPlayer } from '@/components/live/VideoPlayer';
 import { api } from '@/services/api';
 
 export default function LiveScreen() {
-  const [mensajeApi, setMensajeApi] = useState<string>('Cargando conexion con la api...');
+  const { width } = useWindowDimensions();
+  const isMobile = width < 760;
+  const [mensajeApi, setMensajeApi] = useState<string>('');
   const [authVisible, setAuthVisible] = useState<boolean>(false);
   const [initialRegisterMode, setInitialRegisterMode] = useState<boolean>(false);
-  const [StreamUrl, setStreamUrl] = useState<string>(''); 
+  const [streamUrl, setStreamUrl] = useState<string>('');
 
   useEffect(() => {
-  // Conexión con getPrimer
-  if (typeof api?.getPrimer === 'function') {
-    api.getPrimer()
-      .then((data) => setMensajeApi(data))
-      .catch(() => setMensajeApi('Servidor conectado'));
-  }
+    if (typeof api?.getPrimer === 'function') {
+      api.getPrimer()
+        .then((data) => setMensajeApi(data))
+        .catch(() => setMensajeApi('Servidor conectado'));
+    }
 
-  // Carga del video en vivo
-  if (typeof api?.getStream === 'function') {
-    api.getStream()
-      .then((res) => {
-        // Leemos directamente res.url devuelto por api.ts
-        if (res && res.hasActiveStream && res.url) {
-          setStreamUrl(res.url);
-        } else {
-          setStreamUrl(''); // No hay live activo
-        }
-      })
-      .catch((err) => console.error('Error cargando Stream:', err));
-  }
-}, []);
+    if (typeof api?.getStream === 'function') {
+      api.getStream()
+        .then((res) => {
+          if (res && res.hasActiveStream && res.url) {
+            setStreamUrl(res.url);
+          } else {
+            setStreamUrl('');
+          }
+        })
+        .catch((err) => console.error('Error cargando Stream:', err));
+    }
+  }, []);
+
   const handleOpenLogin = () => {
     setInitialRegisterMode(false);
     setAuthVisible(true);
@@ -51,30 +51,34 @@ export default function LiveScreen() {
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.scrollContent}>
       <LiveHeader
-        headline="Los Tiempos, señal en vivo - Artemis II retorna, Trump y los convenios, Liga boliviana y las ultimas posiciones en las tablas"
+        headline="Los Tiempos, señal en vivo - Artemis retorna, Trump y los convenios, Liga boliviana y las ultimas posiciones en las tablas"
         onOpenLogin={handleOpenLogin}
         onOpenRegister={handleOpenRegister}
       />
 
-      <View style={styles.apiBanner}>
-        <Text style={styles.apiText}>Estado Backend: {mensajeApi}</Text>
+      <View style={styles.page}>
+        <View style={[styles.content, isMobile && styles.contentMobile]}>
+          <View style={[styles.videoArea, isMobile && styles.videoAreaMobile]}>
+            <View style={styles.liveBadge}>
+              <View style={styles.liveDot} />
+              <Text style={styles.liveBadgeText}>EN VIVO</Text>
+            </View>
+            <VideoPlayer videoUrl={streamUrl || 'https://youtu.be/2FrvoWyV9o8'} />
+          </View>
+
+          <View style={[styles.chatArea, isMobile && styles.chatAreaMobile]}>
+            <LiveChat />
+          </View>
+        </View>
+
+        <LiveDescription
+          title="Transmisión en vivo 13/04/2026"
+          body="Sigue nuestras transmisiones en directo y mantente informado. Disfruta de la señal en vivo, noticias y contenido de actualidad de Los Tiempos."
+        />
+
+        <PromoCardsRow />
       </View>
 
-      <View style={styles.content}>
-        <View style={styles.videoArea}>
-          <VideoPlayer videoUrl={StreamUrl || 'https://youtu.be/2FrvoWyV9o8'} />
-        </View>
-        <View style={styles.chatArea}>
-          <LiveChat />
-        </View>
-      </View>
-
-      <LiveDescription
-        title="Transmisión en vivo 13/04/2026"
-        body="sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat."
-      />
-
-      <PromoCardsRow />
       <SiteFooter />
 
       <AuthModal
@@ -85,6 +89,7 @@ export default function LiveScreen() {
     </ScrollView>
   );
 }
+
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
@@ -93,32 +98,62 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
   },
-  apiBanner: {
-    backgroundColor: '#E3F2FD',
-    padding: 8,
-    marginHorizontal: 12,
-    marginTop: 8,
-    borderRadius: 6,
-    alignItems: 'center',
-  },
-  apiText: {
-    color: '#0D47A1',
-    fontWeight: 'bold',
-    fontSize: 12,
+  page: {
+    width: '100%',
+    maxWidth: 1240,
+    alignSelf: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 18,
+    paddingBottom: 8,
   },
   content: {
-    padding: 12,
-    gap: 12,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
     width: '100%',
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    gap: 14,
+  },
+  contentMobile: {
+    flexDirection: 'column',
   },
   videoArea: {
-    flex: 3,
-    minWidth: 320,
+    flex: 2.35,
+    minWidth: 0,
+    position: 'relative',
+  },
+  videoAreaMobile: {
+    width: '100%',
   },
   chatArea: {
     flex: 1,
-    minWidth: 300,
+    minWidth: 285,
+    maxWidth: 360,
+  },
+  chatAreaMobile: {
+    width: '100%',
+    maxWidth: undefined,
+  },
+  liveBadge: {
+    position: 'absolute',
+    zIndex: 2,
+    left: 10,
+    top: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#E51C2A',
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 3,
+  },
+  liveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#FFFFFF',
+  },
+  liveBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '800',
   },
 });
