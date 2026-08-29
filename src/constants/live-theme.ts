@@ -1,10 +1,49 @@
 export const LiveTheme = {
-  gold: '#D9A441',        // franja dorada del header y del chat
+  // Identidad visual de Los Tiempos
+  gold: '#D9A441',
+  goldLight: '#F2C14E',
+  goldDark: '#B8892F',
+
+  // Fondos
+  pageBackground: '#FFFFFF',
+  offWhite: '#FAF7F0',
+  surface: '#FFFFFF',
+  surfaceSoft: '#F7F4ED',
+
+  // Texto y elementos principales
   black: '#111111',
+  text: '#1A1A1A',
+  textSecondary: '#4F4F4F',
+  textMuted: '#777777',
   white: '#FFFFFF',
-  offWhite: '#FAF7F0',    // fondo tipo papel del header
-  liveRed: '#E11D2E',     // badge "LIVE"
+
+  // Estados
+  liveRed: '#E11D2E',
+  success: '#16803C',
+  warning: '#B7791F',
+  error: '#C53030',
+  info: '#2563EB',
+
+  // Bordes y superficies
+  border: '#E5E0D5',
+  borderStrong: '#D5CEBF',
   chatBg: '#FFFFFF',
   chatBorder: '#E5E0D5',
-  textMuted: '#6B6B6B',
+
+  // Espaciado base para mantener consistencia entre vistas
+  spacing: {
+    xs: 4,
+    sm: 8,
+    md: 12,
+    lg: 16,
+    xl: 24,
+    xxl: 32,
+  },
+
+  // Radios
+  radius: {
+    sm: 3,
+    md: 6,
+    lg: 10,
+  },
 };
