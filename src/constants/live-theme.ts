@@ -1,8 +1,8 @@
 export const LiveTheme = {
   // Identidad visual de Los Tiempos
   // Amarillo principal: Rubber Ducky (#FFD801)
-  gold: '#FFD801',
-  goldLight: '#FFE54D',
+  gold: '#F5B723',  
+  goldLight: '#f5d72b',
   goldDark: '#D9B700',
 
   // Fondos

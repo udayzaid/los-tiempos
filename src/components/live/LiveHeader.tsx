@@ -1,5 +1,13 @@
-import { Image, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { LiveTheme } from '@/constants/live-theme';
+import { Ionicons } from '@expo/vector-icons';
+import {
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 
 type Props = {
   headline: string;
@@ -7,159 +15,332 @@ type Props = {
   onOpenRegister: () => void;
 };
 
-export function LiveHeader({ headline, onOpenLogin, onOpenRegister }: Props) {
+export function LiveHeader({
+  headline,
+  onOpenLogin,
+  onOpenRegister,
+}: Props) {
   const { width } = useWindowDimensions();
+
   const isMobile = width < 700;
 
   return (
     <View style={styles.wrapper}>
+
+      {/* HEADER PRINCIPAL */}
       <View style={[styles.topRow, isMobile && styles.topRowMobile]}>
-        <View style={[styles.buildingFrame, isMobile && styles.buildingFrameMobile]} pointerEvents="none">
+
+        {/* EDIFICIO */}
+        <View
+          style={[
+            styles.buildingFrame,
+            isMobile && styles.buildingFrameMobile,
+          ]}
+          pointerEvents="none"
+        >
           <Image
-            source={require('../../../imagenes/logo 2.png')}
+            source={require('../../../imagenes/logo 2.1.png')}
             style={styles.buildingLogo}
             resizeMode="contain"
           />
         </View>
 
-        <View style={[styles.brandFrame, isMobile && styles.brandFrameMobile]} pointerEvents="none">
+        {/* LOGO LOS TIEMPOS */}
+        <View
+          style={[
+            styles.brandFrame,
+            isMobile && styles.brandFrameMobile,
+          ]}
+          pointerEvents="none"
+        >
           <Image
             source={require('../../../imagenes/logo 1 (1).png')}
-            style={[styles.logo, isMobile && styles.logoMobile]}
+            style={[
+              styles.logo,
+              isMobile && styles.logoMobile,
+            ]}
             resizeMode="contain"
           />
         </View>
 
-        <View style={[styles.authButtonsContainer, isMobile && styles.authButtonsMobile]}>
-          <TouchableOpacity style={styles.registerBtn} onPress={onOpenRegister} activeOpacity={0.8}>
-            <Text style={styles.registerBtnText}>Registrarse</Text>
+        {/* BOTONES */}
+        <View
+          style={[
+            styles.authButtonsContainer,
+            isMobile && styles.authButtonsMobile,
+          ]}
+        >
+
+          {/* REGISTRARSE */}
+          <TouchableOpacity
+            style={styles.registerBtn}
+            onPress={onOpenRegister}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.registerBtnText}>
+              Registrarse
+            </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.loginBtn} onPress={onOpenLogin} activeOpacity={0.8}>
-            <Text style={styles.loginBtnText}>Iniciar sesión</Text>
+          {/* INICIAR SESIÓN */}
+          <TouchableOpacity
+            style={styles.loginBtn}
+            onPress={onOpenLogin}
+            activeOpacity={0.8}
+          >
+            <Ionicons
+              name="person-circle-outline"
+              size={23}
+              color={LiveTheme.black}
+            />
+
+            <Text style={styles.loginBtnText}>
+              Iniciar sesión
+            </Text>
           </TouchableOpacity>
+
         </View>
+
       </View>
 
+      {/* BARRA DE NOTICIAS */}
       <View style={styles.headlineBar}>
-        <Text style={styles.headlineText} numberOfLines={1}>
+
+        <Text
+          style={styles.headlineText}
+          numberOfLines={1}
+        >
           {headline}
         </Text>
-        {!isMobile && <Text style={styles.dateText}>Martes, 30 de Noviembre de 2026</Text>}
+
+        {!isMobile && (
+          <Text style={styles.dateText}>
+            Martes, 30 de Noviembre de 2026
+          </Text>
+        )}
+
       </View>
+
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+
+  /* =========================
+     CONTENEDOR
+  ========================= */
+
   wrapper: {
     width: '100%',
     backgroundColor: LiveTheme.offWhite,
   },
+
+  /* =========================
+     HEADER PRINCIPAL
+  ========================= */
+
   topRow: {
-    height: 142,
+    width: '100%',
+    height: 115,
+
     position: 'relative',
+
     alignItems: 'center',
     justifyContent: 'center',
+
     paddingHorizontal: 20,
+
     borderBottomWidth: 1,
     borderBottomColor: LiveTheme.border,
   },
-  topRowMobile: {
-    height: 112,
-    paddingHorizontal: 10,
-    paddingBottom: 30,
-  },
+
+  /* =========================
+     EDIFICIO
+  ========================= */
+
   buildingFrame: {
     position: 'absolute',
-    left: 15,
+
+    left: 0,
     top: 0,
-    width: 446,
-    height: 142,
+
+    width: 350,
+    height: 115,
+
     justifyContent: 'center',
     alignItems: 'flex-start',
+
     overflow: 'hidden',
   },
-  buildingFrameMobile: {
-    left: 8,
-    width: 180,
-    height: 80,
-  },
+
   buildingLogo: {
-    width: 180,
-    height: 72,
+    width: 350,
+    height: 120,
   },
+
+  /* =========================
+     LOGO CENTRAL
+  ========================= */
+
   brandFrame: {
-    alignItems: 'center',
+    width: 350,
+    height: 115,
+
     justifyContent: 'center',
-    width: 365,
-    height: 128,
+    alignItems: 'center',
   },
-  brandFrameMobile: {
-    width: 250,
-    height: 88,
-  },
+
   logo: {
-    width: 365,
-    height: 128,
+    width: 350,
+    height: 115,
   },
-  logoMobile: {
-    width: 250,
-    height: 88,
-  },
+
+  /* =========================
+     BOTONES
+  ========================= */
+
   authButtonsContainer: {
     position: 'absolute',
+
     right: 20,
-    bottom: 20,
+
+    top: 0,
+    bottom: 0,
+
     flexDirection: 'row',
+
     alignItems: 'center',
+
     gap: 8,
   },
-  authButtonsMobile: {
-    right: 10,
-    left: 10,
-    bottom: 7,
-    justifyContent: 'flex-end',
-  },
-  loginBtn: {
-    backgroundColor: LiveTheme.black,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: LiveTheme.radius.sm,
-  },
-  loginBtnText: {
-    color: LiveTheme.white,
-    fontSize: 11,
-    fontWeight: '800',
-  },
+
+  /* =========================
+     REGISTRARSE
+  ========================= */
+
   registerBtn: {
+    height: 48,
+
+    paddingHorizontal: 20,
+
     backgroundColor: LiveTheme.gold,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: LiveTheme.radius.sm,
+
+    borderRadius: 10,
+
+    justifyContent: 'center',
+    alignItems: 'center',
   },
+
   registerBtnText: {
     color: LiveTheme.black,
-    fontSize: 11,
-    fontWeight: '800',
+
+    fontSize: 17,
+    fontWeight: '700',
   },
-  headlineBar: {
-    backgroundColor: LiveTheme.gold,
-    minHeight: 34,
+
+  /* =========================
+     INICIAR SESIÓN
+  ========================= */
+
+  loginBtn: {
+    height: 48,
+
     paddingHorizontal: 20,
+
+    backgroundColor: LiveTheme.white,
+
+    borderWidth: 1,
+    borderColor: '#D9D9D9',
+
+    borderRadius: 10,
+
     flexDirection: 'row',
+
     alignItems: 'center',
+    justifyContent: 'center',
+
+    gap: 10,
+  },
+
+  loginBtnText: {
+    color: LiveTheme.black,
+
+    fontSize: 17,
+    fontWeight: '500',
+  },
+
+  /* =========================
+     BARRA DE NOTICIAS
+  ========================= */
+
+  headlineBar: {
+    width: '100%',
+    height: 34,
+
+    backgroundColor: LiveTheme.gold,
+
+    paddingHorizontal: 20,
+
+    flexDirection: 'row',
+
+    alignItems: 'center',
+
     gap: 12,
   },
+
   headlineText: {
     flex: 1,
+
     color: LiveTheme.black,
+
     fontSize: 10,
     fontWeight: '800',
   },
+
   dateText: {
     color: LiveTheme.black,
+
     fontSize: 9,
     fontWeight: '700',
   },
+
+  /* =========================
+     MOBILE
+  ========================= */
+
+  topRowMobile: {
+    height: 110,
+
+    paddingHorizontal: 10,
+  },
+
+  buildingFrameMobile: {
+    left: 0,
+    top: 0,
+
+    width: 180,
+    height: 90,
+  },
+
+  brandFrameMobile: {
+    width: 210,
+    height: 75,
+  },
+
+  logoMobile: {
+    width: 210,
+    height: 75,
+  },
+
+  authButtonsMobile: {
+    right: 10,
+    left: 10,
+
+    bottom: 8,
+    top: 'auto',
+
+    justifyContent: 'flex-end',
+  },
+
 });
