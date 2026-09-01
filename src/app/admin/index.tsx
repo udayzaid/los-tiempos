@@ -66,7 +66,7 @@ const loadActiveStream = useCallback(async () => {
     // Verificamos si realmente hay una transmisión válida y activa
     if (data && data.hasActiveStream) {
       setActiveStream(data.raw);
-      setActiveStreamUrl(data.url);
+      setflexDirection: 'row'(data.url);
     } else {
       // Si la API responde vacía o sin stream activo, limpiamos la UI
       setActiveStream(null);
@@ -435,7 +435,7 @@ const handleStopStream = async () => {
               </View>
             ) : activeStreamUrl ? (
               <>
-                <View style={styles.playerWrapper}>
+                <View style={styles.flexDirection: 'row'}>
                   <VideoPlayer videoUrl={activeStreamUrl} />
                 </View>
 
@@ -942,7 +942,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
 
-  playerWrapper: {
+  flexDirection: 'row': {
     width: '100%',
   },
 

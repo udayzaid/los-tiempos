@@ -74,6 +74,35 @@ export const api = {
     }
   },
 
+  // 2. POST /SingIn
+  // Registro de usuarios.
+  registerUser: async (data: {
+    Nombre: string;
+    NombreUsuario: string;
+    Apellido: string;
+    Email: string;
+    Password: string;
+    PasswordConfir: string;
+  }) => {
+
+    const res = await fetch(`${BASE_URL}/SingIn`, {
+      ...fetchOptions(false),
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+
+    const resData = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      throw new Error(
+        resData?.message ||
+        resData?.mensaje ||
+        'No se pudo registrar el usuario.'
+      );
+    }
+
+    return resData;
+  },
   // 2. POST /api/Stream -> Crea e inicia la transmisión.
   createStream: async (data: { titulo: string; descripcion: string }) => {
     const res = await fetch(`${BASE_URL}/api/Stream`, {

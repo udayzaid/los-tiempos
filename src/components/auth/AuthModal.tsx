@@ -1,6 +1,6 @@
+import { startLogin } from '@/components/auth/authService';
 import { LiveTheme } from '@/constants/live-theme';
 import { api } from '@/services/api';
-import { startLogin } from '@/components/auth/authService';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -24,10 +24,13 @@ export function AuthModal({ visible, onClose, initialRegister = false }: AuthMod
 
   // Campos de registro
   const [nombre, setNombre] = useState('');
+  const [nombreUsuario, setNombreUsuario] = useState('');
   const [apellido, setApellido] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfir, setPasswordConfir] = useState('');
+
+
 
   // Estados de carga y error
   const [loading, setLoading] = useState(false);
@@ -44,6 +47,7 @@ export function AuthModal({ visible, onClose, initialRegister = false }: AuthMod
 
   const resetForm = () => {
     setNombre('');
+    setNombreUsuario('');
     setApellido('');
     setEmail('');
     setPassword('');
@@ -81,10 +85,16 @@ export function AuthModal({ visible, onClose, initialRegister = false }: AuthMod
     }
 
     // REGISTRO: conserva el endpoint de registro existente.
-    if (!nombre || !email || !password || !passwordConfir) {
-      setErrorMessage('Por favor, completa todos los campos requeridos.');
-      return;
-    }
+    if (
+      !nombre ||
+      !nombreUsuario ||
+      !email ||
+      !password ||
+      !passwordConfir
+            ) {
+            setErrorMessage('Por favor, completa todos los campos requeridos.');
+          return;
+       }
 
     if (password !== passwordConfir) {
       setErrorMessage('Las contraseñas no coinciden.');
@@ -94,12 +104,13 @@ export function AuthModal({ visible, onClose, initialRegister = false }: AuthMod
     setLoading(true);
 
     try {
-      await api.singIn({
-        nombre,
-        apellido: apellido || nombre,
-        email,
-        password,
-        passwordConfir,
+      await api.registerUser({
+    Nombre: nombre,
+     NombreUsuario: nombreUsuario,
+    Apellido: apellido,
+      Email: email,
+     Password: password,
+     PasswordConfir: passwordConfir,
       });
       setSuccessMessage('¡Cuenta creada con éxito!');
       setTimeout(() => {
@@ -143,7 +154,19 @@ export function AuthModal({ visible, onClose, initialRegister = false }: AuthMod
                   </View>
 
                   <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Apellido (Opcional)</Text>
+                     <Text style={styles.label}>Nombre de usuario</Text>
+                                  <TextInput
+                             style={styles.input}
+                             //placeholder="Ej. zaid123"
+                        value={nombreUsuario}
+                                   onChangeText={setNombreUsuario}
+                           autoCapitalize="none"
+                                                   />
+                                          </View>
+
+                  <View style={styles.inputGroup}>
+                    
+                    <Text style={styles.label}>Apellido </Text>
                     <TextInput
                       style={styles.input}
                       placeholder="Tu apellido"
@@ -156,7 +179,7 @@ export function AuthModal({ visible, onClose, initialRegister = false }: AuthMod
                     <Text style={styles.label}>Correo electrónico</Text>
                     <TextInput
                       style={styles.input}
-                      placeholder="ejemplo@correo.com"
+                     // placeholder="ejemplo@correo.com"
                       value={email}
                       onChangeText={setEmail}
                       keyboardType="email-address"
@@ -168,7 +191,7 @@ export function AuthModal({ visible, onClose, initialRegister = false }: AuthMod
                     <Text style={styles.label}>Contraseña</Text>
                     <TextInput
                       style={styles.input}
-                      placeholder="••••••••"
+                      placeholder="     "
                       value={password}
                       onChangeText={setPassword}
                       secureTextEntry
@@ -179,7 +202,7 @@ export function AuthModal({ visible, onClose, initialRegister = false }: AuthMod
                     <Text style={styles.label}>Confirmar Contraseña</Text>
                     <TextInput
                       style={styles.input}
-                      placeholder="••••••••"
+                     // placeholder="••••••••"
                       value={passwordConfir}
                       onChangeText={setPasswordConfir}
                       secureTextEntry
@@ -305,15 +328,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
   },
-  submitBtn: {
-    backgroundColor: LiveTheme.black,
-    paddingVertical: 12,
-    borderRadius: 6,
-    alignItems: 'center',
-    marginTop: 8,
-  },
+ submitBtn: {
+  backgroundColor: LiveTheme.gold,
+  paddingVertical: 9,
+  borderRadius: 6,
+  alignItems: 'center',
+  marginTop: 8,
+},
   submitBtnText: {
-    color: LiveTheme.offWhite,
+    color: LiveTheme.black,
     fontWeight: 'bold',
     fontSize: 14,
   },

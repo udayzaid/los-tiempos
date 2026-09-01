@@ -201,41 +201,31 @@ const styles = StyleSheet.create({
   ========================= */
 
   authButtonsContainer: {
-    position: 'absolute',
-
-    right: 20,
-
-    top: 0,
-    bottom: 0,
-
-    flexDirection: 'row',
-
-    alignItems: 'center',
-
-    gap: 8,
-  },
+  position: 'absolute',
+  right: 20,
+  top: 0,
+  bottom: 8,
+  flexDirection: 'row',
+  alignItems: 'flex-end',
+  gap: 8,
+},
 
   /* =========================
      REGISTRARSE
   ========================= */
 
   registerBtn: {
-    height: 48,
-
-    paddingHorizontal: 20,
-
+    height: 35,
+    paddingHorizontal: 10,
     backgroundColor: LiveTheme.gold,
-
     borderRadius: 10,
-
     justifyContent: 'center',
     alignItems: 'center',
   },
 
   registerBtnText: {
     color: LiveTheme.black,
-
-    fontSize: 17,
+    fontSize: 12,
     fontWeight: '700',
   },
 
@@ -244,9 +234,9 @@ const styles = StyleSheet.create({
   ========================= */
 
   loginBtn: {
-    height: 48,
+    height: 35,
 
-    paddingHorizontal: 20,
+    paddingHorizontal: 10,
 
     backgroundColor: LiveTheme.white,
 
@@ -254,7 +244,6 @@ const styles = StyleSheet.create({
     borderColor: '#D9D9D9',
 
     borderRadius: 10,
-
     flexDirection: 'row',
 
     alignItems: 'center',
@@ -266,7 +255,7 @@ const styles = StyleSheet.create({
   loginBtnText: {
     color: LiveTheme.black,
 
-    fontSize: 17,
+    fontSize: 12,
     fontWeight: '500',
   },
 
