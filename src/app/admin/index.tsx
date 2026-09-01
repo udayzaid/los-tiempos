@@ -66,7 +66,7 @@ const loadActiveStream = useCallback(async () => {
     // Verificamos si realmente hay una transmisión válida y activa
     if (data && data.hasActiveStream) {
       setActiveStream(data.raw);
-      setflexDirection: 'row'(data.url);
+     setActiveStreamUrl(data.url);
     } else {
       // Si la API responde vacía o sin stream activo, limpiamos la UI
       setActiveStream(null);
@@ -197,14 +197,7 @@ const handleStopStream = async () => {
   }
 };
 
-// 2. Vincularlo al botón de la pantalla
-<button 
-  onClick={handleStopStream} 
-  disabled={stopping}
-  className="btn-danger"
->
-  {stopping ? 'TERMINANDO...' : '• TERMINAR EN DIRECTO'}
-</button>
+
 
   // Función de prueba para eliminar comentarios.
   const handleDeleteComment = (id: string) => {
@@ -435,10 +428,9 @@ const handleStopStream = async () => {
               </View>
             ) : activeStreamUrl ? (
               <>
-                <View style={styles.flexDirection: 'row'}>
-                  <VideoPlayer videoUrl={activeStreamUrl} />
-                </View>
-
+               <View>
+              <VideoPlayer videoUrl={activeStreamUrl} />
+              </View>
                 <Text style={styles.streamUrlLabel} numberOfLines={1}>
                   Señal activa: {activeStreamUrl}
                 </Text>
@@ -922,7 +914,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#B8B8B8',
     backgroundColor: '#FFFFFF',
-    padding: 10,
+    padding: 0,
   },
 
   placeholderCard: {
@@ -941,11 +933,6 @@ const styles = StyleSheet.create({
     color: '#222222',
     marginBottom: 8,
   },
-
-  flexDirection: 'row': {
-    width: '100%',
-  },
-
   streamPlaceholder: {
     aspectRatio: 16 / 9,
     minHeight: 180,
