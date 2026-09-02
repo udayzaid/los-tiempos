@@ -25,6 +25,17 @@ const fetchOptions = (requireAuth = false): RequestInit => ({
   headers: getHeaders(requireAuth),
 });
 
+export type ChatHistoryMessage = {
+  id: string;
+  userId?: string;
+  userName?: string;
+  username?: string;
+  avatarColor?: string;
+  message?: string;
+  text?: string;
+  createdAt?: string;
+};
+
 export const api = {
   // 0. GET / -> Endpoint base de salud/inicio
   getPrimer: async () => {
@@ -74,7 +85,40 @@ export const api = {
     }
   },
 
-  // 2. POST /SingIn
+  // 2. GET /api/Chat/history -> Historial público del chat.
+  // No requiere autenticación. Las cookies de sesión se envían igualmente
+  // mediante credentials: 'include'.
+  getChatHistory: async (take = 50) => {
+    const safeTake = Math.min(Math.max(take, 1), 100);
+
+    try {
+      const res = await fetch(`${BASE_URL}/api/Chat/history?take=${safeTake}`, {
+        ...fetchOptions(false),
+        method: 'GET',
+      });
+
+      if (!res.ok) {
+        throw new Error(`Error en historial de chat (${res.status})`);
+      }
+
+      const data = await res.json();
+
+      if (Array.isArray(data)) {
+        return data as ChatHistoryMessage[];
+      }
+
+      if (Array.isArray(data?.messages)) {
+        return data.messages as ChatHistoryMessage[];
+      }
+
+      return [];
+    } catch (error) {
+      console.error('Error en getChatHistory:', error);
+      throw error;
+    }
+  },
+
+  // 3. POST /SingIn
   // Registro de usuarios.
   registerUser: async (data: {
     Nombre: string;
@@ -103,7 +147,7 @@ export const api = {
 
     return resData;
   },
-  // 2. POST /api/Stream -> Crea e inicia la transmisión.
+  // 4. POST /api/Stream -> Crea e inicia la transmisión.
   createStream: async (data: { titulo: string; descripcion: string }) => {
     const res = await fetch(`${BASE_URL}/api/Stream`, {
       ...fetchOptions(true),
@@ -128,7 +172,7 @@ export const api = {
     return api.createStream(data);
   },
 
-  // 3. DELETE /api/Stream -> Finaliza y borra la transmisión activa.
+  // 5. DELETE /api/Stream -> Finaliza y borra la transmisión activa.
   deleteStream: async () => {
     const res = await fetch(`${BASE_URL}/api/Stream`, {
       ...fetchOptions(true),
