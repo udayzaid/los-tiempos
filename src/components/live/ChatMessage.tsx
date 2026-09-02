@@ -5,22 +5,21 @@ export type ChatMessageData = {
   id: string;
   username: string;
   text: string;
+  avatarColor?: string;
 };
 
 /*
- * Genera un color estable para cada usuario.
- * El mismo usuario conservará el mismo color
- * aunque se actualice la página.
+ * Fallback estable para mensajes antiguos o datos que no traigan avatarColor.
  */
 const AVATAR_COLORS = [
-  '#4285F4', // Azul
-  '#34A853', // Verde
-  '#FBBC05', // Amarillo
-  '#EA4335', // Rojo
-  '#9C27B0', // Morado
-  '#00ACC1', // Cian
-  '#FF7043', // Naranja
-  '#5C6BC0', // Índigo
+  '#4285F4',
+  '#34A853',
+  '#FBBC05',
+  '#EA4335',
+  '#9C27B0',
+  '#00ACC1',
+  '#FF7043',
+  '#5C6BC0',
 ];
 
 function getAvatarColor(username: string) {
@@ -48,8 +47,9 @@ function getInitial(username: string) {
 export function ChatMessage({
   username,
   text,
+  avatarColor,
 }: ChatMessageData) {
-  const avatarColor = getAvatarColor(username);
+  const finalAvatarColor = avatarColor || getAvatarColor(username);
   const initial = getInitial(username);
 
   return (
@@ -60,7 +60,7 @@ export function ChatMessage({
         style={[
           styles.avatar,
           {
-            backgroundColor: avatarColor,
+            backgroundColor: finalAvatarColor,
           },
         ]}
       >
