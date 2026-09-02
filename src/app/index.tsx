@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
 
   page: {
     width: '100%',
-    maxWidth: 1240,
+    maxWidth: 1366,
     alignSelf: 'center',
 
     paddingHorizontal: 16,
@@ -213,13 +213,10 @@ const styles = StyleSheet.create({
   ========================= */
 
   videoArea: {
-    flex: 2.35,
-
+    flex: 1,
     minWidth: 0,
-
     position: 'relative',
   },
-
   videoAreaMobile: {
     width: '100%',
   },
@@ -227,14 +224,12 @@ const styles = StyleSheet.create({
   /* =========================
      CHAT
   ========================= */
-
-  chatArea: {
-    flex: 1,
-
-    minWidth: 285,
-
-    maxWidth: 360,
-  },
+chatArea: {
+  flex: 0,
+  width: 360,
+  minWidth: 360,
+  maxWidth: 360,
+},
 
   chatAreaMobile: {
     width: '100%',

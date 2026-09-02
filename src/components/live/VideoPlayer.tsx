@@ -9,7 +9,7 @@ export function VideoPlayer({
 }: VideoPlayerProps) {
   const getEmbedUrl = (url: string) => {
     if (!url) {
-      return 'https://www.youtube.com/embed/2FrvoWyV9o8?autoplay=1&mute=1';
+      return 'https://www.youtube.com/embed/2FrvoWyV9o8?autoplay=1&mute=0&controls=1';
     }
 
     const match = url.match(
@@ -19,7 +19,7 @@ export function VideoPlayer({
     const videoId = match ? match[1] : '';
 
     if (videoId) {
-      return `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+     return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&controls=1`;
     }
 
     if (url.includes('youtube.com/embed/')) {
@@ -39,8 +39,8 @@ export function VideoPlayer({
           width: '100%',
           height: '100%',
           border: 'none',
-          transform: 'scale(1.40)',
-          transformOrigin: 'center center',
+          //transform: 'scale(1.40)',
+          //transformOrigin: 'center center',
         }}
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
@@ -52,7 +52,7 @@ export function VideoPlayer({
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    aspectRatio: 960 / 580,
+    aspectRatio: 11 / 6,
     backgroundColor: '#000000',
     borderRadius: 8,
     overflow: 'hidden',
