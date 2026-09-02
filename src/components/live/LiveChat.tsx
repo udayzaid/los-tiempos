@@ -1,6 +1,8 @@
 import { LiveTheme } from '@/constants/live-theme';
-import { useState } from 'react';
+import { api, ChatHistoryMessage } from '@/services/api';
+import { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   FlatList,
   Pressable,
   StyleSheet,
@@ -10,34 +12,69 @@ import {
 } from 'react-native';
 import { ChatMessage, ChatMessageData } from './ChatMessage';
 
-// TODO: reemplazar este estado local por datos reales:
-// - conexión WebSocket para recibir mensajes en tiempo real
-// - envío del mensaje a la API/backend en vez de solo agregarlo local
-const MOCK_MESSAGES: ChatMessageData[] = [
-  {
-    id: '1',
-    username: '@mercedesnunez9731',
-    text: 'En el Perú pasa de todo ahi viene la trafa',
-  },
-  {
-    id: '2',
-    username: '@Lun_wint',
-    text: 'hasta en roblox se organizaron mejor',
-  },
-  {
-    id: '3',
-    username: '@sokarita0528',
-    text: 'Nos gustaría saber quiénes son los dueños de esta compañía...',
-  },
-];
+function mapChatMessage(message: ChatHistoryMessage, index: number): ChatMessageData {
+  const username =
+    message.userName ||
+    message.username ||
+    'Usuario';
+
+  const text =
+    message.message ||
+    message.text ||
+    '';
+
+  return {
+    id: String(message.id ?? `${message.createdAt ?? 'message'}-${index}`),
+    username,
+    text,
+    avatarColor: message.avatarColor,
+  };
+}
 
 export function LiveChat() {
-  const [messages, setMessages] = useState(MOCK_MESSAGES);
+  const [messages, setMessages] = useState<ChatMessageData[]>([]);
   const [draft, setDraft] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [historyError, setHistoryError] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadHistory = async () => {
+      try {
+        setLoading(true);
+        setHistoryError(false);
+
+        const data = await api.getChatHistory(50);
+
+        if (!mounted) return;
+
+        setMessages(data.map(mapChatMessage));
+      } catch (error) {
+        console.error('Error cargando historial del chat:', error);
+
+        if (!mounted) return;
+
+        setHistoryError(true);
+        setMessages([]);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadHistory();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   function handleSend() {
     if (!draft.trim()) return;
 
+    // Temporal: el envío real se conectará a SignalR en el siguiente paso.
     setMessages((prev) => [
       ...prev,
       {
@@ -63,6 +100,26 @@ export function LiveChat() {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <ChatMessage {...item} />}
         style={styles.list}
+        ListEmptyComponent={
+          loading ? (
+            <View style={styles.statusContainer}>
+              <ActivityIndicator size="small" color={LiveTheme.black} />
+              <Text style={styles.statusText}>Cargando mensajes...</Text>
+            </View>
+          ) : historyError ? (
+            <View style={styles.statusContainer}>
+              <Text style={styles.statusText}>
+                No se pudo cargar el historial.
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.statusContainer}>
+              <Text style={styles.statusText}>
+                Aún no hay mensajes.
+              </Text>
+            </View>
+          )
+        }
       />
 
       {/* ESCRIBIR MENSAJE */}
@@ -129,6 +186,20 @@ const styles = StyleSheet.create({
 
   list: {
     flex: 1,
+  },
+
+  statusContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 20,
+    paddingHorizontal: 10,
+    gap: 8,
+  },
+
+  statusText: {
+    fontSize: 12,
+    color: LiveTheme.textMuted,
+    textAlign: 'center',
   },
 
   /* =========================
