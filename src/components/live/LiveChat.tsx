@@ -1,5 +1,4 @@
 import { LiveTheme } from '@/constants/live-theme';
-import { getProfile } from '@/components/auth/authService';
 import { api, ChatHistoryMessage } from '@/services/api';
 import * as signalR from '@microsoft/signalr';
 import { useEffect, useRef, useState } from 'react';
@@ -14,16 +13,12 @@ import {
 } from 'react-native';
 import { ChatMessage, ChatMessageData } from './ChatMessage';
 
-function mapChatMessage(message: ChatHistoryMessage, index: number): ChatMessageData {
-  const username =
-    message.userName ||
-    message.username ||
-    'Usuario';
+const CHAT_HUB_URL =
+  'https://lostiemposapi20260817104248-avbkfhcfcucgf9e0.centralus-01.azurewebsites.net/chatHub';
 
-  const text =
-    message.message ||
-    message.text ||
-    '';
+function mapChatMessage(message: ChatHistoryMessage, index: number): ChatMessageData {
+  const username = message.userName || message.username || 'Usuario';
+  const text = message.message || message.text || '';
 
   return {
     id: String(message.id ?? `${message.createdAt ?? 'message'}-${index}`),
@@ -48,9 +43,7 @@ export function LiveChat() {
     let mounted = true;
 
     const initializeChat = async () => {
-      // --------------------------------
-      // 1. Cargar historial público
-      // --------------------------------
+      // 1. El historial es público.
       try {
         setLoading(true);
         setHistoryError(false);
@@ -58,116 +51,82 @@ export function LiveChat() {
         const data = await api.getChatHistory(50);
 
         if (!mounted) return;
-
         setMessages(data.map(mapChatMessage));
       } catch (error) {
-        console.error('Error cargando historial del chat:', error);
+        console.error('[Chat] Error cargando historial:', error);
 
         if (!mounted) return;
-
         setHistoryError(true);
         setMessages([]);
       } finally {
-        if (mounted) {
-          setLoading(false);
-        }
+        if (mounted) setLoading(false);
       }
 
       if (!mounted) return;
 
-      // --------------------------------
-      // 2. Comprobar sesión existente
-      // --------------------------------
-      try {
-        const profileResponse = await getProfile();
+      // 2. La autenticación del chat la determina el propio Hub.
+      //    No hacemos una segunda comprobación mediante /api/Profile.
+      //    Esto evita acoplar el chat al flujo OAuth del frontend.
+      setConnecting(true);
 
+      const connection = new signalR.HubConnectionBuilder()
+        .withUrl(CHAT_HUB_URL, {
+          // El backend autentica SignalR mediante las mismas cookies HttpOnly.
+          withCredentials: true,
+        })
+        .withAutomaticReconnect()
+        .build();
+
+      connectionRef.current = connection;
+
+      // 3. Escuchar antes de iniciar la conexión para no perder mensajes.
+      connection.on('RecibeMessage', (message: ChatHistoryMessage) => {
         if (!mounted) return;
 
-        if (!profileResponse.ok) {
-          // Visitante: puede ver el historial, pero no se conecta al Hub.
-          setAuthenticated(false);
-          return;
-        }
+        setMessages((prev) => [
+          ...prev,
+          mapChatMessage(message, prev.length),
+        ]);
+      });
 
-        setAuthenticated(true);
+      connection.onreconnecting(() => {
+        if (!mounted) return;
+        setConnected(false);
         setConnecting(true);
+      });
 
-        // --------------------------------
-        // 3. Crear conexión SignalR
-        // --------------------------------
-        const connection = new signalR.HubConnectionBuilder()
-          .withUrl(
-            'https://lostiemposapi20260817104248-avbkfhcfcucgf9e0.centralus-01.azurewebsites.net/chatHub',
-            {
-              // La autenticación existente usa cookies HttpOnly.
-              // No enviamos userId, userName ni avatarColor manualmente.
-              withCredentials: true,
-            }
-          )
-          .withAutomaticReconnect()
-          .build();
-
-        connectionRef.current = connection;
-
-        // --------------------------------
-        // 4. Recibir mensajes nuevos
-        // --------------------------------
-        connection.on('RecibeMessage', (message: ChatHistoryMessage) => {
-          if (!mounted) return;
-
-          setMessages((prev) => [
-            ...prev,
-            mapChatMessage(message, prev.length),
-          ]);
-        });
-
-        connection.onreconnecting(() => {
-          if (!mounted) return;
-          setConnected(false);
-          setConnecting(true);
-        });
-
-        connection.onreconnected(() => {
-          if (!mounted) return;
-          setConnecting(false);
-          setConnected(true);
-        });
-
-        connection.onclose(() => {
-          if (!mounted) return;
-          setConnecting(false);
-          setConnected(false);
-        });
-
-        // --------------------------------
-        // 5. Conectar al Hub
-        // --------------------------------
-        try {
-          await connection.start();
-
-          if (!mounted) return;
-
-          setConnecting(false);
-          setConnected(true);
-          console.info('[Chat] Conectado a SignalR');
-        } catch (error) {
-          console.error('[Chat] Error conectando a SignalR:', error);
-
-          if (!mounted) return;
-
-          setConnecting(false);
-          setConnected(false);
-        }
-      } catch (error) {
-        // Si no existe sesión válida, el usuario sigue pudiendo
-        // consultar el historial como visitante.
-        console.info('[Chat] Usuario no autenticado o sesión no disponible.');
-
+      connection.onreconnected(() => {
         if (!mounted) return;
+        setConnecting(false);
+        setConnected(true);
+        setAuthenticated(true);
+      });
 
-        setAuthenticated(false);
+      connection.onclose(() => {
+        if (!mounted) return;
         setConnecting(false);
         setConnected(false);
+      });
+
+      // 4. Intentar conectar. Si el backend rechaza la conexión por no estar
+      //    autenticado, seguimos mostrando el historial como visitante.
+      try {
+        await connection.start();
+
+        if (!mounted) return;
+
+        setConnecting(false);
+        setConnected(true);
+        setAuthenticated(true);
+        console.info('[Chat] Conectado a SignalR mediante cookies.');
+      } catch (error) {
+        console.info('[Chat] No hay sesión válida para SignalR. Chat en modo lectura.', error);
+
+        if (!mounted) return;
+
+        setConnecting(false);
+        setConnected(false);
+        setAuthenticated(false);
       }
     };
 
@@ -194,8 +153,12 @@ export function LiveChat() {
 
     const connection = connectionRef.current;
 
-    if (!authenticated || !connection || connection.state !== signalR.HubConnectionState.Connected) {
-      console.warn('[Chat] No hay una conexión activa para enviar mensajes.');
+    if (
+      !authenticated ||
+      !connection ||
+      connection.state !== signalR.HubConnectionState.Connected
+    ) {
+      console.warn('[Chat] No hay una sesión/conexión activa para enviar mensajes.');
       return;
     }
 
@@ -240,9 +203,7 @@ export function LiveChat() {
             </View>
           ) : (
             <View style={styles.statusContainer}>
-              <Text style={styles.statusText}>
-                Aún no hay mensajes.
-              </Text>
+              <Text style={styles.statusText}>Aún no hay mensajes.</Text>
             </View>
           )
         }
@@ -262,10 +223,7 @@ export function LiveChat() {
                   : 'Chat no disponible'
             }
             placeholderTextColor={LiveTheme.textMuted}
-            style={[
-              styles.input,
-              inputDisabled && styles.inputDisabled,
-            ]}
+            style={[styles.input, inputDisabled && styles.inputDisabled]}
             onSubmitEditing={handleSend}
             editable={!inputDisabled}
           />
@@ -280,10 +238,7 @@ export function LiveChat() {
         {authenticated && (
           <Pressable
             onPress={handleSend}
-            style={[
-              styles.sendButton,
-              inputDisabled && styles.sendButtonDisabled,
-            ]}
+            style={[styles.sendButton, inputDisabled && styles.sendButtonDisabled]}
             disabled={inputDisabled}
           >
             <Text style={styles.sendButtonText}>➤</Text>
@@ -295,31 +250,18 @@ export function LiveChat() {
 }
 
 const styles = StyleSheet.create({
-  /* =========================
-     CONTENEDOR DEL CHAT
-  ========================= */
-
   container: {
     flex: 1,
-
     borderWidth: 1,
     borderColor: '#C8C8C8',
-
     backgroundColor: LiveTheme.chatBg,
-
     minHeight: 300,
   },
 
-  /* =========================
-     CABECERA
-  ========================= */
-
   header: {
     backgroundColor: LiveTheme.offWhite,
-
     borderBottomWidth: 1,
     borderBottomColor: '#C8C8C8',
-
     paddingVertical: 8,
     paddingHorizontal: 10,
   },
@@ -329,10 +271,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: LiveTheme.black,
   },
-
-  /* =========================
-     LISTA DE MENSAJES
-  ========================= */
 
   list: {
     flex: 1,
@@ -352,37 +290,22 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
-  /* =========================
-     BARRA INFERIOR
-  ========================= */
-
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-
     backgroundColor: LiveTheme.gold,
-
     paddingHorizontal: 10,
     paddingVertical: 8,
   },
 
-  /* =========================
-     CAJA PARA ESCRIBIR
-  ========================= */
-
   input: {
     flex: 1,
-
     height: 36,
-
     backgroundColor: '#FFFFFF',
-
     borderWidth: 1,
     borderColor: '#D0D0D0',
     borderRadius: 6,
-
     paddingHorizontal: 10,
-
     fontSize: 12,
     color: '#000000',
   },
@@ -393,15 +316,11 @@ const styles = StyleSheet.create({
 
   loginMessage: {
     flex: 1,
-
     height: 36,
-
     backgroundColor: '#FFFFFF',
-
     borderWidth: 1,
     borderColor: '#D0D0D0',
     borderRadius: 6,
-
     justifyContent: 'center',
     paddingHorizontal: 10,
   },
@@ -410,10 +329,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: LiveTheme.textMuted,
   },
-
-  /* =========================
-     BOTÓN ENVIAR
-  ========================= */
 
   sendButton: {
     paddingHorizontal: 8,
