@@ -12,7 +12,8 @@ export const PROFILE_ENDPOINT = `${BASE_URL}/api/Profile`;
 export const REFRESH_ENDPOINT = `${BASE_URL}/api/auth/refresh`;
 export const LOGOUT_ENDPOINT = `${BASE_URL}/api/auth/logout`;
 
-const CLIENT_ID = 'react-client-tiempos';
+// Cliente OAuth configurado por el backend para el frontend React.
+const CLIENT_ID = 'react-client';
 const SCOPES = 'openid profile email offline_access users:read users:write';
 
 export function getRedirectUri(): string {
@@ -28,7 +29,7 @@ export async function startLogin(): Promise<void> {
     throw new Error('El inicio de sesión solo está disponible en el navegador.');
   }
 
-  // Mismo flujo PKCE utilizado por el harness de pruebas del backend.
+  // Mismo flujo PKCE utilizado por el backend.
   const codeVerifier = generateCodeVerifier();
   const codeChallenge = await generateCodeChallenge(codeVerifier);
   const state = generateState();
@@ -58,7 +59,6 @@ export async function startLogin(): Promise<void> {
     codeChallengeMethod: 'S256',
     state,
   });
-  console.info('[OAuth] URL completa:', authorizeUrl);
 
   window.location.href = authorizeUrl;
 }
