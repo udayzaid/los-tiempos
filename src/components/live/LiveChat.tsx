@@ -1,6 +1,7 @@
 import { LiveTheme } from '@/constants/live-theme';
 import { api, ChatHistoryMessage } from '@/services/api';
 import * as signalR from '@microsoft/signalr';
+import { useAuth } from '@/context/AuthContext';
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -16,12 +17,21 @@ import { ChatMessage, ChatMessageData } from './ChatMessage';
 const CHAT_HUB_URL =
   'https://lostiemposapi20260817104248-avbkfhcfcucgf9e0.centralus-01.azurewebsites.net/chatHub';
 
-function mapChatMessage(message: ChatHistoryMessage, index: number): ChatMessageData {
-  const username = message.userName || message.username || 'Usuario';
-  const text = message.message || message.text || '';
+function mapChatMessage(
+  message: ChatHistoryMessage,
+  index: number
+): ChatMessageData {
+  const username =
+    message.userName || message.username || 'Usuario';
+
+  const text =
+    message.message || message.text || '';
 
   return {
-    id: String(message.id ?? `${message.createdAt ?? 'message'}-${index}`),
+    id: String(
+      message.id ??
+        `${message.createdAt ?? 'message'}-${index}`
+    ),
     username,
     text,
     avatarColor: message.avatarColor,
@@ -29,21 +39,28 @@ function mapChatMessage(message: ChatHistoryMessage, index: number): ChatMessage
 }
 
 export function LiveChat() {
+  const { isAuthenticated } = useAuth();
+
   const [messages, setMessages] = useState<ChatMessageData[]>([]);
   const [draft, setDraft] = useState('');
   const [loading, setLoading] = useState(true);
   const [historyError, setHistoryError] = useState(false);
-  const [authenticated, setAuthenticated] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [connected, setConnected] = useState(false);
 
-  const connectionRef = useRef<signalR.HubConnection | null>(null);
+  const connectionRef =
+    useRef<signalR.HubConnection | null>(null);
+
+  /*
+   * =========================================================
+   * HISTORIAL PÚBLICO
+   * =========================================================
+   */
 
   useEffect(() => {
     let mounted = true;
 
-    const initializeChat = async () => {
-      // 1. El historial es público.
+    const loadHistory = async () => {
       try {
         setLoading(true);
         setHistoryError(false);
@@ -51,149 +68,322 @@ export function LiveChat() {
         const data = await api.getChatHistory(50);
 
         if (!mounted) return;
-        setMessages(data.map(mapChatMessage));
+
+        setMessages(
+          data.map(mapChatMessage)
+        );
       } catch (error) {
-        console.error('[Chat] Error cargando historial:', error);
+        console.error(
+          '[Chat] Error cargando historial:',
+          error
+        );
 
         if (!mounted) return;
+
         setHistoryError(true);
         setMessages([]);
       } finally {
-        if (mounted) setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadHistory();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  /*
+   * =========================================================
+   * SIGNALR
+   * =========================================================
+   *
+   * Se conecta solamente cuando el usuario está autenticado.
+   *
+   * Si pasa:
+   *
+   * false → true
+   *
+   * se ejecuta nuevamente este efecto y se conecta.
+   *
+   * Si pasa:
+   *
+   * true → false
+   *
+   * se detiene la conexión.
+   */
+
+  useEffect(() => {
+    let mounted = true;
+
+    const connectSignalR = async () => {
+      /*
+       * Si no hay usuario autenticado,
+       * aseguramos que SignalR esté desconectado.
+       */
+
+      if (!isAuthenticated) {
+        const existingConnection =
+          connectionRef.current;
+
+        connectionRef.current = null;
+
+        setConnecting(false);
+        setConnected(false);
+
+        if (existingConnection) {
+          try {
+            await existingConnection.stop();
+          } catch (error) {
+            console.error(
+              '[Chat] Error cerrando SignalR:',
+              error
+            );
+          }
+        }
+
+        return;
       }
 
-      if (!mounted) return;
+      /*
+       * Evitar crear una segunda conexión.
+       */
 
-      // 2. La autenticación del chat la determina el propio Hub.
-      //    No hacemos una segunda comprobación mediante /api/Profile.
-      //    Esto evita acoplar el chat al flujo OAuth del frontend.
+      const existingConnection =
+        connectionRef.current;
+
+      if (
+        existingConnection &&
+        existingConnection.state !==
+          signalR.HubConnectionState.Disconnected
+      ) {
+        return;
+      }
+
       setConnecting(true);
 
-      const connection = new signalR.HubConnectionBuilder()
-        .withUrl(CHAT_HUB_URL, {
-          // El backend autentica SignalR mediante las mismas cookies HttpOnly.
-          withCredentials: true,
-        })
-        .withAutomaticReconnect()
-        .build();
+      const connection =
+        new signalR.HubConnectionBuilder()
+          .withUrl(CHAT_HUB_URL, {
+            /*
+             * El backend autentica SignalR
+             * utilizando las cookies HttpOnly.
+             */
+            withCredentials: true,
+          })
+          .withAutomaticReconnect()
+          .build();
 
       connectionRef.current = connection;
 
-      // 3. Escuchar antes de iniciar la conexión para no perder mensajes.
-      connection.on('RecibeMessage', (message: ChatHistoryMessage) => {
-        if (!mounted) return;
+      /*
+       * =====================================================
+       * RECIBIR MENSAJES
+       * =====================================================
+       */
 
-        setMessages((prev) => [
-          ...prev,
-          mapChatMessage(message, prev.length),
-        ]);
-      });
+      connection.on(
+        'RecibeMessage',
+        (message: ChatHistoryMessage) => {
+          if (!mounted) return;
+
+          setMessages((prev) => [
+            ...prev,
+            mapChatMessage(
+              message,
+              prev.length
+            ),
+          ]);
+        }
+      );
+
+      /*
+       * =====================================================
+       * RECONEXIÓN
+       * =====================================================
+       */
 
       connection.onreconnecting(() => {
         if (!mounted) return;
+
         setConnected(false);
         setConnecting(true);
+
+        console.info(
+          '[Chat] Reconectando SignalR...'
+        );
       });
 
       connection.onreconnected(() => {
         if (!mounted) return;
+
         setConnecting(false);
         setConnected(true);
-        setAuthenticated(true);
+
+        console.info(
+          '[Chat] SignalR reconectado.'
+        );
       });
 
       connection.onclose(() => {
         if (!mounted) return;
+
         setConnecting(false);
         setConnected(false);
+
+        console.info(
+          '[Chat] Conexión SignalR cerrada.'
+        );
       });
 
-      // 4. Intentar conectar. Si el backend rechaza la conexión por no estar
-      //    autenticado, seguimos mostrando el historial como visitante.
+      /*
+       * =====================================================
+       * INICIAR CONEXIÓN
+       * =====================================================
+       */
+
       try {
         await connection.start();
 
-        if (!mounted) return;
+        if (!mounted) {
+          await connection.stop();
+          return;
+        }
 
         setConnecting(false);
         setConnected(true);
-        setAuthenticated(true);
-        console.info('[Chat] Conectado a SignalR mediante cookies.');
+
+        console.info(
+          '[Chat] Conectado a SignalR mediante cookies.'
+        );
       } catch (error) {
-        console.info('[Chat] No hay sesión válida para SignalR. Chat en modo lectura.', error);
+        console.error(
+          '[Chat] No se pudo conectar SignalR:',
+          error
+        );
 
         if (!mounted) return;
 
         setConnecting(false);
         setConnected(false);
-        setAuthenticated(false);
+
+        connectionRef.current = null;
+
+        try {
+          await connection.stop();
+        } catch {
+          // No hacemos nada si ya estaba detenida.
+        }
       }
     };
 
-    initializeChat();
+    connectSignalR();
+
+    /*
+     * =======================================================
+     * LIMPIEZA
+     * =======================================================
+     */
 
     return () => {
       mounted = false;
-
-      const connection = connectionRef.current;
-      connectionRef.current = null;
-
-      if (connection) {
-        connection.stop().catch((error) => {
-          console.error('[Chat] Error cerrando SignalR:', error);
-        });
-      }
     };
-  }, []);
+  }, [isAuthenticated]);
+
+  /*
+   * =========================================================
+   * ENVIAR MENSAJE
+   * =========================================================
+   */
 
   async function handleSend() {
     const text = draft.trim();
 
     if (!text) return;
 
-    const connection = connectionRef.current;
+    const connection =
+      connectionRef.current;
 
     if (
-      !authenticated ||
+      !isAuthenticated ||
       !connection ||
-      connection.state !== signalR.HubConnectionState.Connected
+      connection.state !==
+        signalR.HubConnectionState.Connected
     ) {
-      console.warn('[Chat] No hay una sesión/conexión activa para enviar mensajes.');
+      console.warn(
+        '[Chat] No hay una sesión/conexión activa para enviar mensajes.'
+      );
+
       return;
     }
 
     try {
-      await connection.invoke('SendMessage', text);
+      await connection.invoke(
+        'SendMessage',
+        text
+      );
+
       setDraft('');
     } catch (error) {
-      console.error('[Chat] Error enviando mensaje:', error);
+      console.error(
+        '[Chat] Error enviando mensaje:',
+        error
+      );
     }
   }
 
+  /*
+   * =========================================================
+   * ESTADO DEL INPUT
+   * =========================================================
+   */
+
   const inputDisabled =
     loading ||
-    !authenticated ||
+    !isAuthenticated ||
     connecting ||
     !connected;
 
+  /*
+   * =========================================================
+   * INTERFAZ
+   * =========================================================
+   */
+
   return (
     <View style={styles.container}>
+
       {/* CABECERA */}
+
       <View style={styles.header}>
-        <Text style={styles.headerText}>CHAT EN VIVO</Text>
+        <Text style={styles.headerText}>
+          CHAT EN VIVO
+        </Text>
       </View>
 
       {/* MENSAJES */}
+
       <FlatList
         data={messages}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <ChatMessage {...item} />}
+        renderItem={({ item }) => (
+          <ChatMessage {...item} />
+        )}
         style={styles.list}
         ListEmptyComponent={
           loading ? (
             <View style={styles.statusContainer}>
-              <ActivityIndicator size="small" color={LiveTheme.black} />
-              <Text style={styles.statusText}>Cargando mensajes...</Text>
+              <ActivityIndicator
+                size="small"
+                color={LiveTheme.black}
+              />
+
+              <Text style={styles.statusText}>
+                Cargando mensajes...
+              </Text>
             </View>
           ) : historyError ? (
             <View style={styles.statusContainer}>
@@ -203,15 +393,19 @@ export function LiveChat() {
             </View>
           ) : (
             <View style={styles.statusContainer}>
-              <Text style={styles.statusText}>Aún no hay mensajes.</Text>
+              <Text style={styles.statusText}>
+                Aún no hay mensajes.
+              </Text>
             </View>
           )
         }
       />
 
       {/* ESCRIBIR MENSAJE */}
+
       <View style={styles.inputRow}>
-        {authenticated ? (
+
+        {isAuthenticated ? (
           <TextInput
             value={draft}
             onChangeText={setDraft}
@@ -222,28 +416,43 @@ export function LiveChat() {
                   ? 'Escribe un mensaje...'
                   : 'Chat no disponible'
             }
-            placeholderTextColor={LiveTheme.textMuted}
-            style={[styles.input, inputDisabled && styles.inputDisabled]}
+            placeholderTextColor={
+              LiveTheme.textMuted
+            }
+            style={[
+              styles.input,
+              inputDisabled &&
+                styles.inputDisabled,
+            ]}
             onSubmitEditing={handleSend}
             editable={!inputDisabled}
           />
         ) : (
           <View style={styles.loginMessage}>
-            <Text style={styles.loginMessageText}>
+            <Text
+              style={styles.loginMessageText}
+            >
               Inicia sesión para comentar.
             </Text>
           </View>
         )}
 
-        {authenticated && (
+        {isAuthenticated && (
           <Pressable
             onPress={handleSend}
-            style={[styles.sendButton, inputDisabled && styles.sendButtonDisabled]}
+            style={[
+              styles.sendButton,
+              inputDisabled &&
+                styles.sendButtonDisabled,
+            ]}
             disabled={inputDisabled}
           >
-            <Text style={styles.sendButtonText}>➤</Text>
+            <Text style={styles.sendButtonText}>
+              ➤
+            </Text>
           </Pressable>
         )}
+
       </View>
     </View>
   );

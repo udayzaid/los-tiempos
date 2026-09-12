@@ -1,5 +1,6 @@
 import { LiveTheme } from '@/constants/live-theme';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '@/context/AuthContext';
 import {
   Image,
   StyleSheet,
@@ -22,7 +23,15 @@ export function LiveHeader({
 }: Props) {
   const { width } = useWindowDimensions();
 
+  const { isAuthenticated, profile, logout } = useAuth();
+
   const isMobile = width < 700;
+
+  const userName =
+    profile?.name ||
+    profile?.userName ||
+    profile?.email ||
+    'Usuario';
 
   return (
     <View style={styles.wrapper}>
@@ -71,33 +80,72 @@ export function LiveHeader({
           ]}
         >
 
-          {/* REGISTRARSE */}
-          <TouchableOpacity
-            style={styles.registerBtn}
-            onPress={onOpenRegister}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.registerBtnText}>
-              Registrarse
-            </Text>
-          </TouchableOpacity>
+          {!isAuthenticated ? (
+            <>
+              {/* REGISTRARSE */}
+              <TouchableOpacity
+                style={styles.registerBtn}
+                onPress={onOpenRegister}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.registerBtnText}>
+                  Registrarse
+                </Text>
+              </TouchableOpacity>
 
-          {/* INICIAR SESIÓN */}
-          <TouchableOpacity
-            style={styles.loginBtn}
-            onPress={onOpenLogin}
-            activeOpacity={0.8}
-          >
-            <Ionicons
-              name="person-circle-outline"
-              size={23}
-              color={LiveTheme.black}
-            />
+              {/* INICIAR SESIÓN */}
+              <TouchableOpacity
+                style={styles.loginBtn}
+                onPress={onOpenLogin}
+                activeOpacity={0.8}
+              >
+                <Ionicons
+                  name="person-circle-outline"
+                  size={23}
+                  color={LiveTheme.black}
+                />
 
-            <Text style={styles.loginBtnText}>
-              Iniciar sesión
-            </Text>
-          </TouchableOpacity>
+                <Text style={styles.loginBtnText}>
+                  Iniciar sesión
+                </Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              {/* USUARIO */}
+              <View style={styles.userInfo}>
+                <Ionicons
+                  name="person-circle-outline"
+                  size={23}
+                  color={LiveTheme.black}
+                />
+
+                <Text
+                  style={styles.userText}
+                  numberOfLines={1}
+                >
+                  {userName}
+                </Text>
+              </View>
+
+              {/* CERRAR SESIÓN */}
+              <TouchableOpacity
+                style={styles.logoutBtn}
+                onPress={logout}
+                activeOpacity={0.8}
+              >
+                <Ionicons
+                  name="log-out-outline"
+                  size={20}
+                  color={LiveTheme.black}
+                />
+
+                <Text style={styles.logoutBtnText}>
+                  Cerrar sesión
+                </Text>
+              </TouchableOpacity>
+            </>
+          )}
 
         </View>
 
@@ -201,14 +249,14 @@ const styles = StyleSheet.create({
   ========================= */
 
   authButtonsContainer: {
-  position: 'absolute',
-  right: 20,
-  top: 0,
-  bottom: 8,
-  flexDirection: 'row',
-  alignItems: 'flex-end',
-  gap: 8,
-},
+    position: 'absolute',
+    right: 20,
+    top: 0,
+    bottom: 8,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 8,
+  },
 
   /* =========================
      REGISTRARSE
@@ -257,6 +305,64 @@ const styles = StyleSheet.create({
 
     fontSize: 12,
     fontWeight: '500',
+  },
+
+  /* =========================
+     USUARIO
+  ========================= */
+
+  userInfo: {
+    height: 35,
+    paddingHorizontal: 10,
+
+    backgroundColor: LiveTheme.white,
+
+    borderWidth: 1,
+    borderColor: '#D9D9D9',
+
+    borderRadius: 10,
+
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+
+    gap: 8,
+
+    maxWidth: 220,
+  },
+
+  userText: {
+    color: LiveTheme.black,
+    fontSize: 12,
+    fontWeight: '600',
+    maxWidth: 160,
+  },
+
+  /* =========================
+     CERRAR SESIÓN
+  ========================= */
+
+  logoutBtn: {
+    height: 35,
+
+    paddingHorizontal: 10,
+
+    backgroundColor: LiveTheme.gold,
+
+    borderRadius: 10,
+
+    flexDirection: 'row',
+
+    alignItems: 'center',
+    justifyContent: 'center',
+
+    gap: 6,
+  },
+
+  logoutBtnText: {
+    color: LiveTheme.black,
+    fontSize: 12,
+    fontWeight: '700',
   },
 
   /* =========================

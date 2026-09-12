@@ -5,7 +5,11 @@ import React, {
   useState,
   ReactNode,
 } from 'react';
-import { getProfile, logout as logoutService } from '../components/auth/authService';
+
+import {
+  getProfile,
+  logout as logoutService,
+} from '../components/auth/authService';
 
 type Profile = {
   email?: string;
@@ -25,10 +29,13 @@ type AuthContextType = {
   logout: () => Promise<void>;
 };
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext =
+  createContext<AuthContextType | undefined>(undefined);
 
 function extractRole(profile: Profile | null): string | null {
-  if (!profile) return null;
+  if (!profile) {
+    return null;
+  }
 
   const roleValue =
     profile.rol ??
@@ -37,10 +44,15 @@ function extractRole(profile: Profile | null): string | null {
     (profile as any).Role;
 
   if (Array.isArray(roleValue)) {
-    return roleValue.length > 0 ? String(roleValue[0]) : null;
+    return roleValue.length > 0
+      ? String(roleValue[0])
+      : null;
   }
 
-  if (typeof roleValue === 'object' && roleValue !== null) {
+  if (
+    typeof roleValue === 'object' &&
+    roleValue !== null
+  ) {
     const values = Object.values(roleValue);
 
     if (values.length > 0) {
@@ -55,21 +67,38 @@ function extractRole(profile: Profile | null): string | null {
   return null;
 }
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
+export function AuthProvider({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  const [profile, setProfile] =
+    useState<Profile | null>(null);
+
+  const [loading, setLoading] =
+    useState(true);
 
   const refreshProfile = async () => {
+    setLoading(true);
+
     try {
       const data = await getProfile();
 
       if (data) {
-        setProfile(data);
+        console.info('[Auth] Perfil autenticado:', data);
+        setProfile(data as Profile);
       } else {
+        console.info(
+          '[Auth] No existe una sesión autenticada.'
+        );
         setProfile(null);
       }
     } catch (error) {
-      console.log('[Auth] Usuario no autenticado');
+      console.error(
+        '[Auth] Error actualizando perfil:',
+        error
+      );
+
       setProfile(null);
     } finally {
       setLoading(false);
@@ -80,9 +109,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await logoutService();
     } catch (error) {
-      console.error('[Auth] Error al cerrar sesión:', error);
+      console.error(
+        '[Auth] Error al cerrar sesión:',
+        error
+      );
     } finally {
+      // Limpiar inmediatamente el estado local.
       setProfile(null);
+      setLoading(false);
+
+      console.info('[Auth] Sesión local cerrada.');
     }
   };
 

@@ -4,7 +4,8 @@ import {
   generateState,
 } from './pkce';
 
-const BASE_URL = 'https://lostiemposapi20260817104248-avbkfhcfcucgf9e0.centralus-01.azurewebsites.net';
+const BASE_URL =
+  'https://lostiemposapi20260817104248-avbkfhcfcucgf9e0.centralus-01.azurewebsites.net';
 
 export const AUTHORIZE_ENDPOINT = `${BASE_URL}/connect/authorize`;
 export const EXCHANGE_ENDPOINT = `${BASE_URL}/api/auth/exchange`;
@@ -14,7 +15,8 @@ export const LOGOUT_ENDPOINT = `${BASE_URL}/api/auth/logout`;
 
 // Cliente OAuth configurado por el backend para el frontend React.
 const CLIENT_ID = 'react-client';
-const SCOPES = 'openid profile email offline_access users:read users:write';
+const SCOPES =
+  'openid profile email offline_access users:read users:write';
 
 export function getRedirectUri(): string {
   if (typeof window !== 'undefined') {
@@ -26,10 +28,11 @@ export function getRedirectUri(): string {
 
 export async function startLogin(): Promise<void> {
   if (typeof window === 'undefined') {
-    throw new Error('El inicio de sesión solo está disponible en el navegador.');
+    throw new Error(
+      'El inicio de sesión solo está disponible en el navegador.'
+    );
   }
 
-  // Mismo flujo PKCE utilizado por el backend.
   const codeVerifier = generateCodeVerifier();
   const codeChallenge = await generateCodeChallenge(codeVerifier);
   const state = generateState();
@@ -40,6 +43,7 @@ export async function startLogin(): Promise<void> {
   const redirectUri = getRedirectUri();
 
   const params = new URLSearchParams();
+
   params.set('client_id', CLIENT_ID);
   params.set('redirect_uri', redirectUri);
   params.set('response_type', 'code');
@@ -48,7 +52,8 @@ export async function startLogin(): Promise<void> {
   params.set('code_challenge_method', 'S256');
   params.set('state', state);
 
-  const authorizeUrl = `${AUTHORIZE_ENDPOINT}?${params.toString()}`;
+  const authorizeUrl =
+    `${AUTHORIZE_ENDPOINT}?${params.toString()}`;
 
   console.info('[OAuth] Iniciando autorización:', {
     authorizeEndpoint: AUTHORIZE_ENDPOINT,
@@ -63,10 +68,15 @@ export async function startLogin(): Promise<void> {
   window.location.href = authorizeUrl;
 }
 
-export async function exchangeCodeForTokens(code: string, codeVerifier: string): Promise<void> {
+export async function exchangeCodeForTokens(
+  code: string,
+  codeVerifier: string
+): Promise<void> {
   const response = await fetch(EXCHANGE_ENDPOINT, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+    },
     credentials: 'include',
     body: JSON.stringify({
       code,
@@ -77,17 +87,50 @@ export async function exchangeCodeForTokens(code: string, codeVerifier: string):
 
   if (!response.ok) {
     const errorBody = await response.text().catch(() => '');
-    console.error('Error al intercambiar el código:', errorBody);
-    throw new Error('No se pudo completar el inicio de sesión.');
+
+    console.error(
+      'Error al intercambiar el código:',
+      errorBody
+    );
+
+    throw new Error(
+      'No se pudo completar el inicio de sesión.'
+    );
   }
 }
 
-export async function getProfile(): Promise<Response> {
-  return fetch(PROFILE_ENDPOINT, {
-    method: 'GET',
-    credentials: 'include',
-    headers: { Accept: 'application/json' },
-  });
+export async function getProfile(): Promise<Record<string, any> | null> {
+  try {
+    const response = await fetch(PROFILE_ENDPOINT, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        Accept: 'application/json',
+      },
+    });
+
+    if (response.status === 401) {
+      console.info('[Auth] No hay una sesión autenticada.');
+      return null;
+    }
+
+    if (!response.ok) {
+      console.error(
+        '[Auth] Error obteniendo perfil:',
+        response.status,
+        response.statusText
+      );
+
+      return null;
+    }
+
+    const data = await response.json();
+
+    return data;
+  } catch (error) {
+    console.error('[Auth] Error consultando Profile:', error);
+    return null;
+  }
 }
 
 export async function refreshSession(): Promise<boolean> {
@@ -96,6 +139,7 @@ export async function refreshSession(): Promise<boolean> {
       method: 'POST',
       credentials: 'include',
     });
+
     return response.ok;
   } catch {
     return false;
@@ -104,11 +148,17 @@ export async function refreshSession(): Promise<boolean> {
 
 export async function logout(): Promise<void> {
   try {
-    await fetch(LOGOUT_ENDPOINT, {
+    const response = await fetch(LOGOUT_ENDPOINT, {
       method: 'POST',
       credentials: 'include',
     });
+
+    console.info(
+      '[Auth] Logout:',
+      response.status,
+      response.ok
+    );
   } catch (err) {
-    console.error('Error en logout:', err);
+    console.error('[Auth] Error en logout:', err);
   }
 }
