@@ -82,17 +82,30 @@ export function AuthProvider({
     setLoading(true);
 
     try {
-      const data = await getProfile();
+      const response = await getProfile();
 
-      if (data) {
-        console.info('[Auth] Perfil autenticado:', data);
-        setProfile(data as Profile);
-      } else {
+      if (response.status === 401) {
         console.info(
           '[Auth] No existe una sesión autenticada.'
         );
         setProfile(null);
+        return;
       }
+
+      if (!response.ok) {
+        console.error(
+          '[Auth] Error obteniendo perfil:',
+          response.status,
+          response.statusText
+        );
+        setProfile(null);
+        return;
+      }
+
+      const data = await response.json();
+
+      console.info('[Auth] Perfil autenticado:', data);
+      setProfile(data as Profile);
     } catch (error) {
       console.error(
         '[Auth] Error actualizando perfil:',
@@ -114,7 +127,6 @@ export function AuthProvider({
         error
       );
     } finally {
-      // Limpiar inmediatamente el estado local.
       setProfile(null);
       setLoading(false);
 
