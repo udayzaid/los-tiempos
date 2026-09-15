@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 
 import { AuthModal } from '@/components/auth/AuthModal';
+import { startLogin } from '@/components/auth/authService';
 import { LiveChat } from '@/components/live/LiveChat';
 import { LiveDescription } from '@/components/live/LiveDescription';
 import { LiveHeader } from '@/components/live/LiveHeader';
@@ -52,13 +53,16 @@ export default function LiveScreen() {
     }
   }, []);
 
-  // Abrir Login
-  const handleOpenLogin = () => {
-    setInitialRegisterMode(false);
-    setAuthVisible(true);
+  // INICIAR SESIÓN: ir directamente al login seguro del backend.
+  const handleOpenLogin = async () => {
+    try {
+      await startLogin();
+    } catch (err: any) {
+      console.error('Error iniciando sesión:', err);
+    }
   };
 
-  // Abrir Registro
+  // REGISTRO: mantiene el formulario de registro del frontend.
   const handleOpenRegister = () => {
     setInitialRegisterMode(true);
     setAuthVisible(true);
@@ -147,7 +151,7 @@ export default function LiveScreen() {
       <SiteFooter />
 
       {/* =========================
-          LOGIN / REGISTRO
+          REGISTRO
       ========================= */}
       <AuthModal
         visible={authVisible}
@@ -224,12 +228,12 @@ const styles = StyleSheet.create({
   /* =========================
      CHAT
   ========================= */
-chatArea: {
-  flex: 0,
-  width: 360,
-  minWidth: 360,
-  maxWidth: 360,
-},
+  chatArea: {
+    flex: 0,
+    width: 360,
+    minWidth: 360,
+    maxWidth: 360,
+  },
 
   chatAreaMobile: {
     width: '100%',
