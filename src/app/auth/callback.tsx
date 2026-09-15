@@ -12,17 +12,11 @@ import {
   exchangeCodeForTokens,
   getProfile,
 } from '../../components/auth/authService';
+import { useAuth } from '../../context/AuthContext';
 
 /**
  * Obtiene el rol del perfil independientemente
  * de cómo venga serializado desde el backend.
- *
- * Ejemplos soportados:
- * { role: "User" }
- * { rol: "User" }
- * { roles: ["User"] }
- * { rol: ["User"] }
- * { roles: [{ name: "User" }] }
  */
 function extractRole(profile: any): string {
   const directRole =
@@ -31,15 +25,10 @@ function extractRole(profile: any): string {
     profile?.Rol ??
     profile?.Role;
 
-  // Caso:
-  // { role: "User" }
   if (typeof directRole === 'string') {
     return directRole.trim();
   }
 
-  // Caso:
-  // { rol: ["User"] }
-  // { roles: ["User"] }
   if (Array.isArray(directRole)) {
     const stringRole = directRole.find(
       (value) => typeof value === 'string'
@@ -49,9 +38,6 @@ function extractRole(profile: any): string {
       return stringRole.trim();
     }
 
-    // Caso:
-    // { roles: [{ name: "User" }] }
-    // { roles: [{ role: "User" }] }
     const roleObject = directRole.find(
       (value) =>
         value !== null &&
@@ -71,7 +57,6 @@ function extractRole(profile: any): string {
     }
   }
 
-  // Soporte adicional para "roles" / "Roles"
   const roles =
     profile?.roles ??
     profile?.Roles;
@@ -113,6 +98,7 @@ function extractRole(profile: any): string {
 
 export default function AuthCallbackScreen() {
   const router = useRouter();
+  const { refreshProfile } = useAuth();
 
   const [error, setError] = useState<string | null>(
     null
@@ -132,10 +118,6 @@ export default function AuthCallbackScreen() {
       const state = urlParams.get('state');
       const errorParam = urlParams.get('error');
 
-      // ==========================================
-      // ERROR DEVUELTO POR OAUTH
-      // ==========================================
-
       if (errorParam) {
         setError(
           `Error de autenticación: ${errorParam}`
@@ -143,20 +125,12 @@ export default function AuthCallbackScreen() {
         return;
       }
 
-      // ==========================================
-      // VALIDAR CODE Y STATE
-      // ==========================================
-
       if (!code || !state) {
         setError(
           'Faltan parámetros de respuesta en la URL (code/state).'
         );
         return;
       }
-
-      // ==========================================
-      // VALIDAR STATE
-      // ==========================================
 
       const savedState =
         sessionStorage.getItem('oauth_state');
@@ -167,10 +141,6 @@ export default function AuthCallbackScreen() {
         );
         return;
       }
-
-      // ==========================================
-      // OBTENER CODE VERIFIER
-      // ==========================================
 
       const codeVerifier =
         sessionStorage.getItem(
@@ -185,12 +155,6 @@ export default function AuthCallbackScreen() {
       }
 
       try {
-        // ========================================
-        // 1. INTERCAMBIAR CÓDIGO
-        // ========================================
-
-        // El backend establece las cookies
-        // HttpOnly de la sesión.
         await exchangeCodeForTokens(
           code,
           codeVerifier
@@ -200,10 +164,6 @@ export default function AuthCallbackScreen() {
           '[OAuth] Exchange completado correctamente.'
         );
 
-        // ========================================
-        // 2. LIMPIAR DATOS TEMPORALES PKCE
-        // ========================================
-
         sessionStorage.removeItem(
           'pkce_code_verifier'
         );
@@ -211,10 +171,6 @@ export default function AuthCallbackScreen() {
         sessionStorage.removeItem(
           'oauth_state'
         );
-
-        // ========================================
-        // 3. OBTENER PROFILE
-        // ========================================
 
         const profileResponse =
           await getProfile();
@@ -227,10 +183,6 @@ export default function AuthCallbackScreen() {
 
         const profile =
           await profileResponse.json();
-
-        // ========================================
-        // 4. OBTENER ROL
-        // ========================================
 
         const role =
           extractRole(profile);
@@ -245,9 +197,9 @@ export default function AuthCallbackScreen() {
           role
         );
 
-        // ========================================
-        // 5. ADMIN
-        // ========================================
+        // Sincronizar el AuthContext con la sesión
+        // que el backend acaba de establecer.
+        await refreshProfile();
 
         if (
           role.toLowerCase() === 'admin'
@@ -260,10 +212,6 @@ export default function AuthCallbackScreen() {
           return;
         }
 
-        // ========================================
-        // 6. USER
-        // ========================================
-
         if (
           role.toLowerCase() === 'user'
         ) {
@@ -274,10 +222,6 @@ export default function AuthCallbackScreen() {
           router.replace('/');
           return;
         }
-
-        // ========================================
-        // 7. ROL DESCONOCIDO
-        // ========================================
 
         setError(
           `La cuenta está autenticada, pero el rol recibido no es compatible: ${
@@ -298,11 +242,7 @@ export default function AuthCallbackScreen() {
     }
 
     processCallback();
-  }, [router]);
-
-  // ==========================================
-  // PANTALLA DE ERROR
-  // ==========================================
+  }, [router, refreshProfile]);
 
   if (error) {
     return (
@@ -331,10 +271,6 @@ export default function AuthCallbackScreen() {
     );
   }
 
-  // ==========================================
-  // PANTALLA DE CARGA
-  // ==========================================
-
   return (
     <View style={styles.container}>
       <ActivityIndicator
@@ -352,10 +288,6 @@ export default function AuthCallbackScreen() {
     </View>
   );
 }
-
-// ==========================================
-// ESTILOS
-// ==========================================
 
 const styles = StyleSheet.create({
   container: {
