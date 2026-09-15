@@ -41,7 +41,6 @@ export async function startLogin(): Promise<void> {
   sessionStorage.setItem('oauth_state', state);
 
   const redirectUri = getRedirectUri();
-
   const params = new URLSearchParams();
 
   params.set('client_id', CLIENT_ID);
@@ -99,38 +98,18 @@ export async function exchangeCodeForTokens(
   }
 }
 
-export async function getProfile(): Promise<Record<string, any> | null> {
-  try {
-    const response = await fetch(PROFILE_ENDPOINT, {
-      method: 'GET',
-      credentials: 'include',
-      headers: {
-        Accept: 'application/json',
-      },
-    });
-
-    if (response.status === 401) {
-      console.info('[Auth] No hay una sesión autenticada.');
-      return null;
-    }
-
-    if (!response.ok) {
-      console.error(
-        '[Auth] Error obteniendo perfil:',
-        response.status,
-        response.statusText
-      );
-
-      return null;
-    }
-
-    const data = await response.json();
-
-    return data;
-  } catch (error) {
-    console.error('[Auth] Error consultando Profile:', error);
-    return null;
-  }
+/**
+ * Mantiene Response como contrato para que tanto AuthContext
+ * como el callback OAuth puedan comprobar explícitamente el status HTTP.
+ */
+export async function getProfile(): Promise<Response> {
+  return fetch(PROFILE_ENDPOINT, {
+    method: 'GET',
+    credentials: 'include',
+    headers: {
+      Accept: 'application/json',
+    },
+  });
 }
 
 export async function refreshSession(): Promise<boolean> {
