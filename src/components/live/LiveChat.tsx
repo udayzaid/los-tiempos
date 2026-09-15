@@ -17,6 +17,16 @@ import { ChatMessage, ChatMessageData } from './ChatMessage';
 const CHAT_HUB_URL =
   'https://lostiemposapi20260817104248-avbkfhcfcucgf9e0.centralus-01.azurewebsites.net/hubs/chat';
 
+type SignalRChatMessage = ChatHistoryMessage | string;
+
+type AuthenticatedProfile = {
+  email?: string;
+  name?: string;
+  userName?: string;
+  avatarColor?: string;
+  [key: string]: any;
+};
+
 function mapChatMessage(
   message: ChatHistoryMessage,
   index: number
@@ -38,8 +48,31 @@ function mapChatMessage(
   };
 }
 
+function mapSignalRMessage(
+  message: SignalRChatMessage,
+  profile: AuthenticatedProfile | null,
+  index: number
+): ChatMessageData {
+  if (typeof message === 'string') {
+    const username =
+      profile?.userName ||
+      profile?.name ||
+      profile?.email ||
+      'Usuario';
+
+    return {
+      id: `signalr-${Date.now()}-${index}`,
+      username,
+      text: message,
+      avatarColor: profile?.avatarColor,
+    };
+  }
+
+  return mapChatMessage(message, index);
+}
+
 export function LiveChat() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, profile } = useAuth();
 
   const [messages, setMessages] = useState<ChatMessageData[]>([]);
   const [draft, setDraft] = useState('');
@@ -129,12 +162,12 @@ export function LiveChat() {
 
       connection.on(
         'RecibeMessage',
-        (message: ChatHistoryMessage) => {
+        (message: SignalRChatMessage) => {
           if (!mounted) return;
 
           setMessages((prev) => [
             ...prev,
-            mapChatMessage(message, prev.length),
+            mapSignalRMessage(message, profile, prev.length),
           ]);
         }
       );
@@ -196,7 +229,7 @@ export function LiveChat() {
     return () => {
       mounted = false;
     };
-  }, [isAuthenticated]);
+  }, [isAuthenticated, profile]);
 
   async function handleSend() {
     const text = draft.trim();
