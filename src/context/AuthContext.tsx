@@ -1,7 +1,9 @@
 import React, {
   createContext,
+  useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
   ReactNode,
 } from 'react';
@@ -78,47 +80,63 @@ export function AuthProvider({
   const [loading, setLoading] =
     useState(true);
 
-  const refreshProfile = async (): Promise<Profile | null> => {
-    setLoading(true);
+  // Evita que el chequeo inicial y el callback OAuth hagan dos
+  // solicitudes simultáneas a /api/Profile.
+  const refreshPromiseRef =
+    useRef<Promise<Profile | null> | null>(null);
 
-    try {
-      const response = await getProfile();
-
-      if (response.status === 401) {
-        console.info(
-          '[Auth] No existe una sesión autenticada.'
-        );
-        setProfile(null);
-        return null;
-      }
-
-      if (!response.ok) {
-        console.error(
-          '[Auth] Error obteniendo perfil:',
-          response.status,
-          response.statusText
-        );
-        setProfile(null);
-        return null;
-      }
-
-      const data = await response.json() as Profile;
-
-      console.info('[Auth] Perfil autenticado:', data);
-      setProfile(data);
-      return data;
-    } catch (error) {
-      console.error(
-        '[Auth] Error actualizando perfil:',
-        error
-      );
-
-      setProfile(null);
-      return null;
-    } finally {
-      setLoading(false);
+  const refreshProfile = useCallback(async (): Promise<Profile | null> => {
+    if (refreshPromiseRef.current) {
+      console.info('[Auth] Reutilizando comprobación de perfil en curso.');
+      return refreshPromiseRef.current;
     }
-  };
+
+    const request = (async (): Promise<Profile | null> => {
+      setLoading(true);
+
+      try {
+        const response = await getProfile();
+
+        if (response.status === 401) {
+          console.info(
+            '[Auth] No existe una sesión autenticada.'
+          );
+          setProfile(null);
+          return null;
+        }
+
+        if (!response.ok) {
+          console.error(
+            '[Auth] Error obteniendo perfil:',
+            response.status,
+            response.statusText
+          );
+          setProfile(null);
+          return null;
+        }
+
+        const data = await response.json() as Profile;
+
+        console.info('[Auth] Perfil autenticado:', data);
+        setProfile(data);
+        return data;
+      } catch (error) {
+        console.error(
+          '[Auth] Error actualizando perfil:',
+          error
+        );
+
+        setProfile(null);
+        return null;
+      } finally {
+        setLoading(false);
+        refreshPromiseRef.current = null;
+      }
+    })();
+
+    refreshPromiseRef.current = request;
+    return request;
+  }, []);
 
   const logout = async () => {
     try {
@@ -138,7 +156,7 @@ export function AuthProvider({
 
   useEffect(() => {
     refreshProfile();
-  }, []);
+  }, [refreshProfile]);
 
   const role = extractRole(profile);
 
