@@ -25,7 +25,7 @@ type AuthContextType = {
   isAuthenticated: boolean;
   loading: boolean;
   role: string | null;
-  refreshProfile: () => Promise<void>;
+  refreshProfile: () => Promise<Profile | null>;
   logout: () => Promise<void>;
 };
 
@@ -78,7 +78,7 @@ export function AuthProvider({
   const [loading, setLoading] =
     useState(true);
 
-  const refreshProfile = async () => {
+  const refreshProfile = async (): Promise<Profile | null> => {
     setLoading(true);
 
     try {
@@ -89,7 +89,7 @@ export function AuthProvider({
           '[Auth] No existe una sesión autenticada.'
         );
         setProfile(null);
-        return;
+        return null;
       }
 
       if (!response.ok) {
@@ -99,13 +99,14 @@ export function AuthProvider({
           response.statusText
         );
         setProfile(null);
-        return;
+        return null;
       }
 
-      const data = await response.json();
+      const data = await response.json() as Profile;
 
       console.info('[Auth] Perfil autenticado:', data);
-      setProfile(data as Profile);
+      setProfile(data);
+      return data;
     } catch (error) {
       console.error(
         '[Auth] Error actualizando perfil:',
@@ -113,6 +114,7 @@ export function AuthProvider({
       );
 
       setProfile(null);
+      return null;
     } finally {
       setLoading(false);
     }
