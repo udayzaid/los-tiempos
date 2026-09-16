@@ -132,6 +132,19 @@ export default function AuthCallbackScreen() {
         return;
       }
 
+      // Un authorization code OAuth solo puede canjearse una vez.
+      // Guardamos el código antes del exchange para impedir que un segundo
+      // render/efecto del callback intente canjear exactamente el mismo code.
+      const processingKey = 'oauth_processing_code';
+      const processingCode = sessionStorage.getItem(processingKey);
+
+      if (processingCode === code) {
+        console.info('[OAuth] Callback duplicado ignorado para el mismo code.');
+        return;
+      }
+
+      sessionStorage.setItem(processingKey, code);
+
       try {
         await exchangeCodeForTokens(code, codeVerifier);
 
@@ -139,6 +152,7 @@ export default function AuthCallbackScreen() {
 
         sessionStorage.removeItem('pkce_code_verifier');
         sessionStorage.removeItem('oauth_state');
+        sessionStorage.removeItem(processingKey);
 
         // Una sola consulta al perfil. Además de verificar la sesión,
         // refreshProfile actualiza el AuthContext para que el resto de la
