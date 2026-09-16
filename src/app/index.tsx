@@ -36,20 +36,30 @@ export default function LiveScreen() {
         .catch(() => setMensajeApi('Servidor conectado'));
     }
 
-    // Obtener transmisión activa
+    // Obtener y vigilar la transmisión activa.
+    // La página puede permanecer abierta mientras el administrador inicia
+    // o termina el Live, por eso volvemos a consultar periódicamente.
     if (typeof api?.getStream === 'function') {
-      api
-        .getStream()
-        .then((res) => {
+      const loadStream = async () => {
+        try {
+          const res = await api.getStream();
+
           if (res && res.hasActiveStream && res.url) {
             setStreamUrl(res.url);
           } else {
             setStreamUrl('');
           }
-        })
-        .catch((err) =>
-          console.error('Error cargando Stream:', err)
-        );
+        } catch (err) {
+          console.error('Error cargando Stream:', err);
+          setStreamUrl('');
+        }
+      };
+
+      loadStream();
+
+      const intervalId = setInterval(loadStream, 10000);
+
+      return () => clearInterval(intervalId);
     }
   }, []);
 
@@ -67,6 +77,8 @@ export default function LiveScreen() {
     setInitialRegisterMode(true);
     setAuthVisible(true);
   };
+
+  const hasActiveStream = Boolean(streamUrl);
 
   return (
     <ScrollView
@@ -102,20 +114,27 @@ export default function LiveScreen() {
             ]}
           >
             {/* Indicador EN VIVO */}
-            <View style={styles.liveBadge}>
-              <View style={styles.liveDot} />
+            {hasActiveStream && (
+              <View style={styles.liveBadge}>
+                <View style={styles.liveDot} />
 
-              <Text style={styles.liveBadgeText}>
-                EN VIVO
-              </Text>
-            </View>
+                <Text style={styles.liveBadgeText}>
+                  EN VIVO
+                </Text>
+              </View>
+            )}
 
             {/* Reproductor */}
-            <VideoPlayer
-              videoUrl={
-                streamUrl || 'https://youtu.be/2FrvoWyV9o8'
-              }
-            />
+            {hasActiveStream ? (
+              <VideoPlayer videoUrl={streamUrl} />
+            ) : (
+              <View style={styles.noLiveContainer}>
+                <Text style={styles.noLiveTitle}>Sin transmisión en vivo</Text>
+                <Text style={styles.noLiveText}>
+                  La transmisión aparecerá aquí cuando el administrador inicie el Live.
+                </Text>
+              </View>
+            )}
           </View>
 
           {/* =========================
@@ -223,6 +242,29 @@ const styles = StyleSheet.create({
   },
   videoAreaMobile: {
     width: '100%',
+  },
+
+  noLiveContainer: {
+    width: '100%',
+    aspectRatio: 16 / 9,
+    backgroundColor: '#F2F2F2',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+  },
+
+  noLiveTitle: {
+    color: '#333333',
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+
+  noLiveText: {
+    color: '#777777',
+    fontSize: 14,
+    textAlign: 'center',
   },
 
   /* =========================
