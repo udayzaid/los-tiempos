@@ -52,32 +52,43 @@ export const api = {
     }
   },
 
-  // 1. GET /stream -> Consulta la transmisión disponible para la vista pública.
+  // 1. GET /api/Stream -> Consulta la transmisión activa para la vista pública.
+  // Cuando no existe Live, el backend puede responder { message: 'stream no encontrado' }.
   getStream: async () => {
     try {
-      const res = await fetch(`${BASE_URL}/stream`, {
+      const res = await fetch(`${BASE_URL}/api/Stream`, {
         ...fetchOptions(false),
         method: 'GET',
       });
 
+      const data = await res.json().catch(() => null);
+
       if (!res.ok) {
-        return { url: '', raw: null, hasActiveStream: false };
+        return { url: '', raw: data, hasActiveStream: false };
       }
 
-      const data = await res.json();
+      const message = String(data?.message || data?.mensaje || '').toLowerCase();
+      if (message.includes('stream no encontrado')) {
+        return { url: '', raw: data, hasActiveStream: false };
+      }
 
+      // Compatibilidad mientras terminamos de confirmar el JSON exacto
+      // que devuelve el backend cuando existe una transmisión activa.
       const videoUrl =
         data?.embedUrl ||
         data?.embeUrl ||
         data?.watchUrl ||
         data?.link ||
         data?.url ||
+        data?.streamUrl ||
+        data?.videoUrl ||
         (typeof data === 'string' ? data : '');
 
       return {
-        url: videoUrl,
+        url: typeof videoUrl === 'string' ? videoUrl : '',
         raw: data,
-        hasActiveStream: Boolean(videoUrl && videoUrl.trim().length > 0),
+        hasActiveStream:
+          typeof videoUrl === 'string' && videoUrl.trim().length > 0,
       };
     } catch (error) {
       console.error('Error en getStream:', error);
