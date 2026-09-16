@@ -10,14 +10,9 @@ import {
 
 import {
   exchangeCodeForTokens,
-  getProfile,
 } from '../../components/auth/authService';
 import { useAuth } from '../../context/AuthContext';
 
-/**
- * Obtiene el rol del perfil independientemente
- * de cómo venga serializado desde el backend.
- */
 function extractRole(profile: any): string {
   const directRole =
     profile?.rol ??
@@ -100,9 +95,7 @@ export default function AuthCallbackScreen() {
   const router = useRouter();
   const { refreshProfile } = useAuth();
 
-  const [error, setError] = useState<string | null>(
-    null
-  );
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function processCallback() {
@@ -110,115 +103,64 @@ export default function AuthCallbackScreen() {
         return;
       }
 
-      const urlParams = new URLSearchParams(
-        window.location.search
-      );
-
+      const urlParams = new URLSearchParams(window.location.search);
       const code = urlParams.get('code');
       const state = urlParams.get('state');
       const errorParam = urlParams.get('error');
 
       if (errorParam) {
-        setError(
-          `Error de autenticación: ${errorParam}`
-        );
+        setError(`Error de autenticación: ${errorParam}`);
         return;
       }
 
       if (!code || !state) {
-        setError(
-          'Faltan parámetros de respuesta en la URL (code/state).'
-        );
+        setError('Faltan parámetros de respuesta en la URL (code/state).');
         return;
       }
 
-      const savedState =
-        sessionStorage.getItem('oauth_state');
+      const savedState = sessionStorage.getItem('oauth_state');
 
       if (!savedState || state !== savedState) {
-        setError(
-          'Validación de seguridad fallida (State mismatch).'
-        );
+        setError('Validación de seguridad fallida (State mismatch).');
         return;
       }
 
-      const codeVerifier =
-        sessionStorage.getItem(
-          'pkce_code_verifier'
-        );
+      const codeVerifier = sessionStorage.getItem('pkce_code_verifier');
 
       if (!codeVerifier) {
-        setError(
-          'La sesión de inicio expiró. Intenta iniciar sesión nuevamente.'
-        );
+        setError('La sesión de inicio expiró. Intenta iniciar sesión nuevamente.');
         return;
       }
 
       try {
-        await exchangeCodeForTokens(
-          code,
-          codeVerifier
-        );
+        await exchangeCodeForTokens(code, codeVerifier);
 
-        console.info(
-          '[OAuth] Exchange completado correctamente.'
-        );
+        console.info('[OAuth] Exchange completado correctamente.');
 
-        sessionStorage.removeItem(
-          'pkce_code_verifier'
-        );
+        sessionStorage.removeItem('pkce_code_verifier');
+        sessionStorage.removeItem('oauth_state');
 
-        sessionStorage.removeItem(
-          'oauth_state'
-        );
+        // Una sola consulta al perfil. Además de verificar la sesión,
+        // refreshProfile actualiza el AuthContext para que el resto de la
+        // aplicación reconozca inmediatamente al usuario autenticado.
+        const profile = await refreshProfile();
 
-        const profileResponse =
-          await getProfile();
-
-        if (!profileResponse.ok) {
-          throw new Error(
-            `No se pudo verificar el perfil (HTTP ${profileResponse.status}).`
-          );
+        if (!profile) {
+          throw new Error('No se pudo verificar el perfil autenticado.');
         }
 
-        const profile =
-          await profileResponse.json();
+        const role = extractRole(profile);
 
-        const role =
-          extractRole(profile);
+        console.info('[OAuth] Rol detectado:', role);
 
-        console.info(
-          '[OAuth] Perfil recibido:',
-          profile
-        );
-
-        console.info(
-          '[OAuth] Rol detectado:',
-          role
-        );
-
-        // Sincronizar el AuthContext con la sesión
-        // que el backend acaba de establecer.
-        await refreshProfile();
-
-        if (
-          role.toLowerCase() === 'admin'
-        ) {
-          console.info(
-            '[OAuth] Usuario Admin → /admin'
-          );
-
+        if (role.toLowerCase() === 'admin') {
+          console.info('[OAuth] Usuario Admin → /admin');
           router.replace('/admin');
           return;
         }
 
-        if (
-          role.toLowerCase() === 'user'
-        ) {
-          console.info(
-            '[OAuth] Usuario User → Index principal'
-          );
-
+        if (role.toLowerCase() === 'user') {
+          console.info('[OAuth] Usuario User → Index principal');
           router.replace('/');
           return;
         }
@@ -229,11 +171,7 @@ export default function AuthCallbackScreen() {
           }`
         );
       } catch (err: any) {
-        console.error(
-          '[OAuth] Error al completar autenticación:',
-          err
-        );
-
+        console.error('[OAuth] Error al completar autenticación:', err);
         setError(
           err?.message ||
             'Error al completar el inicio de sesión.'
@@ -248,23 +186,13 @@ export default function AuthCallbackScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.errorCard}>
-          <Text style={styles.errorTitle}>
-            ❌ No se pudo iniciar sesión
-          </Text>
-
-          <Text style={styles.errorText}>
-            {error}
-          </Text>
-
+          <Text style={styles.errorTitle}>❌ No se pudo iniciar sesión</Text>
+          <Text style={styles.errorText}>{error}</Text>
           <Pressable
             style={styles.retryButton}
-            onPress={() =>
-              router.replace('/')
-            }
+            onPress={() => router.replace('/')}
           >
-            <Text style={styles.retryText}>
-              Volver al inicio
-            </Text>
+            <Text style={styles.retryText}>Volver al inicio</Text>
           </Pressable>
         </View>
       </View>
@@ -273,18 +201,9 @@ export default function AuthCallbackScreen() {
 
   return (
     <View style={styles.container}>
-      <ActivityIndicator
-        size="large"
-        color="#e50914"
-      />
-
-      <Text style={styles.loadingText}>
-        Verificando tu sesión...
-      </Text>
-
-      <Text style={styles.subText}>
-        Obteniendo información de tu cuenta
-      </Text>
+      <ActivityIndicator size="large" color="#e50914" />
+      <Text style={styles.loadingText}>Verificando tu sesión...</Text>
+      <Text style={styles.subText}>Obteniendo información de tu cuenta</Text>
     </View>
   );
 }
@@ -297,20 +216,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#121212',
     padding: 20,
   },
-
   loadingText: {
     color: '#fff',
     marginTop: 20,
     fontSize: 16,
     fontWeight: 'bold',
   },
-
   subText: {
     color: '#888',
     marginTop: 5,
     fontSize: 12,
   },
-
   errorCard: {
     backgroundColor: '#2a1212',
     padding: 25,
@@ -321,14 +237,12 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
   },
-
   errorTitle: {
     color: '#ff4d4d',
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 10,
   },
-
   errorText: {
     color: '#ccc',
     fontSize: 14,
@@ -336,14 +250,12 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlignVertical: 'center',
   },
-
   retryButton: {
     backgroundColor: '#e50914',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 6,
   },
-
   retryText: {
     color: '#fff',
     fontWeight: 'bold',
