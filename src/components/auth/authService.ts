@@ -13,8 +13,9 @@ export const PROFILE_ENDPOINT = `${BASE_URL}/api/Profile`;
 export const REFRESH_ENDPOINT = `${BASE_URL}/api/auth/refresh`;
 export const LOGOUT_ENDPOINT = `${BASE_URL}/api/auth/logout`;
 
-// Cliente OAuth configurado por el backend para el frontend React.
-const CLIENT_ID = 'react-client';
+// Cliente OAuth configurado por variable de entorno según el entorno.
+const CLIENT_ID =
+  process.env.EXPO_PUBLIC_OAUTH_CLIENT_ID || 'react-client';
 const SCOPES =
   'openid profile email offline_access users:read users:write';
 
