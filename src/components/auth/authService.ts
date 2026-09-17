@@ -118,8 +118,8 @@ export async function refreshSession(): Promise<boolean> {
   try {
     const response = await fetch(REFRESH_ENDPOINT, {
       method: 'POST',
-      headers :{
-        'COntent-Type': 'application/json', // 
+      headers: {
+        'Content-Type': 'application/json',
       },
       credentials: 'include',
       body: JSON.stringify({
