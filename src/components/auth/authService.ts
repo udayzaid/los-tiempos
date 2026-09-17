@@ -82,6 +82,7 @@ export async function exchangeCodeForTokens(
       code,
       codeVerifier,
       redirectUri: getRedirectUri(),
+      clienteId: CLIENT_ID 
     }),
   });
 
@@ -117,7 +118,13 @@ export async function refreshSession(): Promise<boolean> {
   try {
     const response = await fetch(REFRESH_ENDPOINT, {
       method: 'POST',
+      headers :{
+        'COntent-Type': 'application/json', // 
+      },
       credentials: 'include',
+      body: JSON.stringify({
+        clienteId: CLIENT_ID,
+      }),
     });
 
     return response.ok;
