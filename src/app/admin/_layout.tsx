@@ -1,4 +1,4 @@
-import { Redirect } from 'expo-router';
+import { Redirect, Stack } from 'expo-router';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { useAuth } from '@/context/AuthContext';
@@ -20,12 +20,6 @@ export default function AdminLayout() {
   if (!isAuthenticated || role?.trim().toLowerCase() !== 'admin') {
     return <Redirect href="/" />;
   }
-
-  return <RedirectStack />;
-}
-
-function RedirectStack() {
-  const { Stack } = require('expo-router');
 
   return (
     <Stack
