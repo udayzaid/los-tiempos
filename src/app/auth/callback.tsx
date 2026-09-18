@@ -168,8 +168,8 @@ export default function AuthCallbackScreen() {
         console.info('[OAuth] Rol detectado:', role);
 
         if (role.toLowerCase() === 'admin') {
-          console.info('[OAuth] Usuario Admin → /admin');
-          router.replace('/admin');
+          console.info('[OAuth] Usuario Admin → página principal');
+          router.replace('/');
           return;
         }
 
