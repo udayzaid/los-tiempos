@@ -1,6 +1,7 @@
 import { LiveTheme } from '@/constants/live-theme';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'expo-router';
 import {
   Image,
   StyleSheet,
@@ -23,7 +24,9 @@ export function LiveHeader({
 }: Props) {
   const { width } = useWindowDimensions();
 
-  const { isAuthenticated, profile, logout } = useAuth();
+  const router = useRouter(); 
+
+  const { isAuthenticated, profile, role ,logout } = useAuth();
 
   const isMobile = width < 700;
 
@@ -32,6 +35,8 @@ export function LiveHeader({
     profile?.userName ||
     profile?.email ||
     'Usuario';
+
+  const isAdmin = role?.toLowerCase() === 'Admin';
 
   return (
     <View style={styles.wrapper}>
@@ -127,6 +132,23 @@ export function LiveHeader({
                   {userName}
                 </Text>
               </View>
+
+              {isAdmin && (
+                <TouchableOpacity
+                  style={styles.adminBtn}
+                  onPress={() => router.push('/admin')}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons
+                    name="settings-outline"
+                    size={18}
+                    color={LiveTheme.gold}
+                  />
+                  <Text style={styles.adminBtnText}>
+                    Administrar
+                  </Text>
+                </TouchableOpacity>
+              )}
 
               {/* CERRAR SESIÓN */}
               <TouchableOpacity
@@ -336,6 +358,26 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     maxWidth: 160,
+  },
+
+    /* =========================
+     BOTÓN ADMIN
+  ========================= */
+  adminBtn: {
+    height: 35,
+    paddingHorizontal: 12,
+    backgroundColor: '#111111',   // negro
+    borderRadius: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+
+  adminBtnText: {
+    color: '#FFD900',              // dorado (LiveTheme.gold)
+    fontSize: 12,
+    fontWeight: '700',
   },
 
   /* =========================
