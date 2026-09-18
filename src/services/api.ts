@@ -96,6 +96,41 @@ export const api = {
     }
   },
 
+  getStreamCredentials: async () => {
+  try {
+    const res = await fetch(`${BASE_URL}/Stream`, {
+      ...fetchOptions(true),  // requiere auth (admin)
+      method: 'GET',
+    });
+
+    
+    if (!res.ok) {
+      return null;
+    }
+
+    const data = await res.json().catch(() => null);
+
+    if (!data) return null;
+
+    // Validación mínima: debe tener broadcastId (indicador de live real)
+    if (!data.broadcastId && !data.streamingKey) {
+      return null;
+    }
+
+    return {
+      broadcastId: String(data.broadcastId ?? ''),
+      watchUrl: String(data.watchUrl ?? ''),
+      embeUrl: String(data.embeUrl ?? data.embedUrl ?? ''),
+      rtmpServerUrl: String(data.rtmpServerUrl ?? ''),
+      streamingKey: String(data.streamingKey ?? ''),
+      estado: String(data.estado ?? ''),
+    };
+  } catch (error) {
+    console.error('Error en getStreamCredentials:', error);
+    return null;
+  }
+},
+
   // 2. GET /api/Chat/history -> Historial público del chat.
   // No requiere autenticación. Las cookies de sesión se envían igualmente
   // mediante credentials: 'include'.
