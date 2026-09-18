@@ -21,21 +21,12 @@ export default function LiveScreen() {
   const { width } = useWindowDimensions();
   const isMobile = width < 760;
 
-  const [mensajeApi, setMensajeApi] = useState<string>('');
   const [authVisible, setAuthVisible] = useState<boolean>(false);
   const [initialRegisterMode, setInitialRegisterMode] =
     useState<boolean>(false);
   const [streamUrl, setStreamUrl] = useState<string>('');
 
   useEffect(() => {
-    // Verificar conexión con el backend
-    if (typeof api?.getPrimer === 'function') {
-      api
-        .getPrimer()
-        .then((data) => setMensajeApi(data))
-        .catch(() => setMensajeApi('Servidor conectado'));
-    }
-
     // Obtener y vigilar la transmisión activa.
     // La página puede permanecer abierta mientras el administrador inicia
     // o termina el Live, por eso volvemos a consultar periódicamente.
@@ -186,10 +177,6 @@ export default function LiveScreen() {
 ========================================================= */
 
 const styles = StyleSheet.create({
-  /* =========================
-     PANTALLA
-  ========================= */
-
   screen: {
     flex: 1,
     backgroundColor: '#FFFFFF',
@@ -198,10 +185,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
   },
-
-  /* =========================
-     CONTENEDOR PRINCIPAL
-  ========================= */
 
   page: {
     width: '100%',
@@ -212,10 +195,6 @@ const styles = StyleSheet.create({
     paddingTop: 18,
     paddingBottom: 8,
   },
-
-  /* =========================
-     VIDEO + CHAT
-  ========================= */
 
   content: {
     width: '100%',
@@ -231,15 +210,12 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
   },
 
-  /* =========================
-     ÁREA DEL VIDEO
-  ========================= */
-
   videoArea: {
     flex: 1,
     minWidth: 0,
     position: 'relative',
   },
+
   videoAreaMobile: {
     width: '100%',
   },
@@ -267,9 +243,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
-  /* =========================
-     CHAT
-  ========================= */
   chatArea: {
     flex: 0,
     width: 360,
@@ -282,10 +255,6 @@ const styles = StyleSheet.create({
 
     maxWidth: undefined,
   },
-
-  /* =========================
-     INDICADOR EN VIVO
-  ========================= */
 
   liveBadge: {
     position: 'absolute',
