@@ -204,28 +204,35 @@ export default function AdminDashboard() {
     setFeedback({ type: null, message: '' });
 
     try {
-      const createdStream = await api.postStream({
+      // 👇 createStream ahora devuelve las credenciales tipadas
+      const created = await api.createStream({
         titulo: title,
         descripcion: description || title,
       });
 
-      const createdUrl =
-        typeof createdStream === 'string'
-          ? createdStream
-          : createdStream?.link || createdStream?.url || createdStream?.embedUrl;
-
+      // Reflejamos el nuevo live en el estado local del panel
       setActiveStream({ titulo: title, descripcion: description || title });
 
-      if (createdUrl) {
-        setActiveStreamUrl(createdUrl);
+      // Intentamos obtener la URL de reproducción para el monitor
+      const playableUrl = created.watchUrl || created.embeUrl || '';
+      if (playableUrl) {
+        setActiveStreamUrl(playableUrl);
       } else {
         await loadActiveStream();
       }
 
+      // Limpiamos el formulario
       setStreamTitle('');
       setStreamDescription('');
 
-      showFeedback('success', 'Transmisión publicada correctamente.');
+      // 👇 AQUÍ ESTÁ LA MAGIA: si el live se creó OK, mostramos el modal
+      if (created.broadcastId || created.streamingKey) {
+        setCredentials(created);
+        setCredentialsVisible(true);
+        showFeedback('success', 'Transmisión creada. Credenciales listas.');
+      } else {
+        showFeedback('success', 'Transmisión publicada correctamente.');
+      }
     } catch (err: any) {
       showFeedback(
         'error',

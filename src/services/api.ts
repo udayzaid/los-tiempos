@@ -1,3 +1,5 @@
+import { StreamCredentials } from '@/components/admin/StreamCredentialsModal';
+
 const BASE_URL = 'https://lostiemposapi20260817104248-avbkfhcfcucgf9e0.centralus-01.azurewebsites.net';
 
 // Helper para obtener encabezados y Token de sesión.
@@ -97,39 +99,39 @@ export const api = {
   },
 
   getStreamCredentials: async () => {
-  try {
-    const res = await fetch(`${BASE_URL}/Stream`, {
-      ...fetchOptions(true),  // requiere auth (admin)
-      method: 'GET',
-    });
+    try {
+      const res = await fetch(`${BASE_URL}/Stream`, {
+        ...fetchOptions(true),  // requiere auth (admin)
+        method: 'GET',
+      });
 
-    
-    if (!res.ok) {
+
+      if (!res.ok) {
+        return null;
+      }
+
+      const data = await res.json().catch(() => null);
+
+      if (!data) return null;
+
+      // Validación mínima: debe tener broadcastId (indicador de live real)
+      if (!data.broadcastId && !data.streamingKey) {
+        return null;
+      }
+
+      return {
+        broadcastId: String(data.broadcastId ?? ''),
+        watchUrl: String(data.watchUrl ?? ''),
+        embeUrl: String(data.embeUrl ?? data.embedUrl ?? ''),
+        rtmpServerUrl: String(data.rtmpServerUrl ?? ''),
+        streamingKey: String(data.streamingKey ?? ''),
+        estado: String(data.estado ?? ''),
+      };
+    } catch (error) {
+      console.error('Error en getStreamCredentials:', error);
       return null;
     }
-
-    const data = await res.json().catch(() => null);
-
-    if (!data) return null;
-
-    // Validación mínima: debe tener broadcastId (indicador de live real)
-    if (!data.broadcastId && !data.streamingKey) {
-      return null;
-    }
-
-    return {
-      broadcastId: String(data.broadcastId ?? ''),
-      watchUrl: String(data.watchUrl ?? ''),
-      embeUrl: String(data.embeUrl ?? data.embedUrl ?? ''),
-      rtmpServerUrl: String(data.rtmpServerUrl ?? ''),
-      streamingKey: String(data.streamingKey ?? ''),
-      estado: String(data.estado ?? ''),
-    };
-  } catch (error) {
-    console.error('Error en getStreamCredentials:', error);
-    return null;
-  }
-},
+  },
 
   // 2. GET /api/Chat/history -> Historial público del chat.
   // No requiere autenticación. Las cookies de sesión se envían igualmente
@@ -193,8 +195,8 @@ export const api = {
 
     return resData;
   },
-  // 4. POST /api/Stream -> Crea e inicia la transmisión.
-  createStream: async (data: { titulo: string; descripcion: string }) => {
+
+  createStream: async (data: { titulo: string; descripcion: string }): Promise<StreamCredentials> => {
     const res = await fetch(`${BASE_URL}/api/Stream`, {
       ...fetchOptions(true),
       method: 'POST',
@@ -210,7 +212,15 @@ export const api = {
       throw new Error(resData?.message || resData?.mensaje || `Error en POST (${res.status})`);
     }
 
-    return resData;
+    // Normalizamos los campos por si el backend varía el casing
+    return {
+      broadcastId: String(resData.broadcastId ?? ''),
+      watchUrl: String(resData.watchUrl ?? ''),
+      embeUrl: String(resData.embeUrl ?? resData.embedUrl ?? ''),
+      rtmpServerUrl: String(resData.rtmpServerUrl ?? ''),
+      streamingKey: String(resData.streamingKey ?? ''),
+      estado: String(resData.estado ?? ''),
+    };
   },
 
   // Compatibilidad temporal: admin/index.tsx todavía utiliza postStream.
