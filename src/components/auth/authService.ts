@@ -82,7 +82,7 @@ export async function exchangeCodeForTokens(
       code,
       codeVerifier,
       redirectUri: getRedirectUri(),
-      clienteId: CLIENT_ID 
+      clientId: CLIENT_ID 
     }),
   });
 
@@ -123,7 +123,7 @@ export async function refreshSession(): Promise<boolean> {
       },
       credentials: 'include',
       body: JSON.stringify({
-        clienteId: CLIENT_ID,
+        clientId: CLIENT_ID,
       }),
     });
 
