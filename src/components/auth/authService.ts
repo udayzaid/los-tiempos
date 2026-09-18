@@ -137,7 +137,13 @@ export async function logout(): Promise<void> {
   try {
     const response = await fetch(LOGOUT_ENDPOINT, {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
       credentials: 'include',
+      body: JSON.stringify({
+        clientId: CLIENT_ID,
+      }),
     });
 
     console.info(

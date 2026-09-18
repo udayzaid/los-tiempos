@@ -1,6 +1,7 @@
 import { LiveTheme } from '@/constants/live-theme';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
+import { router } from 'expo-router';
 import {
   Image,
   StyleSheet,
@@ -23,15 +24,27 @@ export function LiveHeader({
 }: Props) {
   const { width } = useWindowDimensions();
 
-  const { isAuthenticated, profile, logout } = useAuth();
+  const {
+    isAuthenticated,
+    profile,
+    role,
+    logout,
+  } = useAuth();
 
   const isMobile = width < 700;
+
+  const isAdmin =
+    role?.trim().toLowerCase() === 'admin';
 
   const userName =
     profile?.name ||
     profile?.userName ||
     profile?.email ||
     'Usuario';
+
+  const handleAdminPress = () => {
+    router.push('/admin');
+  };
 
   return (
     <View style={styles.wrapper}>
@@ -112,6 +125,25 @@ export function LiveHeader({
             </>
           ) : (
             <>
+              {/* ADMINISTRAR - SOLO ADMIN */}
+              {isAdmin && (
+                <TouchableOpacity
+                  style={styles.adminBtn}
+                  onPress={handleAdminPress}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons
+                    name="settings-outline"
+                    size={19}
+                    color={LiveTheme.black}
+                  />
+
+                  <Text style={styles.adminBtnText}>
+                    Administrar
+                  </Text>
+                </TouchableOpacity>
+              )}
+
               {/* USUARIO */}
               <View style={styles.userInfo}>
                 <Ionicons
@@ -305,6 +337,35 @@ const styles = StyleSheet.create({
 
     fontSize: 12,
     fontWeight: '500',
+  },
+
+  /* =========================
+     ADMINISTRAR
+  ========================= */
+
+  adminBtn: {
+    height: 35,
+
+    paddingHorizontal: 10,
+
+    backgroundColor: LiveTheme.white,
+
+    borderWidth: 1,
+    borderColor: '#D9D9D9',
+
+    borderRadius: 10,
+
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+
+    gap: 6,
+  },
+
+  adminBtnText: {
+    color: LiveTheme.black,
+    fontSize: 12,
+    fontWeight: '600',
   },
 
   /* =========================
