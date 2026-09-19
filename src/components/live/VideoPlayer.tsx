@@ -5,11 +5,11 @@ type VideoPlayerProps = {
 };
 
 export function VideoPlayer({
-  videoUrl = 'https://youtu.be/2FrvoWyV9o8',
+  videoUrl = 'https://youtu.be/KplVe8OILMc',
 }: VideoPlayerProps) {
   const getEmbedUrl = (url: string) => {
     if (!url) {
-      return 'https://www.youtube.com/embed/2FrvoWyV9o8?autoplay=1&mute=0&controls=1';
+      return 'https://www.youtube-nocookie.com/embed/KplVe8OILMc?controls=1&rel=0';
     }
 
     const match = url.match(
@@ -19,13 +19,11 @@ export function VideoPlayer({
     const videoId = match ? match[1] : '';
 
     if (videoId) {
-     return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&controls=1`;
+      return `https://www.youtube-nocookie.com/embed/\${videoId}?controls=1&rel=0`;
     }
 
     if (url.includes('youtube.com/embed/')) {
-      return url.includes('?')
-        ? `${url}&autoplay=1`
-        : `${url}?autoplay=1`;
+      return url;
     }
 
     return url;
