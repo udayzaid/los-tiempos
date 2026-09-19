@@ -85,6 +85,17 @@ export function LiveChat() {
     useRef<signalR.HubConnection | null>(null);
 
   useEffect(() => {
+    // El backend actual devuelve 404 para el historial REST.
+    // Dejamos desactivada esta consulta hasta que ese endpoint exista;
+    // el chat en tiempo real continúa funcionando mediante SignalR.
+    const LOAD_CHAT_HISTORY = false;
+
+    if (!LOAD_CHAT_HISTORY) {
+      setLoading(false);
+      setHistoryError(false);
+      return;
+    }
+
     let mounted = true;
 
     const loadHistory = async () => {
