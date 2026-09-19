@@ -175,9 +175,10 @@ export const api = {
       }
 
       return [];
-    } catch (error) {
-      console.error('Error en getChatHistory:', error);
-      throw error;
+    } catch {
+      // El historial es complementario. Si el endpoint no está publicado
+      // o falla por red/CORS, dejamos que SignalR mantenga el chat en vivo.
+      return [];
     }
   },
 
