@@ -19,7 +19,7 @@ export function VideoPlayer({
     const videoId = match ? match[1] : '';
 
     if (videoId) {
-      return `https://www.youtube-nocookie.com/embed/\${videoId}?controls=1&rel=0`;
+      return `https://www.youtube-nocookie.com/embed/${videoId}?controls=1&rel=0`;
     }
 
     if (url.includes('youtube.com/embed/')) {
