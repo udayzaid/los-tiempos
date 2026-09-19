@@ -101,28 +101,16 @@ export default function LiveScreen() {
               isMobile && styles.videoAreaMobile,
             ]}
           >
-            {/* Indicador EN VIVO */}
+            {/* Si existe un Live del backend, usamos su URL.
+                Si no existe, VideoPlayer muestra el canal de YouTube de respaldo. */}
             {hasActiveStream && (
               <View style={styles.liveBadge}>
                 <View style={styles.liveDot} />
-
-                <Text style={styles.liveBadgeText}>
-                  EN VIVO
-                </Text>
+                <Text style={styles.liveBadgeText}>EN VIVO</Text>
               </View>
             )}
 
-            {/* Reproductor */}
-            {hasActiveStream ? (
-              <VideoPlayer videoUrl={streamUrl} />
-            ) : (
-              <View style={styles.noLiveContainer}>
-                <Text style={styles.noLiveTitle}>Sin transmisión en vivo</Text>
-                <Text style={styles.noLiveText}>
-                  La transmisión aparecerá aquí cuando el administrador inicie el Live.
-                </Text>
-              </View>
-            )}
+            <VideoPlayer videoUrl={streamUrl} />
           </View>
 
           {/* =========================
@@ -215,29 +203,6 @@ const styles = StyleSheet.create({
 
   videoAreaMobile: {
     width: '100%',
-  },
-
-  noLiveContainer: {
-    width: '100%',
-    aspectRatio: 16 / 9,
-    backgroundColor: '#F2F2F2',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-  },
-
-  noLiveTitle: {
-    color: '#333333',
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-
-  noLiveText: {
-    color: '#777777',
-    fontSize: 14,
-    textAlign: 'center',
   },
 
   chatArea: {
