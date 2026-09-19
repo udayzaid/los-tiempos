@@ -58,10 +58,19 @@ export const api = {
   // Cuando no existe Live, el backend puede responder { message: 'stream no encontrado' }.
   getStream: async () => {
     try {
-      const res = await fetch(`${BASE_URL}/api/Stream`, {
+      let res = await fetch(`${BASE_URL}/Stream`, {
         ...fetchOptions(false),
         method: 'GET',
       });
+
+      // Compatibilidad: algunos despliegues exponen la consulta pública
+      // bajo /api/Stream. Si /Stream no existe, probamos esa ruta.
+      if (res.status === 404) {
+        res = await fetch(`${BASE_URL}/api/Stream`, {
+          ...fetchOptions(false),
+          method: 'GET',
+        });
+      }
 
       const data = await res.json().catch(() => null);
 
