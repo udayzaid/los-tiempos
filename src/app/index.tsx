@@ -8,7 +8,6 @@ import {
 } from 'react-native';
 
 import { AuthModal } from '@/components/auth/AuthModal';
-import { startLogin } from '@/components/auth/authService';
 import { LiveChat } from '@/components/live/LiveChat';
 import { LiveDescription } from '@/components/live/LiveDescription';
 import { LiveHeader } from '@/components/live/LiveHeader';
@@ -54,13 +53,11 @@ export default function LiveScreen() {
     }
   }, []);
 
-  // INICIAR SESIÓN: ir directamente al login seguro del backend.
-  const handleOpenLogin = async () => {
-    try {
-      await startLogin();
-    } catch (err: any) {
-      console.error('Error iniciando sesión:', err);
-    }
+  // INICIAR SESIÓN: abrir el mismo modal que usamos para el registro.
+  // El modal se encarga de iniciar el OAuth seguro cuando el usuario continúe.
+  const handleOpenLogin = () => {
+    setInitialRegisterMode(false);
+    setAuthVisible(true);
   };
 
   // REGISTRO: mantiene el formulario de registro del frontend.
