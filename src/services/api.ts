@@ -154,6 +154,12 @@ export const api = {
         method: 'GET',
       });
 
+      // El historial es opcional para que el chat en tiempo real
+      // siga funcionando aunque el endpoint histórico no esté publicado.
+      if (res.status === 404) {
+        return [];
+      }
+
       if (!res.ok) {
         throw new Error(`Error en historial de chat (${res.status})`);
       }
