@@ -85,6 +85,17 @@ export function LiveChat() {
     useRef<signalR.HubConnection | null>(null);
 
   useEffect(() => {
+    // El backend actual devuelve 404 para el historial REST.
+    // Dejamos desactivada esta consulta hasta que ese endpoint exista;
+    // el chat en tiempo real continúa funcionando mediante SignalR.
+    const LOAD_CHAT_HISTORY = false;
+
+    if (!LOAD_CHAT_HISTORY) {
+      setLoading(false);
+      setHistoryError(false);
+      return;
+    }
+
     let mounted = true;
 
     const loadHistory = async () => {
@@ -97,12 +108,12 @@ export function LiveChat() {
         if (!mounted) return;
 
         setMessages(data.map(mapChatMessage));
-      } catch (error) {
-        console.error('[Chat] Error cargando historial:', error);
-
+      } catch {
         if (!mounted) return;
 
-        setHistoryError(true);
+        // El historial REST es opcional. SignalR sigue siendo la fuente
+        // de mensajes en tiempo real, por lo que un 404 no debe romper el chat.
+        setHistoryError(false);
         setMessages([]);
       } finally {
         if (mounted) {

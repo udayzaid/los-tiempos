@@ -58,10 +58,19 @@ export const api = {
   // Cuando no existe Live, el backend puede responder { message: 'stream no encontrado' }.
   getStream: async () => {
     try {
-      const res = await fetch(`${BASE_URL}/api/Stream`, {
+      let res = await fetch(`${BASE_URL}/Stream`, {
         ...fetchOptions(false),
         method: 'GET',
       });
+
+      // Compatibilidad: algunos despliegues exponen la consulta pública
+      // bajo /api/Stream. Si /Stream no existe, probamos esa ruta.
+      if (res.status === 404) {
+        res = await fetch(`${BASE_URL}/api/Stream`, {
+          ...fetchOptions(false),
+          method: 'GET',
+        });
+      }
 
       const data = await res.json().catch(() => null);
 
@@ -145,6 +154,12 @@ export const api = {
         method: 'GET',
       });
 
+      // El historial es opcional para que el chat en tiempo real
+      // siga funcionando aunque el endpoint histórico no esté publicado.
+      if (res.status === 404) {
+        return [];
+      }
+
       if (!res.ok) {
         throw new Error(`Error en historial de chat (${res.status})`);
       }
@@ -160,9 +175,10 @@ export const api = {
       }
 
       return [];
-    } catch (error) {
-      console.error('Error en getChatHistory:', error);
-      throw error;
+    } catch {
+      // El historial es complementario. Si el endpoint no está publicado
+      // o falla por red/CORS, dejamos que SignalR mantenga el chat en vivo.
+      return [];
     }
   },
 
