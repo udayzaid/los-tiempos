@@ -20,7 +20,7 @@ import { api } from '@/services/api';
 export default function LiveScreen() {
   const { width } = useWindowDimensions();
   const isMobile = width < 760;
-  const showSideAds = width >= 1200;
+  const showSideAds = width >= 1340;
 
   const [authVisible, setAuthVisible] = useState<boolean>(false);
   const [initialRegisterMode, setInitialRegisterMode] =
