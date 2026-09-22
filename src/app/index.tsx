@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 
 import { AuthModal } from '@/components/auth/AuthModal';
+import { AdSlot } from '@/components/ads/AdSlot';
 import { LiveChat } from '@/components/live/LiveChat';
 import { LiveDescription } from '@/components/live/LiveDescription';
 import { LiveHeader } from '@/components/live/LiveHeader';
@@ -19,6 +20,7 @@ import { api } from '@/services/api';
 export default function LiveScreen() {
   const { width } = useWindowDimensions();
   const isMobile = width < 760;
+  const showSideAds = width >= 1200;
 
   const [authVisible, setAuthVisible] = useState<boolean>(false);
   const [initialRegisterMode, setInitialRegisterMode] =
@@ -88,42 +90,61 @@ export default function LiveScreen() {
       <View style={styles.page}>
         <View
           style={[
-            styles.content,
-            isMobile && styles.contentMobile,
+            styles.layoutRow,
+            isMobile && styles.layoutRowMobile,
           ]}
         >
-          {/* =========================
-              VIDEO
-          ========================= */}
+          {showSideAds && (
+            <View style={styles.adColumn}>
+              <AdSlot placement="left" />
+            </View>
+          )}
+
           <View
             style={[
-              styles.videoArea,
-              isMobile && styles.videoAreaMobile,
+              styles.content,
+              isMobile && styles.contentMobile,
             ]}
           >
-            {/* Si existe un Live del backend, usamos su URL.
-                Si no existe, VideoPlayer muestra el canal de YouTube de respaldo. */}
-            {hasActiveStream && (
-              <View style={styles.liveBadge}>
-                <View style={styles.liveDot} />
-                <Text style={styles.liveBadgeText}>EN VIVO</Text>
-              </View>
-            )}
+            {/* =========================
+                VIDEO
+            ========================= */}
+            <View
+              style={[
+                styles.videoArea,
+                isMobile && styles.videoAreaMobile,
+              ]}
+            >
+              {/* Si existe un Live del backend, usamos su URL.
+                  Si no existe, VideoPlayer muestra el canal de YouTube de respaldo. */}
+              {hasActiveStream && (
+                <View style={styles.liveBadge}>
+                  <View style={styles.liveDot} />
+                  <Text style={styles.liveBadgeText}>EN VIVO</Text>
+                </View>
+              )}
 
-            <VideoPlayer videoUrl={streamUrl} />
+              <VideoPlayer videoUrl={streamUrl} />
+            </View>
+
+            {/* =========================
+                CHAT
+            ========================= */}
+            <View
+              style={[
+                styles.chatArea,
+                isMobile && styles.chatAreaMobile,
+              ]}
+            >
+              <LiveChat />
+            </View>
           </View>
 
-          {/* =========================
-              CHAT
-          ========================= */}
-          <View
-            style={[
-              styles.chatArea,
-              isMobile && styles.chatAreaMobile,
-            ]}
-          >
-            <LiveChat />
-          </View>
+          {showSideAds && (
+            <View style={styles.adColumn}>
+              <AdSlot placement="right" />
+            </View>
+          )}
         </View>
 
         {/* =========================
@@ -181,8 +202,27 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
 
-  content: {
+  layoutRow: {
     width: '100%',
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    gap: 24,
+  },
+
+  layoutRowMobile: {
+    flexDirection: 'column',
+    gap: 14,
+  },
+
+  adColumn: {
+    width: 160,
+    flexShrink: 0,
+  },
+
+  content: {
+    width: 920,
+    maxWidth: '100%',
 
     flexDirection: 'row',
 
@@ -192,6 +232,7 @@ const styles = StyleSheet.create({
   },
 
   contentMobile: {
+    width: '100%',
     flexDirection: 'column',
   },
 
@@ -207,9 +248,9 @@ const styles = StyleSheet.create({
 
   chatArea: {
     flex: 0,
-    width: 360,
-    minWidth: 360,
-    maxWidth: 360,
+    width: 320,
+    minWidth: 320,
+    maxWidth: 320,
   },
 
   chatAreaMobile: {
