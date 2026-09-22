@@ -1,59 +1,153 @@
-import { View, StyleSheet, useWindowDimensions } from 'react-native';
-import { PromoCard, PromoCardData } from './PromoCard';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from 'react-native';
+import { LiveTheme } from '@/constants/live-theme';
+import { PromoCard } from './PromoCard';
+import { api, NoticiaItem, PagedResponse } from '@/services/api'; // Asegúrate de que la ruta apunte a tu archivo api.ts
 
-// TODO: por ahora son datos de ejemplo (placeholder).
-// A futuro esto se reemplaza por los anuncios reales que asigne el admin,
-// probablemente viniendo de la misma API/backend que maneja los ads.json actuales.
-const MOCK_CARDS: PromoCardData[] = [
-  {
-    id: '1',
-    category: 'Deportes',
-    title: 'Lorem ipsum dolor sit amet, consectetuer adipiscing elit',
-    description:
-      'sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat voluepat.',
-  },
-  {
-    id: '2',
-    category: 'Política',
-    title: 'Lorem ipsum dolor sit amet, consectetuer adipiscing elit',
-    description:
-      'sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat voluepat.',
-  },
-  {
-    id: '3',
-    category: 'Mundo',
-    title: 'Lorem ipsum dolor sit amet, consectetuer adipiscing elit',
-    description:
-      'sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat voluepat.',
-  },
-];
-
-type Props = {
-  cards?: PromoCardData[];
-};
-
-export function PromoCardsRow({ cards = MOCK_CARDS }: Props) {
+export function PromoCardsRow() {
   const { width } = useWindowDimensions();
   const isWide = width >= 768;
 
+  const [pageIndex, setPageIndex] = useState<number>(1);
+  const pageSize = 4;
+
+  const [data, setData] = useState<PagedResponse<NoticiaItem> | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  const fetchNoticias = async (page: number) => {
+    setLoading(true);
+    const response = await api.getNoticias(page, pageSize);
+    if (response) {
+      setData(response);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchNoticias(pageIndex);
+  }, [pageIndex]);
+
+  const handlePrev = () => {
+    if (data?.hasPreviousPage) {
+      setPageIndex((prev) => prev - 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (data?.hasNextPage) {
+      setPageIndex((prev) => prev + 1);
+    }
+  };
+
   return (
-    <View style={[styles.row, !isWide && styles.rowNarrow]}>
-      {cards.map((card) => (
-        <PromoCard key={card.id} {...card} />
-      ))}
+    <View style={styles.container}>
+      {/* CONTROLES DE PAGINACIÓN / FLECHAS */}
+      <View style={styles.paginationHeader}>
+        <Text style={styles.pageIndicator}>
+          Página {data?.pageIndex ?? 1} de {data?.totalPages ?? 1}
+        </Text>
+
+        <View style={styles.arrowsContainer}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.arrowButton,
+              !data?.hasPreviousPage && styles.arrowDisabled,
+              pressed && styles.arrowPressed,
+            ]}
+            onPress={handlePrev}
+            disabled={!data?.hasPreviousPage || loading}
+          >
+            <Text style={styles.arrowText}>‹</Text>
+          </Pressable>
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.arrowButton,
+              !data?.hasNextPage && styles.arrowDisabled,
+              pressed && styles.arrowPressed,
+            ]}
+            onPress={handleNext}
+            disabled={!data?.hasNextPage || loading}
+          >
+            <Text style={styles.arrowText}>›</Text>
+          </Pressable>
+        </View>
+      </View>
+
+      {/* CONTENIDO DE LAS TARJETAS */}
+      {loading ? (
+        <View style={styles.loaderContainer}>
+          <ActivityIndicator size="large" color={LiveTheme.gold || '#FFD700'} />
+        </View>
+      ) : (
+        <View style={[styles.row, !isWide && styles.rowNarrow]}>
+          {data?.items.map((item) => (
+            <PromoCard key={item.id} noticia={item} />
+          ))}
+        </View>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  paginationHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  pageIndicator: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: LiveTheme.textMuted || '#888888',
+  },
+  arrowsContainer: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  arrowButton: {
+    width: 32,
+    height: 32,
+    backgroundColor: LiveTheme.black || '#1A1A1A',
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  arrowDisabled: {
+    backgroundColor: '#E2E2E2',
+  },
+  arrowPressed: {
+    opacity: 0.7,
+  },
+  arrowText: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: 'bold',
+    lineHeight: 22,
+  },
   row: {
     flexDirection: 'row',
-    gap: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    gap: 16,
     flexWrap: 'wrap',
   },
   rowNarrow: {
     flexDirection: 'column',
+  },
+  loaderContainer: {
+    height: 179,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
