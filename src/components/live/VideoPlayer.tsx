@@ -50,7 +50,7 @@ export function VideoPlayer({
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    aspectRatio: 11 / 6,
+    aspectRatio: 16 / 9,
     backgroundColor: '#000000',
     borderRadius: 8,
     overflow: 'hidden',
