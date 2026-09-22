@@ -5,7 +5,7 @@ type VideoPlayerProps = {
 };
 
 export function VideoPlayer({
-  videoUrl = 'https://youtu.be/KplVe8OILMc',
+  videoUrl = 'https://youtu.be/Zi-dsa7d5jM?si=E2XBC40NfOQtsz2j',
 }: VideoPlayerProps) {
   const getEmbedUrl = (url: string) => {
     if (!url) {

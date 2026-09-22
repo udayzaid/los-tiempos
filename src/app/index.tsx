@@ -7,8 +7,9 @@ import {
   useWindowDimensions,
 } from 'react-native';
 
-import { AuthModal } from '@/components/auth/AuthModal';
 import { AdSlot } from '@/components/ads/AdSlot';
+import { AuthModal } from '@/components/auth/AuthModal';
+import { startLogin } from '@/components/auth/authService';
 import { LiveChat } from '@/components/live/LiveChat';
 import { LiveDescription } from '@/components/live/LiveDescription';
 import { LiveHeader } from '@/components/live/LiveHeader';
@@ -19,12 +20,14 @@ import { api } from '@/services/api';
 
 export default function LiveScreen() {
   const { width } = useWindowDimensions();
+
   const isMobile = width < 760;
   const showSideAds = width >= 1340;
 
   const [authVisible, setAuthVisible] = useState<boolean>(false);
   const [initialRegisterMode, setInitialRegisterMode] =
     useState<boolean>(false);
+
   const [streamUrl, setStreamUrl] = useState<string>('');
 
   useEffect(() => {
@@ -55,14 +58,21 @@ export default function LiveScreen() {
     }
   }, []);
 
-  // INICIAR SESIÓN: abrir el mismo modal que usamos para el registro.
-  // El modal se encarga de iniciar el OAuth seguro cuando el usuario continúe.
-  const handleOpenLogin = () => {
-    setInitialRegisterMode(false);
-    setAuthVisible(true);
+  // INICIAR SESIÓN:
+  // El login se realiza directamente mediante el flujo OAuth del backend.
+  const handleOpenLogin = async () => {
+    try {
+      await startLogin();
+    } catch (err: any) {
+      console.error(
+        'Error iniciando sesión:',
+        err?.message || err
+      );
+    }
   };
 
-  // REGISTRO: mantiene el formulario de registro del frontend.
+  // REGISTRO:
+  // Mantiene el formulario de registro del frontend.
   const handleOpenRegister = () => {
     setInitialRegisterMode(true);
     setAuthVisible(true);
@@ -88,18 +98,30 @@ export default function LiveScreen() {
           CONTENIDO PRINCIPAL
       ========================= */}
       <View style={styles.page}>
+        {/* =========================
+            FILA PRINCIPAL
+
+            PUBLICIDAD | VIDEO + CHAT | PUBLICIDAD
+        ========================= */}
         <View
           style={[
             styles.layoutRow,
             isMobile && styles.layoutRowMobile,
           ]}
         >
+          {/* =========================
+              PUBLICIDAD IZQUIERDA
+          ========================= */}
           {showSideAds && (
             <View style={styles.adColumn}>
               <AdSlot placement="left" />
             </View>
           )}
 
+          {/* =========================
+              CONTENIDO CENTRAL
+              VIDEO + CHAT
+          ========================= */}
           <View
             style={[
               styles.content,
@@ -115,15 +137,21 @@ export default function LiveScreen() {
                 isMobile && styles.videoAreaMobile,
               ]}
             >
-              {/* Si existe un Live del backend, usamos su URL.
-                  Si no existe, VideoPlayer muestra el canal de YouTube de respaldo. */}
+              {/* Si existe un Live del backend,
+                  mostramos la etiqueta EN VIVO. */}
               {hasActiveStream && (
                 <View style={styles.liveBadge}>
                   <View style={styles.liveDot} />
-                  <Text style={styles.liveBadgeText}>EN VIVO</Text>
+                  <Text style={styles.liveBadgeText}>
+                    EN VIVO
+                  </Text>
                 </View>
               )}
 
+              {/* Si existe una transmisión activa,
+                  usa la URL del backend.
+                  Si no existe, VideoPlayer utiliza
+                  su video de respaldo. */}
               <VideoPlayer videoUrl={streamUrl} />
             </View>
 
@@ -140,6 +168,9 @@ export default function LiveScreen() {
             </View>
           </View>
 
+          {/* =========================
+              PUBLICIDAD DERECHA
+          ========================= */}
           {showSideAds && (
             <View style={styles.adColumn}>
               <AdSlot placement="right" />
@@ -192,21 +223,28 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
 
+  /* =========================================================
+     CONTENEDOR GENERAL DE LA PÁGINA
+  ========================================================= */
   page: {
     width: '100%',
     maxWidth: 1366,
     alignSelf: 'center',
-
     paddingHorizontal: 16,
     paddingTop: 18,
     paddingBottom: 8,
   },
 
+  /* =========================================================
+     FILA PRINCIPAL
+
+     PUBLICIDAD | VIDEO + CHAT | PUBLICIDAD
+  ========================================================= */
   layoutRow: {
     width: '100%',
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'flex-start',
-    flexDirection: 'row',
     gap: 24,
   },
 
@@ -215,27 +253,35 @@ const styles = StyleSheet.create({
     gap: 14,
   },
 
+  /* =========================================================
+     PUBLICIDAD LATERAL
+  ========================================================= */
   adColumn: {
     width: 160,
     flexShrink: 0,
   },
 
+  /* =========================================================
+     CONTENIDO CENTRAL
+     VIDEO + CHAT
+  ========================================================= */
   content: {
     width: 920,
     maxWidth: '100%',
-
     flexDirection: 'row',
-
     alignItems: 'stretch',
-
     gap: 14,
   },
 
   contentMobile: {
     width: '100%',
     flexDirection: 'column',
+    gap: 14,
   },
 
+  /* =========================================================
+     VIDEO
+  ========================================================= */
   videoArea: {
     flex: 1,
     minWidth: 0,
@@ -246,6 +292,9 @@ const styles = StyleSheet.create({
     width: '100%',
   },
 
+  /* =========================================================
+     CHAT
+  ========================================================= */
   chatArea: {
     flex: 0,
     width: 320,
@@ -255,46 +304,37 @@ const styles = StyleSheet.create({
 
   chatAreaMobile: {
     width: '100%',
-
+    minWidth: 0,
     maxWidth: undefined,
   },
 
+  /* =========================================================
+     INDICADOR EN VIVO
+  ========================================================= */
   liveBadge: {
     position: 'absolute',
-
     zIndex: 2,
-
     left: 10,
     top: 10,
-
     flexDirection: 'row',
-
     alignItems: 'center',
-
     gap: 5,
-
     backgroundColor: '#E51C2A',
-
     paddingHorizontal: 9,
     paddingVertical: 5,
-
     borderRadius: 3,
   },
 
   liveDot: {
     width: 6,
     height: 6,
-
     borderRadius: 3,
-
     backgroundColor: '#FFFFFF',
   },
 
   liveBadgeText: {
     color: '#FFFFFF',
-
     fontSize: 10,
-
     fontWeight: '800',
   },
 });
