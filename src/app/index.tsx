@@ -22,7 +22,7 @@ export default function LiveScreen() {
   const { width } = useWindowDimensions();
 
   const isMobile = width < 900;
-  const showSideAds = width >= 1340;
+  const showSideAds = width >= 1200;
 
   const [authVisible, setAuthVisible] = useState<boolean>(false);
   const [initialRegisterMode, setInitialRegisterMode] =
@@ -119,53 +119,75 @@ export default function LiveScreen() {
           )}
 
           {/* =========================
-              CONTENIDO CENTRAL
-              VIDEO + CHAT
+              COLUMNA CENTRAL
           ========================= */}
           <View
             style={[
-              styles.content,
-              isMobile && styles.contentMobile,
+              styles.contentColumn,
+              isMobile && styles.contentColumnMobile,
             ]}
           >
             {/* =========================
-                VIDEO
+                VIDEO + CHAT
             ========================= */}
             <View
               style={[
-                styles.videoArea,
-                isMobile && styles.videoAreaMobile,
+                styles.content,
+                isMobile && styles.contentMobile,
               ]}
             >
-              {/* Si existe un Live del backend,
-                  mostramos la etiqueta EN VIVO. */}
-              {hasActiveStream && (
-                <View style={styles.liveBadge}>
-                  <View style={styles.liveDot} />
-                  <Text style={styles.liveBadgeText}>
-                    EN VIVO
-                  </Text>
-                </View>
-              )}
+              {/* =========================
+                  VIDEO
+              ========================= */}
+              <View
+                style={[
+                  styles.videoArea,
+                  isMobile && styles.videoAreaMobile,
+                ]}
+              >
+                {/* Si existe un Live del backend,
+                    mostramos la etiqueta EN VIVO. */}
+                {hasActiveStream && (
+                  <View style={styles.liveBadge}>
+                    <View style={styles.liveDot} />
+                    <Text style={styles.liveBadgeText}>
+                      EN VIVO
+                    </Text>
+                  </View>
+                )}
 
-              {/* Si existe una transmisión activa,
-                  usa la URL del backend.
-                  Si no existe, VideoPlayer utiliza
-                  su video de respaldo. */}
-              <VideoPlayer videoUrl={streamUrl} />
+                {/* Si existe una transmisión activa,
+                    usa la URL del backend.
+                    Si no existe, VideoPlayer utiliza
+                    su video de respaldo. */}
+                <VideoPlayer videoUrl={streamUrl} />
+              </View>
+
+              {/* =========================
+                  CHAT
+              ========================= */}
+              <View
+                style={[
+                  styles.chatArea,
+                  isMobile && styles.chatAreaMobile,
+                ]}
+              >
+                <LiveChat />
+              </View>
             </View>
 
             {/* =========================
-                CHAT
+                DESCRIPCIÓN
             ========================= */}
-            <View
-              style={[
-                styles.chatArea,
-                isMobile && styles.chatAreaMobile,
-              ]}
-            >
-              <LiveChat />
-            </View>
+            <LiveDescription
+              title="Transmisión en vivo 13/04/2026"
+              body="Sigue nuestras transmisiones en directo y mantente informado. Disfruta de la señal en vivo, noticias y contenido de actualidad de Los Tiempos."
+            />
+
+            {/* =========================
+                PROMOCIONES
+            ========================= */}
+            <PromoCardsRow />
           </View>
 
           {/* =========================
@@ -177,19 +199,6 @@ export default function LiveScreen() {
             </View>
           )}
         </View>
-
-        {/* =========================
-            DESCRIPCIÓN
-        ========================= */}
-        <LiveDescription
-          title="Transmisión en vivo 13/04/2026"
-          body="Sigue nuestras transmisiones en directo y mantente informado. Disfruta de la señal en vivo, noticias y contenido de actualidad de Los Tiempos."
-        />
-
-        {/* =========================
-            PROMOCIONES
-        ========================= */}
-        <PromoCardsRow />
       </View>
 
       {/* =========================
@@ -259,6 +268,25 @@ const styles = StyleSheet.create({
   adColumn: {
     width: 160,
     flexShrink: 0,
+    alignSelf: 'stretch',
+  },
+
+  /* =========================================================
+     COLUMNA CENTRAL
+     VIDEO + CHAT + DESCRIPCIÓN + PROMOCIONES
+  ========================================================= */
+  contentColumn: {
+    flex: 1,
+    width: '100%',
+    maxWidth: 920,
+    minWidth: 0,
+    alignSelf: 'center',
+  },
+
+  contentColumnMobile: {
+    width: '100%',
+    maxWidth: undefined,
+    alignSelf: 'stretch',
   },
 
   /* =========================================================
