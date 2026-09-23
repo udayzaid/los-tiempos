@@ -38,6 +38,26 @@ export type ChatHistoryMessage = {
   createdAt?: string;
 };
 
+export interface NoticiaItem {
+  id: number;
+  titulo: string;
+  categoria: string;
+  urlImagen: string;
+  descripcion: string;
+  fecha: string;
+  url: string;
+}
+
+export interface PagedResponse<T> {
+  items: T[];
+  pageIndex: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+}
+
 export const api = {
   // 0. GET / -> Endpoint base de salud/inicio
   getPrimer: async () => {
@@ -259,4 +279,39 @@ export const api = {
 
     return resData;
   },
+
+  // 6. GET /Noticias -> Obtener noticias paginadas
+getNoticias: async (pageIndex = 1, pageSize = 4): Promise<PagedResponse<NoticiaItem> | null> => {
+  try {
+    // 1. Probamos primero la ruta base /Noticias (patrón usado en /Stream y /SingIn)
+    let res = await fetch(
+      `${BASE_URL}/Noticias?PageIndex=${pageIndex}&PageSize=${pageSize}`,
+      {
+        ...fetchOptions(false),
+        method: 'GET',
+      }
+    );
+
+    // 2. Si responde 404, probamos el fallback /api/Noticias
+    if (res.status === 404) {
+      res = await fetch(
+        `${BASE_URL}/api/Noticia?PageIndex=${pageIndex}&PageSize=${pageSize}`,
+        {
+          ...fetchOptions(false),
+          method: 'GET',
+        }
+      );
+    }
+
+    if (!res.ok) {
+      throw new Error(`Error obteniendo noticias (${res.status})`);
+    }
+
+    const data = await res.json();
+    return data as PagedResponse<NoticiaItem>;
+  } catch (error) {
+    console.error('Error en getNoticias:', error);
+    return null;
+  }
+},
 };
