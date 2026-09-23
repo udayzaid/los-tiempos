@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'flex-start',
-    gap: 24,
+    gap: 16,
   },
 
   layoutRowMobile: {
@@ -266,8 +266,10 @@ const styles = StyleSheet.create({
      VIDEO + CHAT
   ========================================================= */
   content: {
-    width: 920,
-    maxWidth: '100%',
+    flex: 1,
+    width: '100%',
+    maxWidth: 920,
+    minWidth: 0,
     flexDirection: 'row',
     alignItems: 'stretch',
     gap: 14,
@@ -297,8 +299,9 @@ const styles = StyleSheet.create({
   ========================================================= */
   chatArea: {
     flex: 0,
+    flexBasis: 320,
     width: 320,
-    minWidth: 320,
+    minWidth: 280,
     maxWidth: 320,
   },
 
