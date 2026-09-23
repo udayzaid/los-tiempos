@@ -14,6 +14,7 @@ import { LiveChat } from '@/components/live/LiveChat';
 import { LiveDescription } from '@/components/live/LiveDescription';
 import { LiveHeader } from '@/components/live/LiveHeader';
 import { PromoCardsRow } from '@/components/live/PromoCardsRow';
+import { ReelSection } from '@/components/live/ReelSection';
 import { SiteFooter } from '@/components/live/SiteFooter';
 import { VideoPlayer } from '@/components/live/VideoPlayer';
 import { api } from '@/services/api';
@@ -199,6 +200,11 @@ export default function LiveScreen() {
             </View>
           )}
         </View>
+
+        {/* =========================
+            REELS
+        ========================= */}
+        <ReelSection />
       </View>
 
       {/* =========================

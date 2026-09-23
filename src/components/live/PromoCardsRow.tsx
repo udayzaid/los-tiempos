@@ -70,7 +70,7 @@ export function PromoCardsRow() {
         <View style={[styles.row, { marginHorizontal: -gap / 2 }]}>
           {data?.items.map((item) => (
             <View
-              key={item.id}
+              key={item.titulo}
               style={{
                 width: cardWidthPercent,
                 paddingHorizontal: gap / 2,
