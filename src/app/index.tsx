@@ -184,7 +184,10 @@ export default function LiveScreen() {
               title="Transmisión en vivo 13/04/2026"
               body="Sigue nuestras transmisiones en directo y mantente informado. Disfruta de la señal en vivo, noticias y contenido de actualidad de Los Tiempos."
             />
-
+              {/* =========================
+            REELS
+        ========================= */}
+        <ReelSection />
             {/* =========================
                 PROMOCIONES
             ========================= */}
@@ -201,10 +204,7 @@ export default function LiveScreen() {
           )}
         </View>
 
-        {/* =========================
-            REELS
-        ========================= */}
-        <ReelSection />
+        
       </View>
 
       {/* =========================
