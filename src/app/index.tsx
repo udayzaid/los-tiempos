@@ -277,7 +277,6 @@ const styles = StyleSheet.create({
   ========================================================= */
   contentColumn: {
     flex: 1,
-    width: '100%',
     maxWidth: 920,
     minWidth: 0,
     alignSelf: 'center',
