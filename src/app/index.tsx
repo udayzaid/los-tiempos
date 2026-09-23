@@ -17,6 +17,7 @@ import { PromoCardsRow } from '@/components/live/PromoCardsRow';
 import { SiteFooter } from '@/components/live/SiteFooter';
 import { VideoPlayer } from '@/components/live/VideoPlayer';
 import { api } from '@/services/api';
+import { ReelSection } from '@/components/live/ReelSection';
 
 export default function LiveScreen() {
   const { width } = useWindowDimensions();
@@ -185,6 +186,14 @@ export default function LiveScreen() {
           title="Transmisión en vivo 13/04/2026"
           body="Sigue nuestras transmisiones en directo y mantente informado. Disfruta de la señal en vivo, noticias y contenido de actualidad de Los Tiempos."
         />
+
+        <ScrollView>
+          {/* Otras secciones (Noticias, etc.) */}
+
+          <ReelSection />
+
+          {/* Otras secciones */}
+        </ScrollView>
 
         {/* =========================
             PROMOCIONES
