@@ -49,10 +49,10 @@ export const ReelCard: React.FC<ReelCardProps> = ({ item }) => {
       <Modal
         visible={modalVisible}
         animationType="fade"
-        transparent={false}
+        transparent
         onRequestClose={closeModal}
       >
-        <View style={styles.modalContainer}>
+        <View style={styles.modalOverlay}>
           <TouchableOpacity
             style={styles.closeButton}
             onPress={closeModal}
@@ -65,7 +65,9 @@ export const ReelCard: React.FC<ReelCardProps> = ({ item }) => {
             </View>
           </TouchableOpacity>
 
-          <ReelPlayer videoId={item.tiktokVideoId} />
+          <View style={styles.playerWrapper}>
+            <ReelPlayer videoId={item.tiktokVideoId} />
+          </View>
         </View>
       </Modal>
     </>
@@ -108,9 +110,18 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 
-  modalContainer: {
+  modalOverlay: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  playerWrapper: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 
   closeButton: {
@@ -125,7 +136,7 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: 'rgba(0,0,0,0.75)',
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
     alignItems: 'center',
     justifyContent: 'center',
   },
