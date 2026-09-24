@@ -18,9 +18,12 @@ interface ReelCardProps {
 export const ReelCard: React.FC<ReelCardProps> = ({ item }) => {
   const [modalVisible, setModalVisible] = useState(false);
 
+  const closeModal = () => {
+    setModalVisible(false);
+  };
+
   return (
     <>
-      {/* Tarjeta del Reel */}
       <TouchableOpacity
         style={styles.cardContainer}
         activeOpacity={0.85}
@@ -32,7 +35,6 @@ export const ReelCard: React.FC<ReelCardProps> = ({ item }) => {
           resizeMode="cover"
         />
 
-        {/* Capa sobre la portada */}
         <View style={styles.overlay}>
           <View style={styles.playIconContainer}>
             <Ionicons name="play" size={24} color="#FFF" />
@@ -44,23 +46,25 @@ export const ReelCard: React.FC<ReelCardProps> = ({ item }) => {
         </View>
       </TouchableOpacity>
 
-      {/* Modal del Reel */}
       <Modal
         visible={modalVisible}
-        animationType="slide"
+        animationType="fade"
         transparent={false}
-        onRequestClose={() => setModalVisible(false)}
+        onRequestClose={closeModal}
       >
         <View style={styles.modalContainer}>
-          {/* Botón cerrar */}
           <TouchableOpacity
             style={styles.closeButton}
-            onPress={() => setModalVisible(false)}
+            onPress={closeModal}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Cerrar video"
           >
-            <Ionicons name="close-circle" size={36} color="#FFF" />
+            <View style={styles.closeButtonBackground}>
+              <Ionicons name="close" size={24} color="#FFF" />
+            </View>
           </TouchableOpacity>
 
-          {/* Reproductor multiplataforma */}
           <ReelPlayer videoId={item.tiktokVideoId} />
         </View>
       </Modal>
@@ -111,8 +115,18 @@ const styles = StyleSheet.create({
 
   closeButton: {
     position: 'absolute',
-    top: 45,
+    top: 20,
     right: 20,
-    zIndex: 10,
+    zIndex: 100,
+    elevation: 100,
+  },
+
+  closeButtonBackground: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
