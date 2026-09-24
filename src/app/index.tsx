@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import Head from 'expo-router/head';
 import {
   ScrollView,
   StyleSheet,
@@ -82,7 +83,31 @@ export default function LiveScreen() {
   const hasActiveStream = Boolean(streamUrl);
 
   return (
-    <ScrollView
+    <>
+      <Head>
+        <title>Los Tiempos | Señal en vivo</title>
+        <meta
+          name="description"
+          content="Sigue la señal en vivo de Los Tiempos y mantente informado con noticias y contenido de actualidad de Bolivia."
+        />
+        <meta name="robots" content="index, follow" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="Los Tiempos | Señal en vivo" />
+        <meta
+          property="og:description"
+          content="Sigue la señal en vivo de Los Tiempos y mantente informado con noticias y contenido de actualidad de Bolivia."
+        />
+        <meta property="og:site_name" content="Los Tiempos" />
+        <meta property="og:locale" content="es_BO" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Los Tiempos | Señal en vivo" />
+        <meta
+          name="twitter:description"
+          content="Sigue la señal en vivo de Los Tiempos y mantente informado con noticias y contenido de actualidad de Bolivia."
+        />
+      </Head>
+
+      <ScrollView
       style={styles.screen}
       contentContainerStyle={styles.scrollContent}
     >
@@ -220,7 +245,8 @@ export default function LiveScreen() {
         onClose={() => setAuthVisible(false)}
         initialRegister={initialRegisterMode}
       />
-    </ScrollView>
+      </ScrollView>
+    </>
   );
 }
 
