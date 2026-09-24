@@ -47,7 +47,7 @@ export function LiveHeader({
   };
 
   return (
-    <View style={styles.wrapper}>
+    <View style={styles.wrapper} role="banner">
 
       {/* HEADER PRINCIPAL */}
       <View style={[styles.topRow, isMobile && styles.topRowMobile]}>
