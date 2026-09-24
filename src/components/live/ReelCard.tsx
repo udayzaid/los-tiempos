@@ -6,29 +6,21 @@ import {
   TouchableOpacity,
   Modal,
   StyleSheet,
-  ActivityIndicator,
-  Dimensions,
 } from 'react-native';
-import { WebView } from 'react-native-webview';
+import { ReelPlayer } from './ReelPlayer';
 import { Ionicons } from '@expo/vector-icons';
-import { ReelGetDto } from '@/services/api'; // Ajusta la ruta a tu api.ts
+import { ReelGetDto } from '@/services/api';
 
 interface ReelCardProps {
   item: ReelGetDto;
 }
 
-const { width, height } = Dimensions.get('window');
-
 export const ReelCard: React.FC<ReelCardProps> = ({ item }) => {
   const [modalVisible, setModalVisible] = useState(false);
-  const [loadingWebView, setLoadingWebView] = useState(true);
-
-  // URL del reproductor embebido de TikTok
-  const embedUrl = `https://www.tiktok.com/embed/v2/${item.tiktokVideoId}`;
 
   return (
     <>
-      {/* Tarjeta del Reel en la lista */}
+      {/* Tarjeta del Reel */}
       <TouchableOpacity
         style={styles.cardContainer}
         activeOpacity={0.85}
@@ -39,19 +31,20 @@ export const ReelCard: React.FC<ReelCardProps> = ({ item }) => {
           style={styles.thumbnail}
           resizeMode="cover"
         />
-        
-        {/* Capa oscura con sombra para resaltar el texto e icono */}
+
+        {/* Capa sobre la portada */}
         <View style={styles.overlay}>
           <View style={styles.playIconContainer}>
             <Ionicons name="play" size={24} color="#FFF" />
           </View>
+
           <Text style={styles.title} numberOfLines={2}>
             {item.titulo}
           </Text>
         </View>
       </TouchableOpacity>
 
-      {/* Modal con el Reproductor de TikTok */}
+      {/* Modal del Reel */}
       <Modal
         visible={modalVisible}
         animationType="slide"
@@ -59,7 +52,7 @@ export const ReelCard: React.FC<ReelCardProps> = ({ item }) => {
         onRequestClose={() => setModalVisible(false)}
       >
         <View style={styles.modalContainer}>
-          {/* Botón para cerrar el Modal */}
+          {/* Botón cerrar */}
           <TouchableOpacity
             style={styles.closeButton}
             onPress={() => setModalVisible(false)}
@@ -67,22 +60,8 @@ export const ReelCard: React.FC<ReelCardProps> = ({ item }) => {
             <Ionicons name="close-circle" size={36} color="#FFF" />
           </TouchableOpacity>
 
-          {/* Indicador de carga mientras renderiza el iframe */}
-          {loadingWebView && (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#FF004F" />
-            </View>
-          )}
-
-          {/* WebView reproduciendo TikTok */}
-          <WebView
-            source={{ uri: embedUrl }}
-            style={styles.webview}
-            onLoadEnd={() => setLoadingWebView(false)}
-            allowsInlineMediaPlayback
-            javaScriptEnabled
-            domStorageEnabled
-          />
+          {/* Reproductor multiplataforma */}
+          <ReelPlayer videoId={item.tiktokVideoId} />
         </View>
       </Modal>
     </>
@@ -98,48 +77,42 @@ const styles = StyleSheet.create({
     backgroundColor: '#1E1E1E',
     marginRight: 12,
   },
+
   thumbnail: {
     width: '100%',
     height: '100%',
   },
+
   overlay: {
     ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(0, 0, 0, 0.35)',
     padding: 10,
     justifyContent: 'space-between',
   },
+
   playIconContainer: {
     alignSelf: 'flex-end',
     backgroundColor: 'rgba(0,0,0,0.5)',
     padding: 6,
     borderRadius: 20,
   },
+
   title: {
     color: '#FFF',
     fontSize: 13,
     fontWeight: '600',
     lineHeight: 18,
   },
+
   modalContainer: {
     flex: 1,
     backgroundColor: '#000',
   },
+
   closeButton: {
     position: 'absolute',
     top: 45,
     right: 20,
     zIndex: 10,
-  },
-  loadingContainer: {
-    ...StyleSheet.absoluteFill,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#000',
-    zIndex: 5,
-  },
-  webview: {
-    flex: 1,
-    backgroundColor: '#000',
-    marginTop: 40,
   },
 });
