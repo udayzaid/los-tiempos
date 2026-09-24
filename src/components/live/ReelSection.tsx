@@ -58,8 +58,8 @@ export const ReelSection: React.FC = () => {
   if (reels.length === 0) return null;
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.sectionTitle}>Reels & Cortos</Text>
+    <View style={styles.container} role="region" aria-label="Reels y cortos">
+      <Text style={styles.sectionTitle} role="heading" aria-level={2}>Reels & Cortos</Text>
       
       <FlatList
         data={reels}
