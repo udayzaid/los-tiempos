@@ -93,7 +93,7 @@ export function SiteFooter() {
   const isWide = width >= 768;
 
   return (
-    <View style={styles.footer}>
+    <View style={styles.footer} role="contentinfo">
 
       {/* =================================================
           COLUMNAS PRINCIPALES
