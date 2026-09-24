@@ -123,7 +123,7 @@ export default function LiveScreen() {
       {/* =========================
           CONTENIDO PRINCIPAL
       ========================= */}
-      <View style={styles.page}>
+      <View style={styles.page} role="main">
         {/* =========================
             FILA PRINCIPAL
 
