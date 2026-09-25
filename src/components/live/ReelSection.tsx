@@ -122,6 +122,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flexShrink: 1,
+    minWidth: 0,
   },
 
   tiktokIcon: {
@@ -149,6 +150,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#555',
     fontWeight: '500',
+    flexShrink: 1,
   },
 
   viewAll: {
@@ -156,6 +158,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#111',
     marginLeft: 12,
+    flexShrink: 0,
   },
 
   listContent: {
