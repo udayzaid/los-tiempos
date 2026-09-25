@@ -8,6 +8,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { ReelPlayer } from './ReelPlayer';
+import { ReelPreview } from './ReelPreview';
 import { Ionicons } from '@expo/vector-icons';
 import { ReelGetDto } from '@/services/api';
 
@@ -17,9 +18,11 @@ interface ReelCardProps {
 
 export const ReelCard: React.FC<ReelCardProps> = ({ item }) => {
   const [modalVisible, setModalVisible] = useState(false);
+  const [previewActive, setPreviewActive] = useState(false);
 
   const closeModal = () => {
     setModalVisible(false);
+    setPreviewActive(false);
   };
 
   return (
@@ -28,11 +31,19 @@ export const ReelCard: React.FC<ReelCardProps> = ({ item }) => {
         style={styles.cardContainer}
         activeOpacity={0.85}
         onPress={() => setModalVisible(true)}
+        onMouseEnter={() => setPreviewActive(true)}
+        onMouseLeave={() => setPreviewActive(false)}
       >
         <Image
           source={{ uri: item.portadaUrl }}
           style={styles.thumbnail}
           resizeMode="cover"
+        />
+
+        <ReelPreview
+          videoId={item.tiktokVideoId}
+          active={previewActive}
+          duration={5000}
         />
 
         <View style={styles.overlay}>
@@ -113,8 +124,11 @@ const styles = StyleSheet.create({
   title: {
     color: '#FFF',
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: '700',
     lineHeight: 15,
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
 
   modalOverlay: {
