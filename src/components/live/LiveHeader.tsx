@@ -1,6 +1,7 @@
 import { LiveTheme } from '@/constants/live-theme';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
+import { useEffect, useState } from 'react';
 import { router } from 'expo-router';
 import {
   Image,
@@ -32,6 +33,25 @@ export function LiveHeader({
   } = useAuth();
 
   const isMobile = width < 700;
+  const [currentDate, setCurrentDate] = useState(new Date());
+
+  useEffect(() => {
+    const updateDate = () => setCurrentDate(new Date());
+    updateDate();
+
+    const intervalId = setInterval(updateDate, 60 * 1000);
+    return () => clearInterval(intervalId);
+  }, []);
+
+  const formattedDate = new Intl.DateTimeFormat('es-BO', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(currentDate);
+
+  const displayDate =
+    formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
 
   const isAdmin =
     role?.trim().toLowerCase() === 'admin';
@@ -195,7 +215,7 @@ export function LiveHeader({
 
         {!isMobile && (
           <Text style={styles.dateText}>
-            Martes, 30 de Noviembre de 2026
+            {displayDate}
           </Text>
         )}
 
