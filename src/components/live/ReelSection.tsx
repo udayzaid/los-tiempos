@@ -4,6 +4,8 @@ import {
   Text,
   FlatList,
   ActivityIndicator,
+  Pressable,
+  Linking,
   StyleSheet,
 } from 'react-native';
 import { api, ReelGetDto } from '@/services/api';
@@ -79,9 +81,14 @@ export const ReelSection: React.FC = () => {
           </Text>
         </View>
 
-        <Text style={styles.viewAll}>
-          Ver todos →
-        </Text>
+        <Pressable
+          onPress={() => Linking.openURL('https://www.tiktok.com/@lostiemposbol')}
+          accessibilityRole="link"
+          accessibilityLabel="Ver todos los videos de Los Tiempos en TikTok"
+          style={({ pressed }) => [styles.viewAllButton, pressed && styles.viewAllPressed]}
+        >
+          <Text style={styles.viewAll}>Ver todos →</Text>
+        </Pressable>
       </View>
 
       <FlatList
@@ -153,12 +160,19 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
 
+  viewAllButton: {
+    marginLeft: 12,
+    flexShrink: 0,
+  },
+
+  viewAllPressed: {
+    opacity: 0.55,
+  },
+
   viewAll: {
     fontSize: 13,
     fontWeight: '700',
     color: '#111',
-    marginLeft: 12,
-    flexShrink: 0,
   },
 
   listContent: {
