@@ -1,13 +1,12 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   FlatList,
   ActivityIndicator,
   StyleSheet,
-  TouchableOpacity,
 } from 'react-native';
-import { api, ReelGetDto } from '@/services/api'; // Ajusta la ruta a tu api.ts
+import { api, ReelGetDto } from '@/services/api';
 import { ReelCard } from './ReelCard';
 
 export const ReelSection: React.FC = () => {
@@ -25,8 +24,10 @@ export const ReelSection: React.FC = () => {
 
     try {
       const response = await api.getReels(page, 10);
-      
-      setReels((prev) => (page === 1 ? response.items : [...prev, ...response.items]));
+
+      setReels((prev) =>
+        page === 1 ? response.items : [...prev, ...response.items]
+      );
       setHasNextPage(response.hasNextPage);
       setPageIndex(response.pageIndex);
     } catch (error) {
@@ -58,14 +59,36 @@ export const ReelSection: React.FC = () => {
   if (reels.length === 0) return null;
 
   return (
-    <View style={styles.container} role="region" aria-label="Reels y cortos">
-      <Text style={styles.sectionTitle} role="heading" aria-level={2}>Reels & Cortos</Text>
-      
+    <View style={styles.container} role="region" aria-label="Videos cortos">
+      <View style={styles.sectionHeader}>
+        <View style={styles.headerTitleGroup}>
+          <Text style={styles.tiktokIcon}>♪</Text>
+
+          <Text
+            style={styles.sectionTitle}
+            role="heading"
+            aria-level={2}
+          >
+            VIDEOS CORTOS
+          </Text>
+
+          <View style={styles.headerDivider} />
+
+          <Text style={styles.sectionSubtitle}>
+            Historias que te mantienen informado
+          </Text>
+        </View>
+
+        <Text style={styles.viewAll}>
+          Ver todos →
+        </Text>
+      </View>
+
       <FlatList
         data={reels}
         horizontal
         showsHorizontalScrollIndicator={false}
-        keyExtractor={(item, index) => `${item.tiktokVideoId}-${index}`}
+        keyExtractor={(item, index) => item.tiktokVideoId + '-' + index}
         renderItem={({ item }) => <ReelCard item={item} />}
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.5}
@@ -86,22 +109,66 @@ const styles = StyleSheet.create({
   container: {
     marginVertical: 16,
   },
+
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    marginBottom: 12,
+  },
+
+  headerTitleGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexShrink: 1,
+  },
+
+  tiktokIcon: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#111',
+    marginRight: 7,
+  },
+
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '900',
     color: '#111',
-    marginBottom: 12,
-    paddingHorizontal: 16,
+    letterSpacing: 0.2,
   },
+
+  headerDivider: {
+    width: 1,
+    height: 18,
+    backgroundColor: '#CFCFCF',
+    marginHorizontal: 10,
+  },
+
+  sectionSubtitle: {
+    fontSize: 13,
+    color: '#555',
+    fontWeight: '500',
+  },
+
+  viewAll: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#111',
+    marginLeft: 12,
+  },
+
   listContent: {
     paddingLeft: 16,
     paddingRight: 4,
   },
+
   centerContainer: {
     height: 180,
     justifyContent: 'center',
     alignItems: 'center',
   },
+
   footerLoader: {
     justifyContent: 'center',
     alignItems: 'center',
