@@ -1,7 +1,7 @@
 import { LiveTheme } from '@/constants/live-theme';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
-import { router } from 'expo-router';
+import { router, usePathname } from 'expo-router';
 import {
   Image,
   StyleSheet,
@@ -23,6 +23,7 @@ export function LiveHeader({
   onOpenRegister,
 }: Props) {
   const { width } = useWindowDimensions();
+  const pathname = usePathname();
 
   const {
     isAuthenticated,
@@ -43,6 +44,11 @@ export function LiveHeader({
     'Usuario';
 
   const handleAdminPress = () => {
+    if (pathname.startsWith('/admin')) {
+      router.replace('/');
+      return;
+    }
+
     router.push('/admin');
   };
 
@@ -139,7 +145,7 @@ export function LiveHeader({
                   />
 
                   <Text style={styles.adminBtnText}>
-                    Administrar
+                    {pathname.startsWith('/admin') ? 'Inicio' : 'Administrar'}
                   </Text>
                 </TouchableOpacity>
               )}

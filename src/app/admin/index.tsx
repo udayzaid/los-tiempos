@@ -1,13 +1,15 @@
 import { VideoPlayer } from '@/components/live/VideoPlayer';
+import { LiveHeader } from '@/components/live/LiveHeader';
 import { LiveTheme } from '@/constants/live-theme';
 import { useAuth } from '@/context/AuthContext';
-import { api } from '@/services/api';
+import { api, type StreamHistoryItem } from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
+  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -38,59 +40,34 @@ type ActiveStream = {
   descripcion?: string;
 };
 
-type RecentStream = {
-  id: string;
-  title: string;
-  category: string;
-  viewers: number;
-  status: 'Estable' | 'Finalizado' | 'Programado';
-  timeAgo: string;
-  author: string;
-  thumbnail: string;
-};
-
 /* =========================================================
-   MOCK DATA (temporal — reemplazar por API)
+   MOCK KPIS (temporales)
 ========================================================= */
-
-const MOCK_RECENT_STREAMS: RecentStream[] = [
-  {
-    id: '1',
-    title: 'Conferencia de Prensa - Mi...',
-    category: 'Política',
-    viewers: 1248,
-    status: 'Estable',
-    timeAgo: 'Iniciado hace 25 minutos',
-    author: 'Admin',
-    thumbnail: 'https://picsum.photos/seed/news1/200/120',
-  },
-  {
-    id: '2',
-    title: 'Debate Presidencial en Vivo',
-    category: 'Política',
-    viewers: 3421,
-    status: 'Finalizado',
-    timeAgo: 'Finalizado hace 2 horas',
-    author: 'Admin',
-    thumbnail: 'https://picsum.photos/seed/news2/200/120',
-  },
-  {
-    id: '3',
-    title: 'Partido Bolívar vs The Strongest',
-    category: 'Deportes',
-    viewers: 5672,
-    status: 'Finalizado',
-    timeAgo: 'Finalizado ayer',
-    author: 'Admin',
-    thumbnail: 'https://picsum.photos/seed/news3/200/120',
-  },
-];
 
 const MOCK_KPIS = {
   streamsToday: 8,
   currentViewers: 1248,
   totalHours: 24.5,
 };
+
+function getYouTubeVideoId(watchUrl: string): string | null {
+  try {
+    const url = new URL(watchUrl);
+    const host = url.hostname.toLowerCase();
+    let videoId = '';
+
+    if (host === 'youtu.be' || host.endsWith('.youtu.be')) {
+      videoId = url.pathname.split('/').filter(Boolean)[0] || '';
+    } else if (host.includes('youtube.com')) {
+      videoId = url.searchParams.get('v') ||
+        url.pathname.match(/\/(?:embed|live|shorts)\/([^/?]+)/)?.[1] || '';
+    }
+
+    return /^[A-Za-z0-9_-]{6,20}$/.test(videoId) ? videoId : null;
+  } catch {
+    return null;
+  }
+}
 
 /* =========================================================
    COMPONENTE PRINCIPAL
@@ -130,12 +107,45 @@ export default function AdminDashboard() {
   const [credentialsVisible, setCredentialsVisible] = useState(false);
   const [loadingCredentials, setLoadingCredentials] = useState(false);
 
+  const [recentStreams, setRecentStreams] = useState<StreamHistoryItem[]>([]);
+  const [recentStreamsLoading, setRecentStreamsLoading] = useState(true);
+  const [recentStreamsError, setRecentStreamsError] = useState('');
+  const [streamsPageIndex, setStreamsPageIndex] = useState(1);
+  const [streamsPagination, setStreamsPagination] = useState({
+    totalPages: 1,
+    totalCount: 0,
+    hasPreviousPage: false,
+    hasNextPage: false,
+  });
+
   const [viewersCount] = useState(MOCK_KPIS.currentViewers);
 
   // -------- HELPERS --------
   const showFeedback = (type: Feedback['type'], message: string) => {
     setFeedback({ type, message });
   };
+
+  const loadRecentStreams = useCallback(async (pageIndex: number) => {
+    setRecentStreamsLoading(true);
+    setRecentStreamsError('');
+
+    try {
+      const result = await api.getAllStreams(pageIndex, 10);
+      setRecentStreams(result.items ?? []);
+      setStreamsPageIndex(result.pageIndex ?? pageIndex);
+      setStreamsPagination({
+        totalPages: result.totalPages ?? 1,
+        totalCount: result.totalCount ?? 0,
+        hasPreviousPage: result.hasPreviousPage ?? pageIndex > 1,
+        hasNextPage: result.hasNextPage ?? false,
+      });
+    } catch (error: any) {
+      setRecentStreams([]);
+      setRecentStreamsError(error?.message || 'No se pudieron cargar las transmisiones.');
+    } finally {
+      setRecentStreamsLoading(false);
+    }
+  }, []);
 
   const hasActiveStream = Boolean(activeStream);
 
@@ -185,6 +195,10 @@ export default function AdminDashboard() {
     loadActiveStream();
   }, [loadActiveStream]);
 
+  useEffect(() => {
+    loadRecentStreams(streamsPageIndex);
+  }, [loadRecentStreams, streamsPageIndex]);
+
   // -------- PUBLICAR STREAM --------
   const handlePublishStream = async () => {
     const title = streamTitle.trim();
@@ -212,6 +226,8 @@ export default function AdminDashboard() {
 
       // Reflejamos el nuevo live en el estado local del panel
       setActiveStream({ titulo: title, descripcion: description || title });
+      if (streamsPageIndex === 1) void loadRecentStreams(1);
+      setStreamsPageIndex(1);
 
       // Intentamos obtener la URL de reproducción para el monitor
       const playableUrl = created.watchUrl || created.embeUrl || '';
@@ -250,6 +266,7 @@ export default function AdminDashboard() {
       const response = await api.deleteStream();
       setActiveStream(null);
       setActiveStreamUrl('');
+      void loadRecentStreams(streamsPageIndex);
       showFeedback(
         'success',
         response?.message || 'Transmisión finalizada correctamente.'
@@ -294,6 +311,11 @@ export default function AdminDashboard() {
       contentContainerStyle={styles.pageContent}
       showsVerticalScrollIndicator={false}
     >
+      <LiveHeader
+        headline="Los Tiempos, señal en vivo - Artemis retorna, Trump y los convenios, Liga boliviana y las ultimas posiciones en las tablas"
+        onOpenLogin={() => {}}
+        onOpenRegister={() => {}}
+      />
       <StreamCredentialsModal
         visible={credentialsVisible}
         credentials={credentials}
@@ -509,55 +531,134 @@ export default function AdminDashboard() {
                   <Text style={styles.cardTitle}>Transmisiones Recientes</Text>
                 </View>
 
-                {MOCK_RECENT_STREAMS.map((item) => (
-                  <View key={item.id} style={styles.recentRow}>
-                    <Image source={{ uri: item.thumbnail }} style={styles.recentThumb} />
-
-                    <View style={{ flex: 1, minWidth: 0 }}>
-                      <Text style={styles.recentTitle} numberOfLines={1}>
-                        {item.title}
-                      </Text>
-                      <Text style={styles.recentCategory}>{item.category}</Text>
-                      <Text style={styles.recentTime} numberOfLines={1}>
-                        {item.timeAgo}
-                      </Text>
-                      <Text style={styles.recentAuthor} numberOfLines={1}>
-                        Transmitido por: {item.author}
-                      </Text>
-                    </View>
-
-                    <View style={styles.recentStats}>
-                      <Text style={styles.recentViewers}>
-                        {item.viewers.toLocaleString()}
-                      </Text>
-                      <Text style={styles.recentViewersLabel}>Espectadores</Text>
-                    </View>
-
-                    <View
-                      style={[
-                        styles.recentStatus,
-                        item.status === 'Estable' && styles.recentStatusOk,
-                      ]}
+                {recentStreamsLoading ? (
+                  <View style={styles.recentMessage}>
+                    <ActivityIndicator size="small" color="#C99200" />
+                    <Text style={styles.placeholderText}>Cargando transmisiones...</Text>
+                  </View>
+                ) : recentStreamsError ? (
+                  <View style={styles.recentMessage}>
+                    <Text style={styles.feedbackError}>{recentStreamsError}</Text>
+                    <TouchableOpacity
+                      style={styles.detailsButton}
+                      onPress={() => loadRecentStreams(streamsPageIndex)}
+                      activeOpacity={0.8}
                     >
-                      <View
-                        style={[
-                          styles.recentStatusDot,
-                          item.status === 'Estable' && { backgroundColor: '#2E7D32' },
-                        ]}
-                      />
-                      <Text style={styles.recentStatusText}>{item.status}</Text>
-                    </View>
-
-                    <TouchableOpacity style={styles.detailsButton} activeOpacity={0.8}>
-                      <Ionicons name="eye-outline" size={14} color="#333" />
-                      <Text style={styles.detailsButtonText}>Ver Detalles</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={styles.moreButton} activeOpacity={0.8}>
-                      <Ionicons name="ellipsis-vertical" size={14} color="#666" />
+                      <Text style={styles.detailsButtonText}>Reintentar</Text>
                     </TouchableOpacity>
                   </View>
-                ))}
+                ) : recentStreams.length === 0 ? (
+                  <Text style={styles.placeholderText}>No hay transmisiones registradas.</Text>
+                ) : (
+                  recentStreams.map((item, index) => {
+                    const videoId = getYouTubeVideoId(item.watchUrl);
+                    const thumbnailUrl = videoId
+                      ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+                      : 'https://picsum.photos/seed/live/200/120';
+                    const isActive = ['activo', 'active', 'estable', 'en vivo'].includes(
+                      String(item.estado ?? '').trim().toLowerCase()
+                    );
+                    const startDate = item.incio ? new Date(item.incio) : null;
+                    const endDate = item.fin ? new Date(item.fin) : null;
+                    const startLabel = startDate && !Number.isNaN(startDate.getTime())
+                      ? startDate.toLocaleString('es-BO')
+                      : item.incio || '—';
+                    const endLabel = endDate && !Number.isNaN(endDate.getTime())
+                      ? endDate.toLocaleString('es-BO')
+                      : item.fin || 'En curso';
+
+                    return (
+                      <View key={`${item.watchUrl}-${item.incio}-${index}`} style={styles.recentRow}>
+                        <Pressable
+                          onPress={() => {
+                            if (item.watchUrl) {
+                              void Linking.openURL(item.watchUrl).catch((error) =>
+                                console.error('No se pudo abrir el video de YouTube:', error)
+                              );
+                            }
+                          }}
+                          disabled={!item.watchUrl}
+                          accessibilityRole="link"
+                          accessibilityLabel={`Abrir en YouTube: ${item.nombre || 'transmisión'}`}
+                        >
+                          <Image source={{ uri: thumbnailUrl }} style={styles.recentThumb} />
+                        </Pressable>
+
+                        <View style={{ flex: 1, minWidth: 0 }}>
+                          <Text style={styles.recentTitle} numberOfLines={1}>
+                            {item.nombre || 'Transmisión sin título'}
+                          </Text>
+                          <Text style={styles.recentCategory} numberOfLines={1}>
+                            {item.descripcion || 'Sin descripción'}
+                          </Text>
+                          <Text style={styles.recentTime} numberOfLines={1}>
+                            Inicio: {startLabel}
+                          </Text>
+                          <Text style={styles.recentAuthor} numberOfLines={1}>
+                            Fin: {endLabel}
+                          </Text>
+                        </View>
+
+                        <View style={styles.recentStats}>
+                          <Text style={styles.recentViewers}>
+                            {(item.espectadores ?? 0).toLocaleString()}
+                          </Text>
+                          <Text style={styles.recentViewersLabel}>Espectadores</Text>
+                        </View>
+
+                        <View
+                          style={[
+                            styles.recentStatus,
+                            isActive && styles.recentStatusOk,
+                          ]}
+                        >
+                          <View
+                            style={[
+                              styles.recentStatusDot,
+                              isActive && { backgroundColor: '#2E7D32' },
+                            ]}
+                          />
+                          <Text style={styles.recentStatusText}>{item.estado || 'Desconocido'}</Text>
+                        </View>
+
+                        <TouchableOpacity style={styles.detailsButton} activeOpacity={0.8}>
+                          <Ionicons name="eye-outline" size={14} color="#333" />
+                          <Text style={styles.detailsButtonText}>Ver Detalles</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity style={styles.moreButton} activeOpacity={0.8}>
+                          <Ionicons name="ellipsis-vertical" size={14} color="#666" />
+                        </TouchableOpacity>
+                      </View>
+                    );
+                  })
+                )}
+
+                {!recentStreamsLoading && !recentStreamsError && streamsPagination.totalCount > 0 && (
+                  <View style={styles.paginationRow}>
+                    <Text style={styles.paginationInfo}>
+                      Página {streamsPageIndex} de {streamsPagination.totalPages} · {streamsPagination.totalCount} transmisiones
+                    </Text>
+                    <View style={styles.paginationActions}>
+                      <TouchableOpacity
+                        style={[styles.paginationButton, !streamsPagination.hasPreviousPage && styles.btnDisabled]}
+                        onPress={() => setStreamsPageIndex((page) => Math.max(1, page - 1))}
+                        disabled={!streamsPagination.hasPreviousPage}
+                        activeOpacity={0.8}
+                      >
+                        <Text style={styles.paginationButtonText}>Anterior</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.paginationButton, !streamsPagination.hasNextPage && styles.btnDisabled]}
+                        onPress={() => setStreamsPageIndex((page) => page + 1)}
+                        disabled={!streamsPagination.hasNextPage}
+                        activeOpacity={0.8}
+                      >
+                        <Text style={styles.paginationButtonText}>Siguiente</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
               </View>
             </>
           )}
@@ -927,6 +1028,13 @@ const styles = StyleSheet.create({
   recentCategory: { fontSize: 10, color: '#C99200', fontWeight: '600', marginTop: 1 },
   recentTime: { fontSize: 10, color: '#888', marginTop: 2 },
   recentAuthor: { fontSize: 10, color: '#888', marginTop: 1 },
+  recentMessage: {
+    minHeight: 72,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
   recentStats: { alignItems: 'flex-end', marginHorizontal: 8 },
   recentViewers: { fontSize: 12, fontWeight: '700', color: '#111' },
   recentViewersLabel: { fontSize: 9, color: '#888' },
@@ -960,6 +1068,27 @@ const styles = StyleSheet.create({
   },
   detailsButtonText: { fontSize: 10, color: '#333', fontWeight: '600' },
   moreButton: { padding: 4 },
+  paginationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    paddingTop: 14,
+    marginTop: 4,
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
+  },
+  paginationInfo: { fontSize: 10, color: '#888', flex: 1 },
+  paginationActions: { flexDirection: 'row', gap: 8 },
+  paginationButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderWidth: 1,
+    borderColor: '#E2E2E2',
+    borderRadius: 6,
+    backgroundColor: '#FFF',
+  },
+  paginationButtonText: { fontSize: 10, color: '#333', fontWeight: '600' },
 
   /* ===== COLUMNA DERECHA ===== */
   rightColumn: { width: 300, gap: 16 },
