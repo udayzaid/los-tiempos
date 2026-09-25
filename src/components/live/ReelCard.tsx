@@ -76,12 +76,12 @@ export const ReelCard: React.FC<ReelCardProps> = ({ item }) => {
 
 const styles = StyleSheet.create({
   cardContainer: {
-    width: 160,
-    height: 260,
-    borderRadius: 12,
+    width: 112,
+    height: 190,
+    borderRadius: 8,
     overflow: 'hidden',
     backgroundColor: '#1E1E1E',
-    marginRight: 12,
+    marginRight: 10,
   },
 
   thumbnail: {
@@ -92,22 +92,22 @@ const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(0, 0, 0, 0.35)',
-    padding: 10,
+    padding: 8,
     justifyContent: 'space-between',
   },
 
   playIconContainer: {
     alignSelf: 'flex-end',
     backgroundColor: 'rgba(0,0,0,0.5)',
-    padding: 6,
-    borderRadius: 20,
+    padding: 5,
+    borderRadius: 18,
   },
 
   title: {
     color: '#FFF',
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: '600',
-    lineHeight: 18,
+    lineHeight: 15,
   },
 
   modalOverlay: {
