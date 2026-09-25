@@ -20,7 +20,8 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import { StreamCredentialsModal, StreamCredentials } from '@/components/admin/StreamCredentialsModal';
+import { StreamCredentialsModal } from '@/components/admin/StreamCredentialsModal';
+import type { StreamCredentials } from '@/types/stream';
 
 /* =========================================================
    TIPOS
