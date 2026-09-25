@@ -97,10 +97,10 @@ export function PromoCard(props: PromoCardProps) {
         )}
 
         <View style={styles.textContent}>
-          <Text style={styles.title} numberOfLines={3}>
+          <Text style={styles.title} numberOfLines={4}>
             {tit}
           </Text>
-          <Text style={styles.description} numberOfLines={3}>
+          <Text style={styles.description} numberOfLines={4}>
             {desc}
           </Text>
         </View>
@@ -150,20 +150,20 @@ const styles = StyleSheet.create({
   body: {
     flex: 1,
     flexDirection: 'row',
-    gap: 12,
-    padding: 10,
+    gap: 8,
+    padding: 8,
   },
   bodyPressed: {
     opacity: 0.85,
   },
   image: {
-    width: '42%',
+    width: '38%',
     aspectRatio: 1,
     borderRadius: 4,
     backgroundColor: LiveTheme.chatBorder,
   },
   imagePlaceholder: {
-    width: '42%',
+    width: '38%',
     aspectRatio: 1,
     borderRadius: 4,
     backgroundColor: '#EFEAE0',
@@ -181,15 +181,15 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   title: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '700',
     color: LiveTheme.black,
-    marginBottom: 6,
-    lineHeight: 18,
+    marginBottom: 4,
+    lineHeight: 16,
   },
   description: {
-    fontSize: 12,
+    fontSize: 11,
     color: LiveTheme.textMuted,
-    lineHeight: 16,
+    lineHeight: 15,
   },
 });
