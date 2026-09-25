@@ -25,7 +25,6 @@ export default function LiveScreen() {
 
   const isMobile = width < 900;
   const showSideAds = width >= 1180;
-  const isWideLayout = width >= 1500;
 
   const [authVisible, setAuthVisible] = useState<boolean>(false);
   const [initialRegisterMode, setInitialRegisterMode] =
