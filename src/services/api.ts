@@ -65,6 +65,16 @@ export interface ReelGetDto {
   tiktokVideoId: string;
 }
 
+export interface StreamHistoryItem {
+  nombre: string;
+  descripcion: string;
+  watchUrl: string;
+  espectadores: number;
+  incio: string;
+  fin: string;
+  estado: string;
+}
+
 export const api = {
   // 0. GET / -> Endpoint base de salud/inicio
   getPrimer: async () => {
@@ -156,6 +166,9 @@ export const api = {
       }
 
       return {
+        nombre: String(data.nombre ?? data.Nombre ?? data.titulo ?? data.Titulo ?? ''),
+        descripcion: String(data.descripcion ?? data.Descripcion ?? ''),
+        incio: String(data.incio ?? data.Incio ?? data.inicio ?? data.Inicio ?? ''),
         broadcastId: String(data.broadcastId ?? ''),
         watchUrl: String(data.watchUrl ?? ''),
         embeUrl: String(data.embeUrl ?? data.embedUrl ?? ''),
@@ -167,6 +180,25 @@ export const api = {
       console.error('Error en getStreamCredentials:', error);
       return null;
     }
+  },
+
+  getAllStreams: async (pageIndex = 1, pageSize = 10): Promise<PagedResponse<StreamHistoryItem>> => {
+    const params = new URLSearchParams({
+      pageIndex: pageIndex.toString(),
+      pageSize: pageSize.toString(),
+    });
+
+    const res = await fetch(`${BASE_URL}/api/Stream/all?${params.toString()}`, {
+      ...fetchOptions(true),
+      method: 'GET',
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data?.message || data?.mensaje || `Error obteniendo transmisiones (${res.status})`);
+    }
+
+    return data as PagedResponse<StreamHistoryItem>;
   },
 
   // 2. GET /api/Chat/history -> Historial público del chat.
@@ -257,6 +289,9 @@ export const api = {
 
     // Normalizamos los campos por si el backend varía el casing
     return {
+      nombre: String(resData.nombre ?? resData.Nombre ?? resData.titulo ?? resData.Titulo ?? data.titulo),
+      descripcion: String(resData.descripcion ?? resData.Descripcion ?? data.descripcion),
+      incio: String(resData.incio ?? resData.Incio ?? resData.inicio ?? resData.Inicio ?? ''),
       broadcastId: String(resData.broadcastId ?? ''),
       watchUrl: String(resData.watchUrl ?? ''),
       embeUrl: String(resData.embeUrl ?? resData.embedUrl ?? ''),
