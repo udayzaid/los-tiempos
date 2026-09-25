@@ -6,19 +6,19 @@ interface ReelPlayerProps {
 }
 
 export const ReelPlayer: React.FC<ReelPlayerProps> = ({ videoId }) => {
-  const embedUrl = `https://www.tiktok.com/embed/v2/${videoId}`;
+  const playerUrl =
+    `https://www.tiktok.com/player/v1/${videoId}?controls=1&description=0&music_info=0&rel=0&fullscreen_button=1&loop=0`;
 
   return (
     <View style={styles.container}>
       <View style={styles.playerContainer}>
         <iframe
-          src={embedUrl}
+          src={playerUrl}
           title="TikTok Reel"
           style={styles.iframe}
-          allow="autoplay; encrypted-media; fullscreen"
+          allow="fullscreen"
           scrolling="no"
           frameBorder="0"
-          referrerPolicy="strict-origin-when-cross-origin"
         />
       </View>
     </View>
@@ -36,8 +36,8 @@ const styles = StyleSheet.create({
   },
 
   playerContainer: {
-    width: 340,
-    maxWidth: '85%',
+    width: 320,
+    maxWidth: '82vw',
     aspectRatio: 9 / 16,
     backgroundColor: 'transparent',
     borderRadius: 12,
@@ -49,6 +49,5 @@ const styles = StyleSheet.create({
     height: '100%',
     border: 'none',
     display: 'block',
-    backgroundColor: 'transparent',
   },
 });
