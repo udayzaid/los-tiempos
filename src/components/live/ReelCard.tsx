@@ -37,7 +37,7 @@ export const ReelCard: React.FC<ReelCardProps> = ({ item }) => {
 
         <View style={styles.overlay}>
           <View style={styles.playIconContainer}>
-            <Ionicons name="play" size={24} color="#FFF" />
+            <Ionicons name="play" size={20} color="#FFF" />
           </View>
 
           <Text style={styles.title} numberOfLines={2}>
@@ -97,10 +97,17 @@ const styles = StyleSheet.create({
   },
 
   playIconContainer: {
-    alignSelf: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    padding: 5,
-    borderRadius: 18,
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    width: 42,
+    height: 42,
+    marginLeft: -21,
+    marginTop: -21,
+    borderRadius: 21,
+    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 
   title: {
