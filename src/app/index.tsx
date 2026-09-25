@@ -24,7 +24,8 @@ export default function LiveScreen() {
   const { width } = useWindowDimensions();
 
   const isMobile = width < 900;
-  const showSideAds = width >= 1200;
+  const showSideAds = width >= 1180;
+  const isWideLayout = width >= 1500;
 
   const [authVisible, setAuthVisible] = useState<boolean>(false);
   const [initialRegisterMode, setInitialRegisterMode] =
@@ -269,7 +270,7 @@ const styles = StyleSheet.create({
   ========================================================= */
   page: {
     width: '100%',
-    maxWidth: 1366,
+    maxWidth: 1680,
     alignSelf: 'center',
     paddingHorizontal: 16,
     paddingTop: 18,
@@ -285,7 +286,7 @@ const styles = StyleSheet.create({
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'flex-start',
+    alignItems: 'stretch',
     gap: 16,
   },
 
@@ -299,7 +300,7 @@ const styles = StyleSheet.create({
   ========================================================= */
   adColumn: {
     width: 160,
-    flexShrink: 0,
+    flexShrink: 1,
     alignSelf: 'stretch',
   },
 
@@ -309,9 +310,9 @@ const styles = StyleSheet.create({
   ========================================================= */
   contentColumn: {
     flex: 1,
-    maxWidth: 920,
+    maxWidth: 1120,
     minWidth: 0,
-    alignSelf: 'center',
+    alignSelf: 'stretch',
   },
 
   contentColumnMobile: {
