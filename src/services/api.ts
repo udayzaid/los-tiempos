@@ -1,4 +1,4 @@
-import { StreamCredentials } from '@/components/admin/StreamCredentialsModal';
+import type { StreamCredentials } from '@/types/stream';
 
 const BASE_URL = 'https://lostiemposapi20260817104248-avbkfhcfcucgf9e0.centralus-01.azurewebsites.net';
 
