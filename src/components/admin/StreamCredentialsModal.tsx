@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { useState } from 'react';
+import type { StreamCredentials } from '@/types/stream';
 import {
   Modal,
   Pressable,
@@ -10,18 +11,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-
-export type StreamCredentials = {
-  nombre: string;
-  descripcion: string;
-  incio: string;
-  broadcastId: string;
-  watchUrl: string;
-  embeUrl: string;
-  rtmpServerUrl: string;
-  streamingKey: string;
-  estado: string;
-};
 
 type Props = {
   visible: boolean;
