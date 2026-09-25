@@ -12,6 +12,9 @@ import {
 } from 'react-native';
 
 export type StreamCredentials = {
+  nombre: string;
+  descripcion: string;
+  incio: string;
   broadcastId: string;
   watchUrl: string;
   embeUrl: string;
@@ -27,6 +30,9 @@ type Props = {
 };
 
 const FIELDS: { key: keyof StreamCredentials; label: string; isSecret?: boolean }[] = [
+  { key: 'nombre', label: 'Nombre' },
+  { key: 'descripcion', label: 'Descripción' },
+  { key: 'incio', label: 'Inicio' },
   { key: 'broadcastId', label: 'Broadcast ID' },
   { key: 'watchUrl', label: 'Watch URL' },
   { key: 'embeUrl', label: 'Embed URL' },
@@ -45,6 +51,13 @@ export function StreamCredentialsModal({ visible, credentials, onClose }: Props)
     await Clipboard.setStringAsync(value);
     setCopiedKey(key);
     setTimeout(() => setCopiedKey(null), 1500);
+  };
+
+  const formatValue = (key: keyof StreamCredentials, value: string) => {
+    if (key !== 'incio' || !value) return value || '—';
+
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? value : date.toLocaleString('es-BO');
   };
 
   return (
@@ -89,9 +102,11 @@ export function StreamCredentialsModal({ visible, credentials, onClose }: Props)
           {/* CAMPOS */}
           <ScrollView style={styles.fieldsContainer} showsVerticalScrollIndicator={false}>
             {FIELDS.map(({ key, label, isSecret }) => {
-              const value = credentials[key] || '—';
+              const value = credentials[key] || '';
               const isHidden = isSecret && !showSecret;
-              const displayValue = isHidden ? '•'.repeat(Math.min(value.length, 24)) : value;
+              const displayValue = isHidden
+                ? '•'.repeat(Math.min(value.length, 24))
+                : formatValue(key, value);
               const isCopied = copiedKey === key;
 
               return (
@@ -100,7 +115,7 @@ export function StreamCredentialsModal({ visible, credentials, onClose }: Props)
                     <Text style={styles.fieldLabel}>{label}</Text>
                     <Text
                       style={styles.fieldValue}
-                      numberOfLines={1}
+                      numberOfLines={key === 'descripcion' ? 3 : 1}
                       selectable
                     >
                       {displayValue}
