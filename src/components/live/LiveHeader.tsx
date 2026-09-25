@@ -1,8 +1,7 @@
 import { LiveTheme } from '@/constants/live-theme';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
-import { useEffect, useState } from 'react';
-import { router } from 'expo-router';
+import { router, usePathname } from 'expo-router';
 import {
   Image,
   StyleSheet,
@@ -24,6 +23,8 @@ export function LiveHeader({
   onOpenRegister,
 }: Props) {
   const { width } = useWindowDimensions();
+  const pathname = usePathname();
+  const pathname = usePathname();
 
   const {
     isAuthenticated,
@@ -38,20 +39,15 @@ export function LiveHeader({
   useEffect(() => {
     const updateDate = () => setCurrentDate(new Date());
     updateDate();
-
     const intervalId = setInterval(updateDate, 60 * 1000);
     return () => clearInterval(intervalId);
   }, []);
 
   const formattedDate = new Intl.DateTimeFormat('es-BO', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
   }).format(currentDate);
 
-  const displayDate =
-    formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
+  const displayDate = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
 
   const isAdmin =
     role?.trim().toLowerCase() === 'admin';
@@ -63,6 +59,11 @@ export function LiveHeader({
     'Usuario';
 
   const handleAdminPress = () => {
+    if (pathname.startsWith('/admin')) {
+      router.replace('/');
+      return;
+    }
+
     router.push('/admin');
   };
 
@@ -159,7 +160,7 @@ export function LiveHeader({
                   />
 
                   <Text style={styles.adminBtnText}>
-                    Administrar
+                    {pathname.startsWith('/admin') ? 'Inicio' : 'Administrar'}
                   </Text>
                 </TouchableOpacity>
               )}
