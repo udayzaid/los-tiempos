@@ -61,30 +61,33 @@ export function PromoCardsRow() {
 
   return (
     <View style={styles.container}>
-      {/* CONTENIDO DE LAS TARJETAS */}
-      {loading ? (
-        <View style={styles.loaderContainer}>
-          <ActivityIndicator size="large" color={LiveTheme.gold || '#FFD700'} />
-        </View>
-      ) : (
-        <View style={[styles.row, { marginHorizontal: -gap / 2 }]}>
-          {data?.items.map((item) => (
-            <View
-              key={item.titulo}
-              style={{
-                width: cardWidthPercent,
-                paddingHorizontal: gap / 2,
-                marginBottom: gap,
-              }}
-            >
-              <PromoCard noticia={item} />
+      {/* CONTENIDO + PAGINACIÓN LATERAL */}
+      <View style={styles.contentRow}>
+        <View style={styles.cardsArea}>
+          {loading ? (
+            <View style={styles.loaderContainer}>
+              <ActivityIndicator size="large" color={LiveTheme.gold || '#FFD700'} />
             </View>
-          ))}
+          ) : (
+            <View style={[styles.row, { marginHorizontal: -gap / 2 }]}>
+              {data?.items.map((item) => (
+                <View
+                  key={item.titulo}
+                  style={{
+                    width: cardWidthPercent,
+                    paddingHorizontal: gap / 2,
+                    marginBottom: gap,
+                  }}
+                >
+                  <PromoCard noticia={item} />
+                </View>
+              ))}
+            </View>
+          )}
         </View>
-      )}
 
-      {/* PAGINACIÓN */}
-      <View style={styles.pagination}>
+        {/* PAGINACIÓN LATERAL */}
+        <View style={styles.pagination}>
         <Pressable
           style={({ pressed }) => [
             styles.pageBtn,
@@ -128,6 +131,7 @@ export function PromoCardsRow() {
             ›
           </Text>
         </Pressable>
+        </View>
       </View>
     </View>
   );
@@ -147,12 +151,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  pagination: {
+  contentRow: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  cardsArea: {
+    flex: 1,
+    minWidth: 0,
+  },
+  pagination: {
+    width: 52,
+    alignItems: 'center',
     justifyContent: 'center',
-    gap: 12,
-    marginTop: 16,
+    gap: 8,
+    marginLeft: 4,
   },
   pageBtn: {
     width: 34,
