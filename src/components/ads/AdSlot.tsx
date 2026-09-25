@@ -32,7 +32,7 @@ export function AdSlot({ placement }: AdSlotProps) {
 
 const styles = StyleSheet.create({
   slot: {
-    width: 160,
+    width: '100%',
     flex: 1,
     minHeight: 300,
 
