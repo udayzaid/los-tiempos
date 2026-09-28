@@ -190,7 +190,7 @@ export function LiveChat() {
           ) : historyError ? (
             <View style={styles.statusContainer}>
               <Text style={styles.statusText}>
-                No se pudo cargar el historial.
+                Live no iniciado.
               </Text>
             </View>
           ) : (

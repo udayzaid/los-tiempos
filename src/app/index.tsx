@@ -53,6 +53,13 @@ export default function LiveScreen() {
     setInitialRegisterMode(true);
     setAuthVisible(true);
   };
+  // fecha automatica
+  const formattedDate = new Date().toLocaleDateString('es-BO', {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+});
+  //
 
   return (
     <>
@@ -177,10 +184,12 @@ export default function LiveScreen() {
             {/* =========================
                 DESCRIPCIÓN
             ========================= */}
+            {/* 1. Generar la fecha actual en formato dd/mm/yyyy */}
             <LiveDescription
-              title="Transmisión en vivo 13/04/2026"
-              body="Sigue nuestras transmisiones en directo y mantente informado. Disfruta de la señal en vivo, noticias y contenido de actualidad de Los Tiempos."
-            />
+            title={`Transmisión en vivo ${formattedDate}`}
+            body="Sigue nuestras transmisiones en directo y mantente informado. Disfruta de la señal en vivo, noticias y contenido de actualidad de Los Tiempos."
+              />
+ 
               {/* =========================
             REELS
         ========================= */}
