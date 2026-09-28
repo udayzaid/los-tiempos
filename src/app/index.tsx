@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Head from 'expo-router/head';
 import {
   ScrollView,
@@ -14,14 +14,15 @@ import { startLogin } from '@/components/auth/authService';
 import { LiveChat } from '@/components/live/LiveChat';
 import { LiveDescription } from '@/components/live/LiveDescription';
 import { LiveHeader } from '@/components/live/LiveHeader';
+import { useLiveHub } from '@/context/LiveHubContext';
 import { PromoCardsRow } from '@/components/live/PromoCardsRow';
 import { ReelSection } from '@/components/live/ReelSection';
 import { SiteFooter } from '@/components/live/SiteFooter';
 import { VideoPlayer } from '@/components/live/VideoPlayer';
-import { api } from '@/services/api';
 
 export default function LiveScreen() {
   const { width } = useWindowDimensions();
+  const { liveInfo } = useLiveHub();
 
   const isMobile = width < 900;
   const showSideAds = width >= 1180;
@@ -30,35 +31,8 @@ export default function LiveScreen() {
   const [initialRegisterMode, setInitialRegisterMode] =
     useState<boolean>(false);
 
-  const [streamUrl, setStreamUrl] = useState<string>('');
-
-  useEffect(() => {
-    // Obtener y vigilar la transmisión activa.
-    // La página puede permanecer abierta mientras el administrador inicia
-    // o termina el Live, por eso volvemos a consultar periódicamente.
-    if (typeof api?.getStream === 'function') {
-      const loadStream = async () => {
-        try {
-          const res = await api.getStream();
-
-          if (res && res.hasActiveStream && res.url) {
-            setStreamUrl(res.url);
-          } else {
-            setStreamUrl('');
-          }
-        } catch (err) {
-          console.error('Error cargando Stream:', err);
-          setStreamUrl('');
-        }
-      };
-
-      loadStream();
-
-      const intervalId = setInterval(loadStream, 10000);
-
-      return () => clearInterval(intervalId);
-    }
-  }, []);
+  const hasActiveStream = Boolean(liveInfo?.isLive);
+  const streamUrl = liveInfo?.isLive ? liveInfo.urlVideo : '';
 
   // INICIAR SESIÓN:
   // El login se realiza directamente mediante el flujo OAuth del backend.
@@ -79,8 +53,6 @@ export default function LiveScreen() {
     setInitialRegisterMode(true);
     setAuthVisible(true);
   };
-
-  const hasActiveStream = Boolean(streamUrl);
 
   return (
     <>
@@ -362,12 +334,14 @@ const styles = StyleSheet.create({
     width: 320,
     minWidth: 280,
     maxWidth: 320,
+    height: 390,
   },
 
   chatAreaMobile: {
     width: '100%',
     minWidth: 0,
-    maxWidth: undefined,
+    maxWidth: 100,
+    height: 400,
   },
 
   /* =========================================================

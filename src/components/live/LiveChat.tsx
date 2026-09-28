@@ -1,8 +1,8 @@
 import { LiveTheme } from '@/constants/live-theme';
 import { api, ChatHistoryMessage } from '@/services/api';
-import * as signalR from '@microsoft/signalr';
 import { useAuth } from '@/context/AuthContext';
 import { useEffect, useRef, useState } from 'react';
+import { useLiveHub, type SignalRChatMessage } from '@/context/LiveHubContext';
 import {
   ActivityIndicator,
   FlatList,
@@ -14,11 +14,6 @@ import {
 } from 'react-native';
 import { ChatMessage, ChatMessageData } from './ChatMessage';
 
-const CHAT_HUB_URL =
-  'https://lostiemposapi20260817104248-avbkfhcfcucgf9e0.centralus-01.azurewebsites.net/hubs/chat';
-
-type SignalRChatMessage = ChatHistoryMessage | string;
-
 type AuthenticatedProfile = {
   email?: string;
   name?: string;
@@ -26,6 +21,8 @@ type AuthenticatedProfile = {
   avatarColor?: string;
   [key: string]: any;
 };
+
+const MAX_CHAT_MESSAGES = 100;
 
 function mapChatMessage(
   message: ChatHistoryMessage,
@@ -73,29 +70,23 @@ function mapSignalRMessage(
 
 export function LiveChat() {
   const { isAuthenticated, profile } = useAuth();
+  const {
+    connection,
+    connecting,
+    connected,
+    subscribeToChatMessages,
+    subscribeToNotices,
+  } = useLiveHub();
 
   const [messages, setMessages] = useState<ChatMessageData[]>([]);
   const [draft, setDraft] = useState('');
   const [loading, setLoading] = useState(true);
   const [historyError, setHistoryError] = useState(false);
-  const [connecting, setConnecting] = useState(false);
-  const [connected, setConnected] = useState(false);
-
-  const connectionRef =
-    useRef<signalR.HubConnection | null>(null);
+  const [chatNotice, setChatNotice] = useState('');
+  const profileRef = useRef(profile);
+  profileRef.current = profile;
 
   useEffect(() => {
-    // El backend actual devuelve 404 para el historial REST.
-    // Dejamos desactivada esta consulta hasta que ese endpoint exista;
-    // el chat en tiempo real continúa funcionando mediante SignalR.
-    const LOAD_CHAT_HISTORY = false;
-
-    if (!LOAD_CHAT_HISTORY) {
-      setLoading(false);
-      setHistoryError(false);
-      return;
-    }
-
     let mounted = true;
 
     const loadHistory = async () => {
@@ -107,14 +98,17 @@ export function LiveChat() {
 
         if (!mounted) return;
 
-        setMessages(data.map(mapChatMessage));
-      } catch {
+        const historyMessages = data.map(mapChatMessage);
+        setMessages((currentMessages) => {
+          const currentIds = new Set(currentMessages.map((message) => message.id));
+          const unseenHistory = historyMessages.filter((message) => !currentIds.has(message.id));
+          return [...unseenHistory, ...currentMessages].slice(-MAX_CHAT_MESSAGES);
+        });
+      } catch (error) {
         if (!mounted) return;
 
-        // El historial REST es opcional. SignalR sigue siendo la fuente
-        // de mensajes en tiempo real, por lo que un 404 no debe romper el chat.
-        setHistoryError(false);
-        setMessages([]);
+        console.error('[Chat] No se pudo cargar el historial:', error);
+        setHistoryError(true);
       } finally {
         if (mounted) {
           setLoading(false);
@@ -130,130 +124,28 @@ export function LiveChat() {
   }, []);
 
   useEffect(() => {
-    let mounted = true;
-
-    const connectSignalR = async () => {
-      if (!isAuthenticated) {
-        const existingConnection = connectionRef.current;
-        connectionRef.current = null;
-
-        setConnecting(false);
-        setConnected(false);
-
-        if (existingConnection) {
-          try {
-            await existingConnection.stop();
-          } catch (error) {
-            console.error('[Chat] Error cerrando SignalR:', error);
-          }
-        }
-
-        return;
-      }
-
-      const existingConnection = connectionRef.current;
-
-      if (
-        existingConnection &&
-        existingConnection.state !== signalR.HubConnectionState.Disconnected
-      ) {
-        return;
-      }
-
-      setConnecting(true);
-
-      const connection = new signalR.HubConnectionBuilder()
-        .withUrl(CHAT_HUB_URL, {
-          withCredentials: true,
-        })
-        .withAutomaticReconnect()
-        .build();
-
-      connectionRef.current = connection;
-
-      connection.on(
-        'RecibeMessage',
-        (message: SignalRChatMessage) => {
-          if (!mounted) return;
-
-          setMessages((prev) => [
-            ...prev,
-            mapSignalRMessage(message, profile, prev.length),
-          ]);
-        }
+    const unsubscribeMessages = subscribeToChatMessages((message) => {
+      setMessages((prev) =>
+        [
+          ...prev,
+          mapSignalRMessage(message, profileRef.current, prev.length),
+        ].slice(-MAX_CHAT_MESSAGES)
       );
-
-      connection.onreconnecting(() => {
-        if (!mounted) return;
-
-        setConnected(false);
-        setConnecting(true);
-        console.info('[Chat] Reconectando SignalR...');
-      });
-
-      connection.onreconnected(() => {
-        if (!mounted) return;
-
-        setConnecting(false);
-        setConnected(true);
-        console.info('[Chat] SignalR reconectado.');
-      });
-
-      connection.onclose(() => {
-        if (!mounted) return;
-
-        setConnecting(false);
-        setConnected(false);
-        console.info('[Chat] Conexión SignalR cerrada.');
-      });
-
-      try {
-        await connection.start();
-
-        if (!mounted) {
-          await connection.stop();
-          return;
-        }
-
-        setConnecting(false);
-        setConnected(true);
-        console.info('[Chat] Conectado a SignalR mediante cookies.');
-      } catch (error) {
-        console.error('[Chat] No se pudo conectar SignalR:', error);
-
-        if (!mounted) return;
-
-        setConnecting(false);
-        setConnected(false);
-        connectionRef.current = null;
-
-        try {
-          await connection.stop();
-        } catch {
-          // No hacemos nada si ya estaba detenida.
-        }
-      }
-    };
-
-    connectSignalR();
+    });
+    const unsubscribeNotices = subscribeToNotices(setChatNotice);
 
     return () => {
-      mounted = false;
+      unsubscribeMessages();
+      unsubscribeNotices();
     };
-  }, [isAuthenticated, profile]);
+  }, [subscribeToChatMessages, subscribeToNotices]);
 
   async function handleSend() {
     const text = draft.trim();
 
     if (!text) return;
 
-    const connection = connectionRef.current;
-
-    if (
-      !isAuthenticated ||
-      !connection ||
-      connection.state !== signalR.HubConnectionState.Connected
-    ) {
+    if (!isAuthenticated || !connection || !connected) {
       console.warn(
         '[Chat] No hay una sesión/conexión activa para enviar mensajes.'
       );
@@ -285,6 +177,10 @@ export function LiveChat() {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <ChatMessage {...item} />}
         style={styles.list}
+        initialNumToRender={20}
+        maxToRenderPerBatch={20}
+        windowSize={7}
+        removeClippedSubviews
         ListEmptyComponent={
           loading ? (
             <View style={styles.statusContainer}>
@@ -304,6 +200,10 @@ export function LiveChat() {
           )
         }
       />
+
+      {chatNotice ? (
+        <Text style={styles.noticeText} numberOfLines={2}>{chatNotice}</Text>
+      ) : null}
 
       <View style={styles.inputRow}>
         {isAuthenticated ? (
@@ -350,10 +250,13 @@ export function LiveChat() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    height: '100%',
+    minHeight: 0,
+    overflow: 'hidden',
     borderWidth: 1,
     borderColor: '#C8C8C8',
     backgroundColor: LiveTheme.chatBg,
-    minHeight: 300,
+    
   },
   header: {
     backgroundColor: LiveTheme.offWhite,
@@ -369,6 +272,7 @@ const styles = StyleSheet.create({
   },
   list: {
     flex: 1,
+    minHeight: 0,
   },
   statusContainer: {
     alignItems: 'center',
@@ -381,6 +285,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: LiveTheme.textMuted,
     textAlign: 'center',
+  },
+  noticeText: {
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    backgroundColor: LiveTheme.surfaceSoft,
+    color: LiveTheme.textSecondary,
+    fontSize: 11,
   },
   inputRow: {
     flexDirection: 'row',

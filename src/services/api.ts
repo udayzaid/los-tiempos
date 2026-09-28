@@ -28,7 +28,7 @@ const fetchOptions = (requireAuth = false): RequestInit => ({
 });
 
 export type ChatHistoryMessage = {
-  id: string;
+  id?: string;
   userId?: string;
   userName?: string;
   username?: string;
@@ -36,6 +36,14 @@ export type ChatHistoryMessage = {
   message?: string;
   text?: string;
   createdAt?: string;
+  fecha?: string;
+};
+
+export type StreamChatHistoryMessage = {
+  message: string;
+  fecha: string;
+  userName: string;
+  avatarColor: string;
 };
 
 export interface NoticiaItem {
@@ -66,6 +74,7 @@ export interface ReelGetDto {
 }
 
 export interface StreamHistoryItem {
+  broadcastId: string;
   nombre: string;
   descripcion: string;
   watchUrl: string;
@@ -201,6 +210,29 @@ export const api = {
     return data as PagedResponse<StreamHistoryItem>;
   },
 
+  getStreamChatHistory: async (
+    broadcastId: string,
+    pageIndex = 1,
+    pageSize = 50
+  ): Promise<PagedResponse<StreamChatHistoryMessage>> => {
+    const params = new URLSearchParams({
+      PageIndex: pageIndex.toString(),
+      PageSize: pageSize.toString(),
+    });
+    const safeBroadcastId = encodeURIComponent(broadcastId);
+    const res = await fetch(
+      `${BASE_URL}/api/Chat/history/stream/${safeBroadcastId}?${params.toString()}`,
+      { ...fetchOptions(true), method: 'GET' }
+    );
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      throw new Error(data?.message || data?.mensaje || `Error obteniendo historial del chat (${res.status})`);
+    }
+
+    return data as PagedResponse<StreamChatHistoryMessage>;
+  },
+
   // 2. GET /api/Chat/history -> Historial público del chat.
   // No requiere autenticación. Las cookies de sesión se envían igualmente
   // mediante credentials: 'include'.
@@ -213,10 +245,8 @@ export const api = {
         method: 'GET',
       });
 
-      // El historial es opcional para que el chat en tiempo real
-      // siga funcionando aunque el endpoint histórico no esté publicado.
       if (res.status === 404) {
-        return [];
+        throw new Error('El endpoint de historial del chat respondió 404.');
       }
 
       if (!res.ok) {
@@ -234,10 +264,9 @@ export const api = {
       }
 
       return [];
-    } catch {
-      // El historial es complementario. Si el endpoint no está publicado
-      // o falla por red/CORS, dejamos que SignalR mantenga el chat en vivo.
-      return [];
+    } catch (error) {
+      console.error('Error cargando historial del chat:', error);
+      throw error;
     }
   },
 

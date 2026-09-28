@@ -1,6 +1,7 @@
 import { LiveTheme } from '@/constants/live-theme';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
+import { useLiveHub } from '@/context/LiveHubContext';
 import { router, usePathname } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
@@ -25,6 +26,8 @@ export function LiveHeader({
 }: Props) {
   const { width } = useWindowDimensions();
   const pathname = usePathname();
+  const { liveInfo } = useLiveHub();
+  const isLive = Boolean(liveInfo?.isLive);
 
   const {
     isAuthenticated,
@@ -206,6 +209,10 @@ export function LiveHeader({
 
       {/* BARRA DE NOTICIAS */}
       <View style={styles.headlineBar}>
+        <View
+          style={[styles.liveStateDot, isLive && styles.liveStateDotActive]}
+          accessibilityLabel={isLive ? 'Transmisión en vivo activa' : 'Sin transmisión en vivo'}
+        />
 
         <Text
           style={styles.headlineText}
@@ -474,6 +481,14 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '800',
   },
+
+  liveStateDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: LiveTheme.textMuted,
+  },
+  liveStateDotActive: { backgroundColor: LiveTheme.liveRed },
 
   dateText: {
     color: LiveTheme.black,
