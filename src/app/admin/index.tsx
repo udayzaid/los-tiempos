@@ -24,6 +24,7 @@ import {
 import Svg, { Path } from 'react-native-svg';
 import { StreamCredentialsModal } from '@/components/admin/StreamCredentialsModal';
 import { StreamChatHistoryModal } from '@/components/admin/StreamChatHistoryModal';
+import { ContentManagementPanel } from '@/components/admin/ContentManagementPanel';
 import type { StreamCredentials } from '@/types/stream';
 
 /* =========================================================
@@ -37,7 +38,7 @@ type Feedback = {
   message: string;
 };
 
-type AdminSection = 'live' | 'content' | 'users' | 'settings';
+type AdminSection = 'live' | 'content' | 'users';
 
 type ActiveStream = {
   titulo?: string;
@@ -347,14 +348,12 @@ export default function AdminDashboard() {
     if (activeSection === 'live') return 'Resumen general de la plataforma en tiempo real.';
     if (activeSection === 'content') return 'Organiza los contenidos publicados en la página principal.';
     if (activeSection === 'users') return 'Gestión de usuarios registrados.';
-    if (activeSection === 'settings') return 'Configuración general del panel.';
     return 'Resumen general de la plataforma en tiempo real.';
   };
 
   const getSectionTitle = () => {
     if (activeSection === 'content') return 'Gestión de contenido';
     if (activeSection === 'users') return 'Usuarios';
-    if (activeSection === 'settings') return 'Configuración';
     return 'Gestión de Live';
   };
 
@@ -463,26 +462,6 @@ export default function AdminDashboard() {
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.sidebarItem, isMobile && styles.sidebarItemMobile, activeSection === 'settings' && styles.sidebarItemActive]}
-            onPress={() => setActiveSection('settings')}
-            activeOpacity={0.8}
-          >
-            <Ionicons
-              name="settings-outline"
-              size={18}
-              color={activeSection === 'settings' ? LiveTheme.goldDark : LiveTheme.textMuted}
-            />
-            <Text
-              style={
-                activeSection === 'settings'
-                  ? styles.sidebarTextActive
-                  : styles.sidebarText
-              }
-            >
-              Configuración
-            </Text>
-          </TouchableOpacity>
         </View>
 
         {/* =========================================================
@@ -720,50 +699,7 @@ export default function AdminDashboard() {
           )}
 
           {activeSection === 'content' && (
-            <View style={styles.card}>
-              <View style={styles.cardHeaderRow}>
-                <View style={[styles.cardIcon, styles.contentHeaderIcon]}>
-                  <Ionicons name="layers-outline" size={17} color={LiveTheme.goldDark} />
-                </View>
-                <View style={styles.contentHeaderText}>
-                  <Text style={styles.cardTitle}>Contenido del sitio</Text>
-                  <Text style={styles.contentDescription}>
-                    Secciones que aparecen en la página principal.
-                  </Text>
-                </View>
-              </View>
-
-              <View style={[styles.contentGrid, isMobile && styles.contentGridMobile]}>
-                <View style={styles.contentTile}>
-                  <View style={styles.contentTileIcon}>
-                    <Ionicons name="newspaper-outline" size={20} color={LiveTheme.textSecondary} />
-                  </View>
-                  <Text style={styles.contentTileTitle}>Noticias</Text>
-                  <Text style={styles.contentTileDescription}>
-                    Publicaciones editoriales y noticias destacadas.
-                  </Text>
-                  <Text style={styles.contentTileState}>Catálogo conectado</Text>
-                </View>
-
-                <View style={styles.contentTile}>
-                  <View style={styles.contentTileIcon}>
-                    <Ionicons name="play-circle-outline" size={20} color={LiveTheme.textSecondary} />
-                  </View>
-                  <Text style={styles.contentTileTitle}>Reels y videos cortos</Text>
-                  <Text style={styles.contentTileDescription}>
-                    Videos breves que se muestran en la página principal.
-                  </Text>
-                  <Text style={styles.contentTileState}>Catálogo conectado</Text>
-                </View>
-              </View>
-
-              <View style={styles.contentNotice}>
-                <Ionicons name="information-circle-outline" size={17} color={LiveTheme.textSecondary} />
-                <Text style={styles.contentNoticeText}>
-                  La API disponible en este proyecto permite consultar estos contenidos; las acciones para crearlos o editarlos requieren endpoints de administración.
-                </Text>
-              </View>
-            </View>
+            <ContentManagementPanel />
           )}
 
           {/* USUARIOS (placeholder) */}
@@ -776,15 +712,6 @@ export default function AdminDashboard() {
             </View>
           )}
 
-          {/* CONFIGURACIÓN (placeholder) */}
-          {activeSection === 'settings' && (
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Configuración</Text>
-              <Text style={styles.placeholderText}>
-                Aquí irán los ajustes generales del panel administrativo.
-              </Text>
-            </View>
-          )}
         </View>
 
         {/* =========================================================
@@ -1020,43 +947,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   cardTitle: { fontSize: 15, fontWeight: '700', color: LiveTheme.text, flexShrink: 1 },
-  contentHeaderIcon: { backgroundColor: LiveTheme.surfaceSoft },
-  contentHeaderText: { flex: 1, minWidth: 0 },
-  contentDescription: { fontSize: 11, color: LiveTheme.textMuted, marginTop: 3 },
-  contentGrid: { flexDirection: 'row', gap: LiveTheme.spacing.md },
-  contentGridMobile: { flexDirection: 'column' },
-  contentTile: {
-    flex: 1,
-    minWidth: 0,
-    padding: LiveTheme.spacing.lg,
-    borderWidth: 1,
-    borderColor: LiveTheme.border,
-    borderRadius: LiveTheme.radius.md,
-    backgroundColor: LiveTheme.white,
-  },
-  contentTileIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: LiveTheme.radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: LiveTheme.surfaceSoft,
-    marginBottom: LiveTheme.spacing.md,
-  },
-  contentTileTitle: { fontSize: 14, fontWeight: '700', color: LiveTheme.text },
-  contentTileDescription: { fontSize: 11, lineHeight: 17, color: LiveTheme.textSecondary, marginTop: 5 },
-  contentTileState: { fontSize: 10, fontWeight: '600', color: LiveTheme.success, marginTop: 14 },
-  contentNotice: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: LiveTheme.spacing.sm,
-    marginTop: LiveTheme.spacing.lg,
-    padding: LiveTheme.spacing.md,
-    borderRadius: LiveTheme.radius.md,
-    backgroundColor: LiveTheme.surfaceSoft,
-  },
-  contentNoticeText: { flex: 1, fontSize: 11, lineHeight: 17, color: LiveTheme.textSecondary },
-
   /* ===== FORM ===== */
   formLabel: {
     fontSize: 11,

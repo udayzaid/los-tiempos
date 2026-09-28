@@ -47,7 +47,7 @@ export type StreamChatHistoryMessage = {
 };
 
 export interface NoticiaItem {
-  
+  id?: number;
   titulo: string;
   categoria: string;
   urlImagen: string;
@@ -67,6 +67,7 @@ export interface PagedResponse<T> {
 }
 
 export interface ReelGetDto {
+  id?: number;
   link: string;
   titulo: string;
   portadaUrl: string;
@@ -352,14 +353,14 @@ export const api = {
   },
 
   // GET /api/reels?pageIndex=1&pageSize=10
-  getReels: async (pageIndex = 1, pageSize = 10): Promise<PagedResponse<ReelGetDto>> => {
+  getReels: async (pageIndex = 1, pageSize = 10, requireAuth = false): Promise<PagedResponse<ReelGetDto>> => {
     const params = new URLSearchParams({
       pageIndex: pageIndex.toString(),
       pageSize: pageSize.toString(),
     });
 
     const res = await fetch(`${BASE_URL}/api/Reel?${params.toString()}`, {
-      ...fetchOptions(false),
+      ...fetchOptions(requireAuth),
       method: 'GET',
     });
 
@@ -369,6 +370,88 @@ export const api = {
     }
 
     return await res.json();
+  },
+
+  getAllNoticias: async (pageIndex = 1, pageSize = 10): Promise<PagedResponse<NoticiaItem>> => {
+    const params = new URLSearchParams({
+      PageIndex: pageIndex.toString(),
+      PageSize: pageSize.toString(),
+    });
+    const res = await fetch(`${BASE_URL}/api/Noticia/All?${params.toString()}`, {
+      ...fetchOptions(true),
+      method: 'GET',
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data?.message || data?.mensaje || `Error obteniendo noticias (${res.status})`);
+    }
+    return data as PagedResponse<NoticiaItem>;
+  },
+
+  getAllReels: async (pageIndex = 1, pageSize = 10): Promise<PagedResponse<ReelGetDto>> => {
+    const params = new URLSearchParams({
+      PageIndex: pageIndex.toString(),
+      PageSize: pageSize.toString(),
+    });
+    const res = await fetch(`${BASE_URL}/api/Reel/All?${params.toString()}`, {
+      ...fetchOptions(true),
+      method: 'GET',
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data?.message || data?.mensaje || `Error obteniendo reels (${res.status})`);
+    }
+    return data as PagedResponse<ReelGetDto>;
+  },
+
+  createNoticia: async (url: string) => {
+    const res = await fetch(`${BASE_URL}/api/Noticia`, {
+      ...fetchOptions(true),
+      method: 'POST',
+      body: JSON.stringify({ url }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data?.message || data?.mensaje || `Error creando noticia (${res.status})`);
+    }
+    return data;
+  },
+
+  createReel: async (url: string) => {
+    const res = await fetch(`${BASE_URL}/api/Reel`, {
+      ...fetchOptions(true),
+      method: 'POST',
+      body: JSON.stringify({ url }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data?.message || data?.mensaje || `Error creando reel (${res.status})`);
+    }
+    return data;
+  },
+
+  deleteNoticia: async (id: number) => {
+    const res = await fetch(`${BASE_URL}/api/Noticia/${id}`, {
+      ...fetchOptions(true),
+      method: 'DELETE',
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data?.message || data?.mensaje || `Error eliminando noticia (${res.status})`);
+    }
+    return data;
+  },
+
+  deleteReel: async (id: number) => {
+    const res = await fetch(`${BASE_URL}/api/Reel/${id}`, {
+      ...fetchOptions(true),
+      method: 'DELETE',
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data?.message || data?.mensaje || `Error eliminando reel (${res.status})`);
+    }
+    return data;
   },
 
   // 6. GET /Noticias -> Obtener noticias paginadas
