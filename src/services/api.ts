@@ -1,4 +1,4 @@
-import { StreamCredentials } from '@/components/admin/StreamCredentialsModal';
+import type { StreamCredentials } from '@/types/stream';
 
 const BASE_URL = 'https://lostiemposapi20260817104248-avbkfhcfcucgf9e0.centralus-01.azurewebsites.net';
 
@@ -28,7 +28,7 @@ const fetchOptions = (requireAuth = false): RequestInit => ({
 });
 
 export type ChatHistoryMessage = {
-  id: string;
+  id?: string;
   userId?: string;
   userName?: string;
   username?: string;
@@ -36,7 +36,54 @@ export type ChatHistoryMessage = {
   message?: string;
   text?: string;
   createdAt?: string;
+  fecha?: string;
 };
+
+export type StreamChatHistoryMessage = {
+  message: string;
+  fecha: string;
+  userName: string;
+  avatarColor: string;
+};
+
+export interface NoticiaItem {
+  id?: number;
+  titulo: string;
+  categoria: string;
+  urlImagen: string;
+  descripcion: string;
+  fecha: string;
+  url: string;
+}
+
+export interface PagedResponse<T> {
+  items: T[];
+  pageIndex: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+}
+
+export interface ReelGetDto {
+  id?: number;
+  link: string;
+  titulo: string;
+  portadaUrl: string;
+  tiktokVideoId: string;
+}
+
+export interface StreamHistoryItem {
+  broadcastId: string;
+  nombre: string;
+  descripcion: string;
+  watchUrl: string;
+  espectadores: number;
+  incio: string;
+  fin: string;
+  estado: string;
+}
 
 export const api = {
   // 0. GET / -> Endpoint base de salud/inicio
@@ -129,6 +176,9 @@ export const api = {
       }
 
       return {
+        nombre: String(data.nombre ?? data.Nombre ?? data.titulo ?? data.Titulo ?? ''),
+        descripcion: String(data.descripcion ?? data.Descripcion ?? ''),
+        incio: String(data.incio ?? data.Incio ?? data.inicio ?? data.Inicio ?? ''),
         broadcastId: String(data.broadcastId ?? ''),
         watchUrl: String(data.watchUrl ?? ''),
         embeUrl: String(data.embeUrl ?? data.embedUrl ?? ''),
@@ -140,6 +190,48 @@ export const api = {
       console.error('Error en getStreamCredentials:', error);
       return null;
     }
+  },
+
+  getAllStreams: async (pageIndex = 1, pageSize = 10): Promise<PagedResponse<StreamHistoryItem>> => {
+    const params = new URLSearchParams({
+      pageIndex: pageIndex.toString(),
+      pageSize: pageSize.toString(),
+    });
+
+    const res = await fetch(`${BASE_URL}/api/Stream/all?${params.toString()}`, {
+      ...fetchOptions(true),
+      method: 'GET',
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data?.message || data?.mensaje || `Error obteniendo transmisiones (${res.status})`);
+    }
+
+    return data as PagedResponse<StreamHistoryItem>;
+  },
+
+  getStreamChatHistory: async (
+    broadcastId: string,
+    pageIndex = 1,
+    pageSize = 50
+  ): Promise<PagedResponse<StreamChatHistoryMessage>> => {
+    const params = new URLSearchParams({
+      PageIndex: pageIndex.toString(),
+      PageSize: pageSize.toString(),
+    });
+    const safeBroadcastId = encodeURIComponent(broadcastId);
+    const res = await fetch(
+      `${BASE_URL}/api/Chat/history/stream/${safeBroadcastId}?${params.toString()}`,
+      { ...fetchOptions(true), method: 'GET' }
+    );
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      throw new Error(data?.message || data?.mensaje || `Error obteniendo historial del chat (${res.status})`);
+    }
+
+    return data as PagedResponse<StreamChatHistoryMessage>;
   },
 
   // 2. GET /api/Chat/history -> Historial público del chat.
@@ -154,10 +246,8 @@ export const api = {
         method: 'GET',
       });
 
-      // El historial es opcional para que el chat en tiempo real
-      // siga funcionando aunque el endpoint histórico no esté publicado.
       if (res.status === 404) {
-        return [];
+        throw new Error('El endpoint de historial del chat respondió 404.');
       }
 
       if (!res.ok) {
@@ -175,10 +265,9 @@ export const api = {
       }
 
       return [];
-    } catch {
-      // El historial es complementario. Si el endpoint no está publicado
-      // o falla por red/CORS, dejamos que SignalR mantenga el chat en vivo.
-      return [];
+    } catch (error) {
+      console.error('Error cargando historial del chat:', error);
+      throw error;
     }
   },
 
@@ -230,6 +319,9 @@ export const api = {
 
     // Normalizamos los campos por si el backend varía el casing
     return {
+      nombre: String(resData.nombre ?? resData.Nombre ?? resData.titulo ?? resData.Titulo ?? data.titulo),
+      descripcion: String(resData.descripcion ?? resData.Descripcion ?? data.descripcion),
+      incio: String(resData.incio ?? resData.Incio ?? resData.inicio ?? resData.Inicio ?? ''),
       broadcastId: String(resData.broadcastId ?? ''),
       watchUrl: String(resData.watchUrl ?? ''),
       embeUrl: String(resData.embeUrl ?? resData.embedUrl ?? ''),
@@ -258,5 +350,144 @@ export const api = {
     }
 
     return resData;
+  },
+
+  // GET /api/reels?pageIndex=1&pageSize=10
+  getReels: async (pageIndex = 1, pageSize = 10, requireAuth = false): Promise<PagedResponse<ReelGetDto>> => {
+    const params = new URLSearchParams({
+      pageIndex: pageIndex.toString(),
+      pageSize: pageSize.toString(),
+    });
+
+    const res = await fetch(`${BASE_URL}/api/Reel?${params.toString()}`, {
+      ...fetchOptions(requireAuth),
+      method: 'GET',
+    });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.message || `Error status: ${res.status}`);
+    }
+
+    return await res.json();
+  },
+
+  getAllNoticias: async (pageIndex = 1, pageSize = 10): Promise<PagedResponse<NoticiaItem>> => {
+    const params = new URLSearchParams({
+      PageIndex: pageIndex.toString(),
+      PageSize: pageSize.toString(),
+    });
+    const res = await fetch(`${BASE_URL}/api/Noticia/All?${params.toString()}`, {
+      ...fetchOptions(true),
+      method: 'GET',
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data?.message || data?.mensaje || `Error obteniendo noticias (${res.status})`);
+    }
+    return data as PagedResponse<NoticiaItem>;
+  },
+
+  getAllReels: async (pageIndex = 1, pageSize = 10): Promise<PagedResponse<ReelGetDto>> => {
+    const params = new URLSearchParams({
+      PageIndex: pageIndex.toString(),
+      PageSize: pageSize.toString(),
+    });
+    const res = await fetch(`${BASE_URL}/api/Reel/All?${params.toString()}`, {
+      ...fetchOptions(true),
+      method: 'GET',
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data?.message || data?.mensaje || `Error obteniendo reels (${res.status})`);
+    }
+    return data as PagedResponse<ReelGetDto>;
+  },
+
+  createNoticia: async (url: string) => {
+    const res = await fetch(`${BASE_URL}/api/Noticia`, {
+      ...fetchOptions(true),
+      method: 'POST',
+      body: JSON.stringify({ url }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data?.message || data?.mensaje || `Error creando noticia (${res.status})`);
+    }
+    return data;
+  },
+
+  createReel: async (url: string) => {
+    const res = await fetch(`${BASE_URL}/api/Reel`, {
+      ...fetchOptions(true),
+      method: 'POST',
+      body: JSON.stringify({ url }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data?.message || data?.mensaje || `Error creando reel (${res.status})`);
+    }
+    return data;
+  },
+
+  deleteNoticia: async (id: number) => {
+    const res = await fetch(`${BASE_URL}/api/Noticia/${id}`, {
+      ...fetchOptions(true),
+      method: 'DELETE',
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data?.message || data?.mensaje || `Error eliminando noticia (${res.status})`);
+    }
+    return data;
+  },
+
+  deleteReel: async (id: number) => {
+    const res = await fetch(`${BASE_URL}/api/Reel/${id}`, {
+      ...fetchOptions(true),
+      method: 'DELETE',
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data?.message || data?.mensaje || `Error eliminando reel (${res.status})`);
+    }
+    return data;
+  },
+
+  // 6. GET /Noticias -> Obtener noticias paginadas
+  getNoticias: async (pageIndex = 1, pageSize = 4): Promise<PagedResponse<NoticiaItem> | null> => {
+    try {
+      // 1. Probamos primero la ruta base /Noticias (patrón usado en /Stream y /SingIn)
+      let res = await fetch(
+        `${BASE_URL}/Noticias?PageIndex=${pageIndex}&PageSize=${pageSize}`,
+        {
+          ...fetchOptions(false),
+          method: 'GET',
+        }
+      );
+
+      // 2. Si responde 404, probamos el fallback /api/Noticias
+      if (res.status === 404) {
+        res = await fetch(
+          `${BASE_URL}/api/Noticia?PageIndex=${pageIndex}&PageSize=${pageSize}`,
+          {
+            ...fetchOptions(false),
+            method: 'GET',
+          }
+        );
+      }
+
+      if (!res.ok) {
+        throw new Error(`Error obteniendo noticias (${res.status})`);
+      }
+
+      const data = await res.json();
+      return data as PagedResponse<NoticiaItem>;
+    } catch (error) {
+      console.error('Error en getNoticias:', error);
+      return null;
+    }
+
+
   },
 };

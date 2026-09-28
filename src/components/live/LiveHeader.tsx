@@ -1,9 +1,12 @@
 import { LiveTheme } from '@/constants/live-theme';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
-import { router } from 'expo-router';
+import { useLiveHub } from '@/context/LiveHubContext';
+import { router, usePathname } from 'expo-router';
+import { useEffect, useState } from 'react';
 import {
   Image,
+  Modal,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -23,6 +26,9 @@ export function LiveHeader({
   onOpenRegister,
 }: Props) {
   const { width } = useWindowDimensions();
+  const pathname = usePathname();
+  const { liveInfo } = useLiveHub();
+  const isLive = Boolean(liveInfo?.isLive);
 
   const {
     isAuthenticated,
@@ -32,6 +38,21 @@ export function LiveHeader({
   } = useAuth();
 
   const isMobile = width < 700;
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [profileVisible, setProfileVisible] = useState(false);
+
+  useEffect(() => {
+    const updateDate = () => setCurrentDate(new Date());
+    updateDate();
+    const intervalId = setInterval(updateDate, 60 * 1000);
+    return () => clearInterval(intervalId);
+  }, []);
+
+  const formattedDate = new Intl.DateTimeFormat('es-BO', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+  }).format(currentDate);
+
+  const displayDate = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
 
   const isAdmin =
     role?.trim().toLowerCase() === 'admin';
@@ -41,13 +62,27 @@ export function LiveHeader({
     profile?.userName ||
     profile?.email ||
     'Usuario';
+  const profileEmail = String(profile?.email ?? profile?.Email ?? '');
+  const profileUserName = String(
+    profile?.userName ??
+    profile?.username ??
+    profile?.NombreUsuario ??
+    profile?.nombreUsuario ??
+    profile?.name ??
+    ''
+  );
 
   const handleAdminPress = () => {
+    if (pathname.startsWith('/admin')) {
+      router.replace('/');
+      return;
+    }
+
     router.push('/admin');
   };
 
   return (
-    <View style={styles.wrapper}>
+    <View style={styles.wrapper} role="banner">
 
       {/* HEADER PRINCIPAL */}
       <View style={[styles.topRow, isMobile && styles.topRowMobile]}>
@@ -139,13 +174,19 @@ export function LiveHeader({
                   />
 
                   <Text style={styles.adminBtnText}>
-                    Administrar
+                    {pathname.startsWith('/admin') ? 'Inicio' : 'Administrar'}
                   </Text>
                 </TouchableOpacity>
               )}
 
               {/* USUARIO */}
-              <View style={styles.userInfo}>
+              <TouchableOpacity
+                style={styles.userInfo}
+                onPress={() => setProfileVisible(true)}
+                activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityLabel="Ver perfil de usuario"
+              >
                 <Ionicons
                   name="person-circle-outline"
                   size={23}
@@ -156,9 +197,9 @@ export function LiveHeader({
                   style={styles.userText}
                   numberOfLines={1}
                 >
-                  {userName}
+                  {profileEmail || userName}
                 </Text>
-              </View>
+              </TouchableOpacity>
 
               {/* CERRAR SESIÓN */}
               <TouchableOpacity
@@ -183,8 +224,56 @@ export function LiveHeader({
 
       </View>
 
+      <Modal
+        visible={profileVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setProfileVisible(false)}
+      >
+        <View style={styles.profileBackdrop}>
+          <View style={styles.profileModal}>
+            <View style={styles.profileHeader}>
+              <View style={styles.profileHeaderIcon}>
+                <Ionicons name="person-outline" size={19} color={LiveTheme.goldDark} />
+              </View>
+              <View style={styles.profileHeaderCopy}>
+                <Text style={styles.profileTitle}>Mi perfil</Text>
+                <Text style={styles.profileSubtitle}>Información de tu cuenta</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.profileClose}
+                onPress={() => setProfileVisible(false)}
+                accessibilityRole="button"
+                accessibilityLabel="Cerrar perfil"
+              >
+                <Ionicons name="close" size={20} color={LiveTheme.textSecondary} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.profileFields}>
+              <View style={styles.profileField}>
+                <Text style={styles.profileLabel}>Correo electrónico</Text>
+                <Text style={styles.profileValue} selectable>
+                  {profileEmail || 'No disponible'}
+                </Text>
+              </View>
+              <View style={styles.profileField}>
+                <Text style={styles.profileLabel}>Nombre de usuario</Text>
+                <Text style={styles.profileValue} selectable>
+                  {profileUserName || 'No disponible'}
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       {/* BARRA DE NOTICIAS */}
       <View style={styles.headlineBar}>
+        <View
+          style={[styles.liveStateDot, isLive && styles.liveStateDotActive]}
+          accessibilityLabel={isLive ? 'Transmisión en vivo activa' : 'Sin transmisión en vivo'}
+        />
 
         <Text
           style={styles.headlineText}
@@ -195,7 +284,7 @@ export function LiveHeader({
 
         {!isMobile && (
           <Text style={styles.dateText}>
-            Martes, 30 de Noviembre de 2026
+            {displayDate}
           </Text>
         )}
 
@@ -453,6 +542,61 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '800',
   },
+
+  profileBackdrop: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+    backgroundColor: 'rgba(0,0,0,0.42)',
+  },
+  profileModal: {
+    width: '100%',
+    maxWidth: 380,
+    borderRadius: LiveTheme.radius.lg,
+    borderWidth: 1,
+    borderColor: LiveTheme.border,
+    backgroundColor: LiveTheme.surface,
+    overflow: 'hidden',
+  },
+  profileHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: LiveTheme.border,
+  },
+  profileHeaderIcon: {
+    width: 38,
+    height: 38,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 19,
+    backgroundColor: LiveTheme.surfaceSoft,
+    marginRight: 11,
+  },
+  profileHeaderCopy: { flex: 1 },
+  profileTitle: { color: LiveTheme.text, fontSize: 15, fontWeight: '700' },
+  profileSubtitle: { color: LiveTheme.textMuted, fontSize: 11, marginTop: 3 },
+  profileClose: { padding: 5, marginLeft: 8 },
+  profileFields: { padding: 16, gap: 12 },
+  profileField: {
+    padding: 12,
+    borderRadius: LiveTheme.radius.md,
+    borderWidth: 1,
+    borderColor: LiveTheme.border,
+    backgroundColor: LiveTheme.offWhite,
+  },
+  profileLabel: { color: LiveTheme.textMuted, fontSize: 10, fontWeight: '600', marginBottom: 5 },
+  profileValue: { color: LiveTheme.text, fontSize: 13, fontWeight: '600' },
+
+  liveStateDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: LiveTheme.textMuted,
+  },
+  liveStateDotActive: { backgroundColor: LiveTheme.liveRed },
 
   dateText: {
     color: LiveTheme.black,

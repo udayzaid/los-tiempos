@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import Head from 'expo-router/head';
 import {
   ScrollView,
   StyleSheet,
@@ -13,50 +14,25 @@ import { startLogin } from '@/components/auth/authService';
 import { LiveChat } from '@/components/live/LiveChat';
 import { LiveDescription } from '@/components/live/LiveDescription';
 import { LiveHeader } from '@/components/live/LiveHeader';
+import { useLiveHub } from '@/context/LiveHubContext';
 import { PromoCardsRow } from '@/components/live/PromoCardsRow';
+import { ReelSection } from '@/components/live/ReelSection';
 import { SiteFooter } from '@/components/live/SiteFooter';
 import { VideoPlayer } from '@/components/live/VideoPlayer';
-import { api } from '@/services/api';
 
 export default function LiveScreen() {
   const { width } = useWindowDimensions();
+  const { liveInfo } = useLiveHub();
 
-  const isMobile = width < 760;
-  const showSideAds = width >= 1340;
+  const isMobile = width < 900;
+  const showSideAds = width >= 1180;
 
   const [authVisible, setAuthVisible] = useState<boolean>(false);
   const [initialRegisterMode, setInitialRegisterMode] =
     useState<boolean>(false);
 
-  const [streamUrl, setStreamUrl] = useState<string>('');
-
-  useEffect(() => {
-    // Obtener y vigilar la transmisión activa.
-    // La página puede permanecer abierta mientras el administrador inicia
-    // o termina el Live, por eso volvemos a consultar periódicamente.
-    if (typeof api?.getStream === 'function') {
-      const loadStream = async () => {
-        try {
-          const res = await api.getStream();
-
-          if (res && res.hasActiveStream && res.url) {
-            setStreamUrl(res.url);
-          } else {
-            setStreamUrl('');
-          }
-        } catch (err) {
-          console.error('Error cargando Stream:', err);
-          setStreamUrl('');
-        }
-      };
-
-      loadStream();
-
-      const intervalId = setInterval(loadStream, 10000);
-
-      return () => clearInterval(intervalId);
-    }
-  }, []);
+  const hasActiveStream = Boolean(liveInfo?.isLive);
+  const streamUrl = liveInfo?.isLive ? liveInfo.urlVideo : '';
 
   // INICIAR SESIÓN:
   // El login se realiza directamente mediante el flujo OAuth del backend.
@@ -78,10 +54,32 @@ export default function LiveScreen() {
     setAuthVisible(true);
   };
 
-  const hasActiveStream = Boolean(streamUrl);
-
   return (
-    <ScrollView
+    <>
+      <Head>
+        <title>Los Tiempos | Señal en vivo</title>
+        <meta
+          name="description"
+          content="Sigue la señal en vivo de Los Tiempos y mantente informado con noticias y contenido de actualidad de Bolivia."
+        />
+        <meta name="robots" content="index, follow" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="Los Tiempos | Señal en vivo" />
+        <meta
+          property="og:description"
+          content="Sigue la señal en vivo de Los Tiempos y mantente informado con noticias y contenido de actualidad de Bolivia."
+        />
+        <meta property="og:site_name" content="Los Tiempos" />
+        <meta property="og:locale" content="es_BO" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Los Tiempos | Señal en vivo" />
+        <meta
+          name="twitter:description"
+          content="Sigue la señal en vivo de Los Tiempos y mantente informado con noticias y contenido de actualidad de Bolivia."
+        />
+      </Head>
+
+      <ScrollView
       style={styles.screen}
       contentContainerStyle={styles.scrollContent}
     >
@@ -97,7 +95,7 @@ export default function LiveScreen() {
       {/* =========================
           CONTENIDO PRINCIPAL
       ========================= */}
-      <View style={styles.page}>
+      <View style={styles.page} role="main">
         {/* =========================
             FILA PRINCIPAL
 
@@ -119,53 +117,78 @@ export default function LiveScreen() {
           )}
 
           {/* =========================
-              CONTENIDO CENTRAL
-              VIDEO + CHAT
+              COLUMNA CENTRAL
           ========================= */}
           <View
             style={[
-              styles.content,
-              isMobile && styles.contentMobile,
+              styles.contentColumn,
+              isMobile && styles.contentColumnMobile,
             ]}
           >
             {/* =========================
-                VIDEO
+                VIDEO + CHAT
             ========================= */}
             <View
               style={[
-                styles.videoArea,
-                isMobile && styles.videoAreaMobile,
+                styles.content,
+                isMobile && styles.contentMobile,
               ]}
             >
-              {/* Si existe un Live del backend,
-                  mostramos la etiqueta EN VIVO. */}
-              {hasActiveStream && (
-                <View style={styles.liveBadge}>
-                  <View style={styles.liveDot} />
-                  <Text style={styles.liveBadgeText}>
-                    EN VIVO
-                  </Text>
-                </View>
-              )}
+              {/* =========================
+                  VIDEO
+              ========================= */}
+              <View
+                style={[
+                  styles.videoArea,
+                  isMobile && styles.videoAreaMobile,
+                ]}
+              >
+                {/* Si existe un Live del backend,
+                    mostramos la etiqueta EN VIVO. */}
+                {hasActiveStream && (
+                  <View style={styles.liveBadge}>
+                    <View style={styles.liveDot} />
+                    <Text style={styles.liveBadgeText}>
+                      EN VIVO
+                    </Text>
+                  </View>
+                )}
 
-              {/* Si existe una transmisión activa,
-                  usa la URL del backend.
-                  Si no existe, VideoPlayer utiliza
-                  su video de respaldo. */}
-              <VideoPlayer videoUrl={streamUrl} />
+                {/* Si existe una transmisión activa,
+                    usa la URL del backend.
+                    Si no existe, VideoPlayer utiliza
+                    su video de respaldo. */}
+                <VideoPlayer videoUrl={streamUrl} />
+              </View>
+
+              {/* =========================
+                  CHAT
+              ========================= */}
+              <View
+                style={[
+                  styles.chatArea,
+                  isMobile && styles.chatAreaMobile,
+                ]}
+              >
+                <LiveChat />
+              </View>
             </View>
 
             {/* =========================
-                CHAT
+                DESCRIPCIÓN
             ========================= */}
-            <View
-              style={[
-                styles.chatArea,
-                isMobile && styles.chatAreaMobile,
-              ]}
-            >
-              <LiveChat />
-            </View>
+            <LiveDescription
+              title="Transmisión en vivo 13/04/2026"
+              body="Sigue nuestras transmisiones en directo y mantente informado. Disfruta de la señal en vivo, noticias y contenido de actualidad de Los Tiempos."
+            />
+              {/* =========================
+            REELS
+        ========================= */}
+        <ReelSection />
+            {/* =========================
+                PROMOCIONES
+            ========================= */}
+            <PromoCardsRow />
           </View>
 
           {/* =========================
@@ -178,18 +201,7 @@ export default function LiveScreen() {
           )}
         </View>
 
-        {/* =========================
-            DESCRIPCIÓN
-        ========================= */}
-        <LiveDescription
-          title="Transmisión en vivo 13/04/2026"
-          body="Sigue nuestras transmisiones en directo y mantente informado. Disfruta de la señal en vivo, noticias y contenido de actualidad de Los Tiempos."
-        />
-
-        {/* =========================
-            PROMOCIONES
-        ========================= */}
-        <PromoCardsRow />
+        
       </View>
 
       {/* =========================
@@ -205,7 +217,8 @@ export default function LiveScreen() {
         onClose={() => setAuthVisible(false)}
         initialRegister={initialRegisterMode}
       />
-    </ScrollView>
+      </ScrollView>
+    </>
   );
 }
 
@@ -228,7 +241,7 @@ const styles = StyleSheet.create({
   ========================================================= */
   page: {
     width: '100%',
-    maxWidth: 1366,
+    maxWidth: 1680,
     alignSelf: 'center',
     paddingHorizontal: 16,
     paddingTop: 18,
@@ -244,8 +257,8 @@ const styles = StyleSheet.create({
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'flex-start',
-    gap: 24,
+    alignItems: 'stretch',
+    gap: 16,
   },
 
   layoutRowMobile: {
@@ -258,7 +271,25 @@ const styles = StyleSheet.create({
   ========================================================= */
   adColumn: {
     width: 160,
-    flexShrink: 0,
+    flexShrink: 1,
+    alignSelf: 'stretch',
+  },
+
+  /* =========================================================
+     COLUMNA CENTRAL
+     VIDEO + CHAT + DESCRIPCIÓN + PROMOCIONES
+  ========================================================= */
+  contentColumn: {
+    flex: 1,
+    maxWidth: 1120,
+    minWidth: 0,
+    alignSelf: 'stretch',
+  },
+
+  contentColumnMobile: {
+    width: '100%',
+    maxWidth: undefined,
+    alignSelf: 'stretch',
   },
 
   /* =========================================================
@@ -266,8 +297,10 @@ const styles = StyleSheet.create({
      VIDEO + CHAT
   ========================================================= */
   content: {
-    width: 920,
-    maxWidth: '100%',
+    flex: 1,
+    width: '100%',
+    maxWidth: 920,
+    minWidth: 0,
     flexDirection: 'row',
     alignItems: 'stretch',
     gap: 14,
@@ -297,15 +330,18 @@ const styles = StyleSheet.create({
   ========================================================= */
   chatArea: {
     flex: 0,
+    flexBasis: 320,
     width: 320,
-    minWidth: 320,
+    minWidth: 280,
     maxWidth: 320,
+    height: 390,
   },
 
   chatAreaMobile: {
     width: '100%',
     minWidth: 0,
-    maxWidth: undefined,
+    maxWidth: 100,
+    height: 400,
   },
 
   /* =========================================================

@@ -8,8 +8,8 @@ type Props = {
 
 export function LiveDescription({ title, body }: Props) {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{title}</Text>
+    <View style={styles.container} role="region" aria-label={title}>
+      <Text style={styles.title} role="heading" aria-level={2}>{title}</Text>
       <Text style={styles.body}>{body}</Text>
     </View>
   );
