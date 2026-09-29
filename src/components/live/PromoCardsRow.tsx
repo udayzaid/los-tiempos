@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import { PromoCard } from './PromoCard';
 
-// Calcula cuántas columnas mostrar según el ancho disponible
 function getColumns(width: number) {
   if (width >= 1024) return 4;
   if (width >= 640) return 2;
@@ -21,8 +20,7 @@ function getColumns(width: number) {
 export function PromoCardsRow() {
   const { width } = useWindowDimensions();
   const columns = getColumns(width);
-  const gap = 16;
-  // % de ancho por tarjeta, restando el gap acumulado
+  const gap = width >= 1024 ? 10 : 12;
   const cardWidthPercent = `${100 / columns}%` as const;
 
   const [pageIndex, setPageIndex] = useState<number>(1);
@@ -61,7 +59,6 @@ export function PromoCardsRow() {
 
   return (
     <View style={styles.container}>
-      {/* CONTENIDO + PAGINACIÓN LATERAL */}
       <View style={styles.contentRow}>
         <View style={styles.cardsArea}>
           {loading ? (
@@ -84,53 +81,45 @@ export function PromoCardsRow() {
               ))}
             </View>
           )}
-        </View>
 
-        {/* PAGINACIÓN LATERAL */}
-        <View style={styles.pagination}>
-        <Pressable
-          style={({ pressed }) => [
-            styles.pageBtn,
-            !data?.hasPreviousPage && styles.pageBtnDisabled,
-            pressed && data?.hasPreviousPage && styles.pageBtnPressed,
-          ]}
-          onPress={handlePrev}
-          disabled={!data?.hasPreviousPage || loading}
-        >
-          <Text
-            style={[
-              styles.pageBtnText,
-              !data?.hasPreviousPage && styles.pageBtnTextDisabled,
-            ]}
-          >
-            ‹
-          </Text>
-        </Pressable>
+          {/* Flechas sobre la propia zona de tarjetas */}
+          {!loading && data?.hasPreviousPage && (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Noticias anteriores"
+              onPress={handlePrev}
+              disabled={loading}
+              style={({ pressed }) => [
+                styles.overlayArrow,
+                styles.overlayArrowLeft,
+                pressed && styles.overlayArrowPressed,
+              ]}
+            >
+              <Text style={styles.overlayArrowText}>‹</Text>
+            </Pressable>
+          )}
+
+          {!loading && data?.hasNextPage && (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Siguientes noticias"
+              onPress={handleNext}
+              disabled={loading}
+              style={({ pressed }) => [
+                styles.overlayArrow,
+                styles.overlayArrowRight,
+                pressed && styles.overlayArrowPressed,
+              ]}
+            >
+              <Text style={styles.overlayArrowText}>›</Text>
+            </Pressable>
+          )}
+        </View>
 
         <View style={styles.pagePill}>
           <Text style={styles.pagePillText}>
             {currentPage} <Text style={styles.pagePillTextMuted}>/ {totalPages}</Text>
           </Text>
-        </View>
-
-        <Pressable
-          style={({ pressed }) => [
-            styles.pageBtn,
-            !data?.hasNextPage && styles.pageBtnDisabled,
-            pressed && data?.hasNextPage && styles.pageBtnPressed,
-          ]}
-          onPress={handleNext}
-          disabled={!data?.hasNextPage || loading}
-        >
-          <Text
-            style={[
-              styles.pageBtnText,
-              !data?.hasNextPage && styles.pageBtnTextDisabled,
-            ]}
-          >
-            ›
-          </Text>
-        </Pressable>
         </View>
       </View>
     </View>
@@ -139,8 +128,8 @@ export function PromoCardsRow() {
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
   },
   row: {
     flexDirection: 'row',
@@ -158,48 +147,53 @@ const styles = StyleSheet.create({
   cardsArea: {
     flex: 1,
     minWidth: 0,
+    position: 'relative',
   },
-  pagination: {
-    width: 52,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginLeft: 4,
-  },
-  pageBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
-    borderColor: LiveTheme.gold || '#FFD700',
+  overlayArrow: {
+    position: 'absolute',
+    top: '50%',
+    marginTop: -18,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.96)',
+    borderWidth: 1,
+    borderColor: '#D9D9D9',
     justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 10,
+    shadowColor: '#000000',
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 3,
   },
-  pageBtnPressed: {
+  overlayArrowLeft: {
+    left: 2,
+  },
+  overlayArrowRight: {
+    right: 2,
+  },
+  overlayArrowPressed: {
     backgroundColor: LiveTheme.gold || '#FFD700',
   },
-  pageBtnDisabled: {
-    borderColor: '#E2E2E2',
-    backgroundColor: '#F7F7F7',
-  },
-  pageBtnText: {
-    fontSize: 18,
-    fontWeight: '700',
+  overlayArrowText: {
+    fontSize: 25,
+    lineHeight: 28,
+    fontWeight: '500',
     color: LiveTheme.black || '#1A1A1A',
-    lineHeight: 20,
-  },
-  pageBtnTextDisabled: {
-    color: '#C4C4C4',
   },
   pagePill: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
+    minWidth: 42,
+    marginLeft: 6,
+    paddingHorizontal: 9,
+    paddingVertical: 7,
     borderRadius: 14,
     backgroundColor: '#F5F1E6',
+    alignItems: 'center',
   },
   pagePillText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '800',
     color: LiveTheme.black || '#1A1A1A',
   },
