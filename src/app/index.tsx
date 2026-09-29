@@ -42,6 +42,12 @@ export default function LiveScreen() {
     year: 'numeric',
   });
 
+  // Entre escritorio y móvil el header original tiene elementos con tamaños fijos.
+  // Reducimos proporcionalmente el header en pantallas intermedias para evitar
+  // que el edificio, logo y botones se monten entre sí.
+  const headerScale = width >= 1180 ? 1 : Math.max(0.72, width / 1180);
+  const headerHeight = 149 * headerScale;
+
   return (
     <>
       <Head>
@@ -59,11 +65,23 @@ export default function LiveScreen() {
       </Head>
 
       <ScrollView style={styles.screen} contentContainerStyle={styles.scrollContent}>
-        <LiveHeader
-          headline="Los Tiempos, señal en vivo - Artemis retorna, Trump y los convenios, Liga boliviana y las ultimas posiciones en las tablas"
-          onOpenLogin={handleOpenLogin}
-          onOpenRegister={handleOpenRegister}
-        />
+        <View style={[styles.headerViewport, { height: headerHeight }]}>
+          <View
+            style={[
+              styles.headerScaled,
+              {
+                width: width / headerScale,
+                transform: [{ scale: headerScale }],
+              },
+            ]}
+          >
+            <LiveHeader
+              headline="Los Tiempos, señal en vivo - Artemis retorna, Trump y los convenios, Liga boliviana y las ultimas posiciones en las tablas"
+              onOpenLogin={handleOpenLogin}
+              onOpenRegister={handleOpenRegister}
+            />
+          </View>
+        </View>
 
         <View style={styles.page} role="main">
           <View style={[styles.layoutRow, isMobile && styles.layoutRowMobile]}>
@@ -122,6 +140,15 @@ export default function LiveScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#FFFFFF' },
   scrollContent: { flexGrow: 1 },
+  headerViewport: {
+    width: '100%',
+    overflow: 'hidden',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  headerScaled: {
+    alignSelf: 'flex-start',
+  },
   page: {
     width: '100%',
     maxWidth: 1680,
