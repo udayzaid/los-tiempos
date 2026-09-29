@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
 
   // ---------- NAVEGACIÓN ----------
   navigationBar: { width: '100%', height: 38, backgroundColor: LiveTheme.gold, borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.12)' },
-  navigationContent: { flexGrow: 1, justifyContent: 'center', alignItems: 'stretch', paddingHorizontal: 8 },
+  navigationContent: { flexGrow: 1, justifyContent: 'flex-end', alignItems: 'stretch', paddingHorizontal: 8 },
   navigationContentMobile: { flexGrow: 0 },
   navigationItem: { minHeight: 38, flexShrink: 0, paddingHorizontal: 13, justifyContent: 'center', alignItems: 'center', borderRightWidth: 1, borderRightColor: 'rgba(0,0,0,0.14)' },
   navigationText: { color: LiveTheme.black, fontSize: 10, fontWeight: '800', letterSpacing: 0.1 },
