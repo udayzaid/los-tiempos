@@ -32,10 +32,6 @@ export function UserModerationPanel() {
   const [pendingUnblock, setPendingUnblock] = useState<string | null>(null);
   const [unblockingUser, setUnblockingUser] = useState<string | null>(null);
 
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [passwordLoading, setPasswordLoading] = useState(false);
-  const [passwordFeedback, setPasswordFeedback] = useState<Feedback>(null);
 
   const refreshBlockedUsers = useCallback(async () => {
     setBlockedLoading(true);
@@ -109,26 +105,6 @@ export function UserModerationPanel() {
       setBlockedFeedback({ kind: 'error', message: getErrorMessage(error, 'No se pudo desbloquear al usuario.') });
     } finally {
       setUnblockingUser(null);
-    }
-  };
-
-  const handleChangePassword = async () => {
-    if (!currentPassword || !newPassword) {
-      setPasswordFeedback({ kind: 'error', message: 'Completa la contraseña actual y la nueva.' });
-      return;
-    }
-
-    setPasswordLoading(true);
-    setPasswordFeedback(null);
-    try {
-      const result = await api.changeProfilePassword(currentPassword, newPassword);
-      setCurrentPassword('');
-      setNewPassword('');
-      setPasswordFeedback({ kind: 'success', message: result?.message || 'La contraseña se actualizó correctamente.' });
-    } catch (error) {
-      setPasswordFeedback({ kind: 'error', message: getErrorMessage(error, 'No se pudo cambiar la contraseña.') });
-    } finally {
-      setPasswordLoading(false);
     }
   };
 
@@ -246,44 +222,6 @@ export function UserModerationPanel() {
         )}
       </View>
 
-      <View style={styles.sectionCard}>
-        <View style={styles.sectionHeading}>
-          <Ionicons name="key-outline" size={17} color={LiveTheme.textSecondary} />
-          <View style={styles.sectionHeadingCopy}>
-            <Text style={styles.sectionTitle}>Cambiar mi contraseña</Text>
-            <Text style={styles.sectionSubtitle}>Actualiza la contraseña de tu sesión administrativa.</Text>
-          </View>
-        </View>
-        <TextInput
-          value={currentPassword}
-          onChangeText={setCurrentPassword}
-          placeholder="Contraseña actual"
-          placeholderTextColor={LiveTheme.textMuted}
-          secureTextEntry
-          style={styles.passwordInput}
-          accessibilityLabel="Contraseña actual"
-        />
-        <TextInput
-          value={newPassword}
-          onChangeText={setNewPassword}
-          placeholder="Nueva contraseña"
-          placeholderTextColor={LiveTheme.textMuted}
-          secureTextEntry
-          style={styles.passwordInput}
-          accessibilityLabel="Nueva contraseña"
-        />
-        {passwordFeedback && <FeedbackMessage feedback={passwordFeedback} />}
-        <View style={styles.passwordActions}>
-          <TouchableOpacity
-            style={[styles.primaryButton, passwordLoading && styles.disabled]}
-            onPress={() => void handleChangePassword()}
-            disabled={passwordLoading}
-          >
-            {passwordLoading ? <ActivityIndicator size="small" color={LiveTheme.black} /> : <Ionicons name="save-outline" size={15} color={LiveTheme.black} />}
-            <Text style={styles.primaryButtonText}>{passwordLoading ? 'Guardando' : 'Actualizar contraseña'}</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
     </View>
   );
 }
@@ -341,8 +279,6 @@ const styles = StyleSheet.create({
   cancelButtonText: { color: LiveTheme.textSecondary, fontSize: 9, fontWeight: '600' },
   confirmButton: { minWidth: 30, minHeight: 28, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 8, borderRadius: LiveTheme.radius.sm, backgroundColor: LiveTheme.error },
   confirmButtonText: { color: LiveTheme.white, fontSize: 9, fontWeight: '700' },
-  passwordInput: { height: 40, paddingHorizontal: 11, marginBottom: 9, borderWidth: 1, borderColor: LiveTheme.borderStrong, borderRadius: LiveTheme.radius.sm, backgroundColor: LiveTheme.offWhite, color: LiveTheme.text, fontSize: 12 },
-  passwordActions: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 2 },
   feedbackBox: { flexDirection: 'row', alignItems: 'flex-start', gap: 7, marginTop: 10, padding: 9, borderRadius: LiveTheme.radius.sm },
   feedbackSuccess: { backgroundColor: '#EAF4EC' },
   feedbackError: { backgroundColor: '#FDECEC' },

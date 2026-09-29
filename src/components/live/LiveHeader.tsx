@@ -2,14 +2,17 @@ import { LiveTheme } from '@/constants/live-theme';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
 import { useLiveHub } from '@/context/LiveHubContext';
+import { api } from '@/services/api';
 import { router, usePathname } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   Image,
   Modal,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
   useWindowDimensions,
@@ -40,6 +43,11 @@ export function LiveHeader({
   const { isAuthenticated, profile, role, logout } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [profileVisible, setProfileVisible] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordFeedback, setPasswordFeedback] = useState<{ kind: 'success' | 'error'; message: string } | null>(null);
 
   const isNarrow = width < 560;
   const isMobile = width < 700;
@@ -62,6 +70,42 @@ export function LiveHeader({
   const userName = profile?.name || profile?.userName || profile?.email || 'Usuario';
   const profileEmail = String(profile?.email ?? profile?.Email ?? '');
   const profileUserName = String(profile?.userName ?? profile?.username ?? profile?.NombreUsuario ?? profile?.nombreUsuario ?? profile?.name ?? '');
+
+  const closeProfile = () => {
+    setProfileVisible(false);
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+    setPasswordFeedback(null);
+  };
+
+  const handleChangePassword = async () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setPasswordFeedback({ kind: 'error', message: 'Completa los tres campos.' });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordFeedback({ kind: 'error', message: 'La nueva contraseña y su confirmación no coinciden.' });
+      return;
+    }
+
+    setPasswordLoading(true);
+    setPasswordFeedback(null);
+    try {
+      const result = await api.changeProfilePassword(currentPassword, newPassword);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setPasswordFeedback({ kind: 'success', message: result?.message || 'La contraseña se actualizó correctamente.' });
+    } catch (error) {
+      setPasswordFeedback({
+        kind: 'error',
+        message: error instanceof Error ? error.message : 'No se pudo cambiar la contraseña.',
+      });
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
 
   const handleAdminPress = () => {
     if (pathname.startsWith('/admin')) { router.replace('/'); return; }
@@ -128,18 +172,76 @@ export function LiveHeader({
         </View>
       </View>
 
-      <Modal visible={profileVisible} transparent animationType="fade" onRequestClose={() => setProfileVisible(false)}>
+      <Modal visible={profileVisible} transparent animationType="fade" onRequestClose={closeProfile}>
         <View style={styles.profileBackdrop}>
           <View style={styles.profileModal}>
             <View style={styles.profileHeader}>
               <View style={styles.profileHeaderIcon}><Ionicons name="person-outline" size={19} color={LiveTheme.goldDark} /></View>
               <View style={styles.profileHeaderCopy}><Text style={styles.profileTitle}>Mi perfil</Text><Text style={styles.profileSubtitle}>Información de tu cuenta</Text></View>
-              <TouchableOpacity style={styles.profileClose} onPress={() => setProfileVisible(false)} accessibilityRole="button" accessibilityLabel="Cerrar perfil"><Ionicons name="close" size={20} color={LiveTheme.textSecondary} /></TouchableOpacity>
+              <TouchableOpacity style={styles.profileClose} onPress={closeProfile} accessibilityRole="button" accessibilityLabel="Cerrar perfil"><Ionicons name="close" size={20} color={LiveTheme.textSecondary} /></TouchableOpacity>
             </View>
-            <View style={styles.profileFields}>
+            <ScrollView style={styles.profileFieldsScroller} contentContainerStyle={styles.profileFields} keyboardShouldPersistTaps="handled">
               <View style={styles.profileField}><Text style={styles.profileLabel}>Correo electrónico</Text><Text style={styles.profileValue} selectable>{profileEmail || 'No disponible'}</Text></View>
               <View style={styles.profileField}><Text style={styles.profileLabel}>Nombre de usuario</Text><Text style={styles.profileValue} selectable>{profileUserName || 'No disponible'}</Text></View>
-            </View>
+              <View style={styles.passwordSection}>
+                <View style={styles.passwordHeading}>
+                  <Ionicons name="key-outline" size={16} color={LiveTheme.textSecondary} />
+                  <View style={styles.profileHeaderCopy}>
+                    <Text style={styles.passwordTitle}>Cambiar contraseña</Text>
+                    <Text style={styles.passwordHint}>Actualiza la contraseña de tu cuenta.</Text>
+                  </View>
+                </View>
+                <TextInput
+                  value={currentPassword}
+                  onChangeText={setCurrentPassword}
+                  placeholder="Contraseña actual"
+                  placeholderTextColor={LiveTheme.textMuted}
+                  secureTextEntry
+                  style={styles.passwordInput}
+                  accessibilityLabel="Contraseña actual"
+                />
+                <TextInput
+                  value={newPassword}
+                  onChangeText={setNewPassword}
+                  placeholder="Nueva contraseña"
+                  placeholderTextColor={LiveTheme.textMuted}
+                  secureTextEntry
+                  style={styles.passwordInput}
+                  accessibilityLabel="Nueva contraseña"
+                />
+                <TextInput
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  placeholder="Confirmar nueva contraseña"
+                  placeholderTextColor={LiveTheme.textMuted}
+                  secureTextEntry
+                  style={styles.passwordInput}
+                  accessibilityLabel="Confirmar nueva contraseña"
+                  onSubmitEditing={() => void handleChangePassword()}
+                />
+                {passwordFeedback && (
+                  <View style={[styles.passwordFeedback, passwordFeedback.kind === 'success' ? styles.passwordSuccess : styles.passwordError]}>
+                    <Ionicons
+                      name={passwordFeedback.kind === 'success' ? 'checkmark-circle-outline' : 'alert-circle-outline'}
+                      size={15}
+                      color={passwordFeedback.kind === 'success' ? LiveTheme.success : LiveTheme.error}
+                    />
+                    <Text style={[styles.passwordFeedbackText, passwordFeedback.kind === 'success' ? styles.passwordSuccessText : styles.passwordErrorText]}>
+                      {passwordFeedback.message}
+                    </Text>
+                  </View>
+                )}
+                <TouchableOpacity
+                  style={[styles.passwordButton, passwordLoading && styles.passwordButtonDisabled]}
+                  onPress={() => void handleChangePassword()}
+                  disabled={passwordLoading}
+                  accessibilityRole="button"
+                >
+                  {passwordLoading ? <ActivityIndicator size="small" color={LiveTheme.black} /> : <Ionicons name="save-outline" size={15} color={LiveTheme.black} />}
+                  <Text style={styles.passwordButtonText}>{passwordLoading ? 'Actualizando...' : 'Actualizar contraseña'}</Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
           </View>
         </View>
       </Modal>
@@ -268,17 +370,32 @@ const styles = StyleSheet.create({
   liveStateDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: LiveTheme.textMuted },
   liveStateDotActive: { backgroundColor: LiveTheme.liveRed },
   profileBackdrop: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20, backgroundColor: 'rgba(0,0,0,0.42)' },
-  profileModal: { width: '100%', maxWidth: 380, borderRadius: LiveTheme.radius.lg, borderWidth: 1, borderColor: LiveTheme.border, backgroundColor: LiveTheme.surface, overflow: 'hidden' },
+  profileModal: { width: '100%', maxWidth: 380, maxHeight: '90%', borderRadius: LiveTheme.radius.lg, borderWidth: 1, borderColor: LiveTheme.border, backgroundColor: LiveTheme.surface, overflow: 'hidden' },
   profileHeader: { flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: LiveTheme.border },
   profileHeaderIcon: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center', borderRadius: 19, backgroundColor: LiveTheme.surfaceSoft, marginRight: 11 },
   profileHeaderCopy: { flex: 1 },
   profileTitle: { color: LiveTheme.text, fontSize: 15, fontWeight: '700' },
   profileSubtitle: { color: LiveTheme.textMuted, fontSize: 11, marginTop: 3 },
   profileClose: { padding: 5, marginLeft: 8 },
+  profileFieldsScroller: { flexShrink: 1 },
   profileFields: { padding: 16, gap: 12 },
   profileField: { padding: 12, borderRadius: LiveTheme.radius.md, borderWidth: 1, borderColor: LiveTheme.border, backgroundColor: LiveTheme.offWhite },
   profileLabel: { color: LiveTheme.textMuted, fontSize: 10, fontWeight: '600', marginBottom: 5 },
   profileValue: { color: LiveTheme.text, fontSize: 13, fontWeight: '600' },
+  passwordSection: { padding: 12, borderWidth: 1, borderColor: LiveTheme.border, borderRadius: LiveTheme.radius.md, backgroundColor: LiveTheme.surface },
+  passwordHeading: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
+  passwordTitle: { color: LiveTheme.text, fontSize: 12, fontWeight: '700' },
+  passwordHint: { color: LiveTheme.textMuted, fontSize: 10, marginTop: 2 },
+  passwordInput: { height: 38, paddingHorizontal: 10, marginBottom: 8, borderWidth: 1, borderColor: LiveTheme.borderStrong, borderRadius: LiveTheme.radius.sm, backgroundColor: LiveTheme.offWhite, color: LiveTheme.text, fontSize: 11 },
+  passwordButton: { minHeight: 37, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 2, paddingHorizontal: 12, borderRadius: LiveTheme.radius.sm, backgroundColor: LiveTheme.gold },
+  passwordButtonDisabled: { opacity: 0.55 },
+  passwordButtonText: { color: LiveTheme.black, fontSize: 10, fontWeight: '700' },
+  passwordFeedback: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginBottom: 8, padding: 8, borderRadius: LiveTheme.radius.sm },
+  passwordSuccess: { backgroundColor: '#EAF4EC' },
+  passwordError: { backgroundColor: '#FDECEC' },
+  passwordFeedbackText: { flex: 1, fontSize: 10, lineHeight: 14 },
+  passwordSuccessText: { color: LiveTheme.success },
+  passwordErrorText: { color: LiveTheme.error },
   headerSpacing: {
   height: 8,
   width: '100%',
