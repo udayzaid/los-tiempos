@@ -58,13 +58,6 @@ export default function LiveScreen() {
     year: 'numeric',
   });
 
-  // El header original ahora incluye también la navegación inferior.
-  // Ajustamos su alto según los breakpoints internos de LiveHeader para
-  // evitar que la navegación quede recortada por el viewport escalado.
-  const headerScale = width >= 1180 ? 1 : width / 1180;
-  const headerBaseHeight = width < 560 ? 197 : width < 700 ? 184 : width < 900 ? 177 : 187;
-  const headerHeight = headerBaseHeight * headerScale;
-
   return (
     <>
       <Head>
@@ -83,26 +76,16 @@ export default function LiveScreen() {
 
       <ScrollView ref={scrollRef} style={styles.screen} contentContainerStyle={styles.scrollContent}>
         <View onLayout={(event) => setSectionY((prev) => ({ ...prev, inicio: event.nativeEvent.layout.y }))}>
-          <View style={[styles.headerViewport, { height: headerHeight }]}>
-            <View
-              style={[
-                styles.headerScaled,
-                {
-                  width: width / headerScale,
-                  transform: [{ scale: headerScale }],
-                },
-              ]}
-            >
-              <LiveHeader
-                headline="Los Tiempos, señal en vivo - Artemis retorna, Trump y los convenios, Liga boliviana y las ultimas posiciones en las tablas"
-                onOpenLogin={handleOpenLogin}
-                onOpenRegister={handleOpenRegister}
-                onGoInicio={() => scrollToSection('inicio')}
-                onGoNoticias={() => scrollToSection('noticias')}
-                onGoVideos={() => scrollToSection('videos')}
-                onGoEnlaces={() => scrollToSection('enlaces')}
-              />
-            </View>
+          <View style={styles.headerViewport}>
+            <LiveHeader
+              headline="Los Tiempos, señal en vivo - Artemis retorna, Trump y los convenios, Liga boliviana y las ultimas posiciones en las tablas"
+              onOpenLogin={handleOpenLogin}
+              onOpenRegister={handleOpenRegister}
+              onGoInicio={() => scrollToSection('inicio')}
+              onGoNoticias={() => scrollToSection('noticias')}
+              onGoVideos={() => scrollToSection('videos')}
+              onGoEnlaces={() => scrollToSection('enlaces')}
+            />
           </View>
         </View>
 
@@ -186,11 +169,9 @@ const styles = StyleSheet.create({
   scrollContent: { flexGrow: 1 },
   headerViewport: {
     width: '100%',
-    overflow: 'hidden',
-    alignItems: 'center',
+    minWidth: 0,
     backgroundColor: '#FFFFFF',
   },
-  headerScaled: { alignSelf: 'flex-start' },
   page: {
     width: '100%',
     maxWidth: 1680,

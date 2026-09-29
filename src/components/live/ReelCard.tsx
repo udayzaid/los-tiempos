@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  Image,
   TouchableOpacity,
   Modal,
   StyleSheet,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { ReelPlayer } from './ReelPlayer';
 import { ReelPreview } from './ReelPreview';
 import { Ionicons } from '@expo/vector-icons';
@@ -37,7 +37,9 @@ export const ReelCard: React.FC<ReelCardProps> = ({ item }) => {
         <Image
           source={{ uri: item.portadaUrl }}
           style={styles.thumbnail}
-          resizeMode="cover"
+          contentFit="cover"
+          loading="lazy"
+          priority="low"
         />
 
         <ReelPreview
@@ -57,8 +59,8 @@ export const ReelCard: React.FC<ReelCardProps> = ({ item }) => {
         </View>
       </TouchableOpacity>
 
-      <Modal
-        visible={modalVisible}
+      {modalVisible && <Modal
+        visible
         animationType="fade"
         transparent
         onRequestClose={closeModal}
@@ -80,7 +82,7 @@ export const ReelCard: React.FC<ReelCardProps> = ({ item }) => {
             <ReelPlayer videoId={item.tiktokVideoId} />
           </View>
         </View>
-      </Modal>
+      </Modal>}
     </>
   );
 };
