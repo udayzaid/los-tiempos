@@ -23,18 +23,9 @@ const DEFAULT_AD_IMAGE =
 // Publicidad de prueba. Posteriormente estas piezas pueden reemplazarse
 // por creatividades reales proporcionadas/autorizadas por el anunciante.
 const ADS: AdItem[] = [
-  {
-    imageUrl: DEFAULT_AD_IMAGE,
-    alt: 'Publicidad',
-  },
-  {
-    imageUrl: DEFAULT_AD_IMAGE,
-    alt: 'Publicidad',
-  },
-  {
-    imageUrl: DEFAULT_AD_IMAGE,
-    alt: 'Publicidad',
-  },
+  { imageUrl: DEFAULT_AD_IMAGE, alt: 'Publicidad' },
+  { imageUrl: DEFAULT_AD_IMAGE, alt: 'Publicidad' },
+  { imageUrl: DEFAULT_AD_IMAGE, alt: 'Publicidad' },
 ];
 
 const ROTATION_MS = 10000;
