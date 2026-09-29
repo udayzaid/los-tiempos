@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Head from 'expo-router/head';
 import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { AdSlot } from '@/components/ads/AdSlot';
@@ -16,12 +16,27 @@ import { VideoPlayer } from '@/components/live/VideoPlayer';
 export default function LiveScreen() {
   const { width } = useWindowDimensions();
   const { liveInfo } = useLiveHub();
+  const scrollRef = useRef<ScrollView>(null);
+  const [sectionY, setSectionY] = useState({
+    inicio: 0,
+    noticias: 0,
+    videos: 0,
+    enlaces: 0,
+  });
+
   const isMobile = width < 1050;
   const showSideAds = width >= 1180;
   const [authVisible, setAuthVisible] = useState<boolean>(false);
   const [initialRegisterMode, setInitialRegisterMode] = useState<boolean>(false);
   const hasActiveStream = Boolean(liveInfo?.isLive);
   const streamUrl = liveInfo?.isLive ? liveInfo.urlVideo : '';
+
+  const scrollToSection = (section: keyof typeof sectionY) => {
+    scrollRef.current?.scrollTo({
+      y: Math.max(0, sectionY[section] - 8),
+      animated: true,
+    });
+  };
 
   const handleOpenLogin = async () => {
     try {
@@ -45,8 +60,9 @@ export default function LiveScreen() {
   // Entre escritorio y móvil el header original tiene elementos con tamaños fijos.
   // Reducimos proporcionalmente el header en pantallas intermedias para evitar
   // que el edificio, logo y botones se monten entre sí.
-const headerScale = width >= 1180 ? 1 : width / 1180;
-const headerHeight = 149 * headerScale;
+  const headerScale = width >= 1180 ? 1 : width / 1180;
+  const headerHeight = 149 * headerScale;
+
   return (
     <>
       <Head>
@@ -63,22 +79,40 @@ const headerHeight = 149 * headerScale;
         <meta name="twitter:description" content="Sigue la señal en vivo de Los Tiempos y mantente informado con noticias y contenido de actualidad de Bolivia." />
       </Head>
 
-      <ScrollView style={styles.screen} contentContainerStyle={styles.scrollContent}>
-        <View style={[styles.headerViewport, { height: headerHeight }]}>
-          <View
-            style={[
-              styles.headerScaled,
-              {
-                width: width / headerScale,
-                transform: [{ scale: headerScale }],
-              },
-            ]}
-          >
-            <LiveHeader
-              headline="Los Tiempos, señal en vivo - Artemis retorna, Trump y los convenios, Liga boliviana y las ultimas posiciones en las tablas"
-              onOpenLogin={handleOpenLogin}
-              onOpenRegister={handleOpenRegister}
-            />
+      <ScrollView
+        ref={scrollRef}
+        style={styles.screen}
+        contentContainerStyle={styles.scrollContent}
+        onLayout={() => {
+          // El propio ScrollView usa coordenadas de sus hijos; los valores
+          // concretos se actualizan mediante onLayout en cada sección.
+        }}
+      >
+        <View
+          onLayout={(event) =>
+            setSectionY((prev) => ({ ...prev, inicio: event.nativeEvent.layout.y }))
+          }
+        >
+          <View style={[styles.headerViewport, { height: headerHeight }]}>
+            <View
+              style={[
+                styles.headerScaled,
+                {
+                  width: width / headerScale,
+                  transform: [{ scale: headerScale }],
+                },
+              ]}
+            >
+              <LiveHeader
+                headline="Los Tiempos, señal en vivo - Artemis retorna, Trump y los convenios, Liga boliviana y las ultimas posiciones en las tablas"
+                onOpenLogin={handleOpenLogin}
+                onOpenRegister={handleOpenRegister}
+                onGoInicio={() => scrollToSection('inicio')}
+                onGoNoticias={() => scrollToSection('noticias')}
+                onGoVideos={() => scrollToSection('videos')}
+                onGoEnlaces={() => scrollToSection('enlaces')}
+              />
+            </View>
           </View>
         </View>
 
@@ -112,8 +146,21 @@ const headerHeight = 149 * headerScale;
                 body="Sigue nuestras transmisiones en directo y mantente informado. Disfruta de la señal en vivo, noticias y contenido de actualidad de Los Tiempos."
               />
 
-              <ReelSection />
-              <PromoCardsRow />
+              <View
+                onLayout={(event) =>
+                  setSectionY((prev) => ({ ...prev, noticias: event.nativeEvent.layout.y }))
+                }
+              >
+                <PromoCardsRow />
+              </View>
+
+              <View
+                onLayout={(event) =>
+                  setSectionY((prev) => ({ ...prev, videos: event.nativeEvent.layout.y }))
+                }
+              >
+                <ReelSection />
+              </View>
             </View>
 
             {showSideAds && (
@@ -124,7 +171,13 @@ const headerHeight = 149 * headerScale;
           </View>
         </View>
 
-        <SiteFooter />
+        <View
+          onLayout={(event) =>
+            setSectionY((prev) => ({ ...prev, enlaces: event.nativeEvent.layout.y }))
+          }
+        >
+          <SiteFooter />
+        </View>
 
         <AuthModal
           visible={authVisible}
@@ -164,7 +217,6 @@ const styles = StyleSheet.create({
     gap: 35,
     boxSizing: 'border-box',
   },
-
   layoutRowMobile: { flexDirection: 'column', gap: 14 },
   adColumn: { width: 160, flexShrink: 0, alignSelf: 'stretch' },
   contentColumn: {
@@ -174,52 +226,43 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     boxSizing: 'border-box',
   },
-  
   contentColumnMobile: {
     width: '100%',
     maxWidth: undefined,
     alignSelf: 'stretch',
   },
   content: {
-  width: '100%',
-  minWidth: 0,
-  flexDirection: 'row',
-  alignItems: 'stretch',
-  gap: 14,
-},
+    width: '100%',
+    minWidth: 0,
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    gap: 14,
+  },
   contentMobile: { width: '100%', flexDirection: 'column', gap: 14 },
- videoArea: { 
-  flex: 1, 
-  minWidth: 0, 
-  position: 'relative' 
-}, 
-
-videoAreaMobile: { 
-  width: '100%' 
-}, 
-
-chatArea: {
-  width: 360,
-  minWidth: 280,
-  maxWidth: 360,
-
-  flexGrow: 0,
-  flexShrink: 1,
-
-  alignSelf: 'stretch',
-},
- chatAreaMobile: {
-  width: '100%',
-  minWidth: 0,
-  maxWidth: '100%',
-
-  alignSelf: 'stretch',
-
-  height: 400,
-  flexBasis: 'auto',
-  flexGrow: 0,
-  flexShrink: 0,
-},
+  videoArea: {
+    flex: 1,
+    minWidth: 0,
+    position: 'relative',
+  },
+  videoAreaMobile: { width: '100%' },
+  chatArea: {
+    width: 360,
+    minWidth: 280,
+    maxWidth: 360,
+    flexGrow: 0,
+    flexShrink: 1,
+    alignSelf: 'stretch',
+  },
+  chatAreaMobile: {
+    width: '100%',
+    minWidth: 0,
+    maxWidth: '100%',
+    alignSelf: 'stretch',
+    height: 400,
+    flexBasis: 'auto',
+    flexGrow: 0,
+    flexShrink: 0,
+  },
   liveBadge: {
     position: 'absolute',
     zIndex: 2,
