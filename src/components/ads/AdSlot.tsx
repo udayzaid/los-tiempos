@@ -72,7 +72,7 @@ export function AdSlot({ placement }: AdSlotProps) {
           source={{ uri: currentAd.imageUrl }}
           accessibilityLabel={currentAd.alt || 'Publicidad'}
           style={styles.image}
-          resizeMode="contain"
+          resizeMode="cover"
         />
       </View>
 
@@ -122,7 +122,6 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     flex: 1,
     minHeight: 460,
-    maxHeight: 620,
     backgroundColor: '#F7F7F7',
     borderWidth: 1,
     borderColor: '#E0E0E0',
@@ -136,7 +135,6 @@ const styles = StyleSheet.create({
     minHeight: 0,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 6,
     backgroundColor: '#F7F7F7',
   },
 
