@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Head from 'expo-router/head';
 import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { AdSlot } from '@/components/ads/AdSlot';
@@ -13,9 +13,21 @@ import { ReelSection } from '@/components/live/ReelSection';
 import { SiteFooter } from '@/components/live/SiteFooter';
 import { VideoPlayer } from '@/components/live/VideoPlayer';
 
+type SectionName = 'inicio' | 'noticias' | 'videos' | 'enlaces';
+
 export default function LiveScreen() {
   const { width } = useWindowDimensions();
   const { liveInfo } = useLiveHub();
+  const scrollRef = useRef<ScrollView | null>(null);
+  const pageYRef = useRef(0);
+  const contentColumnYRef = useRef(0);
+  const sectionYRef = useRef<Record<'inicio' | 'noticias' | 'videos', number>>({
+    inicio: 0,
+    noticias: 0,
+    videos: 0,
+  });
+  const footerYRef = useRef(0);
+
   const isMobile = width < 1050;
   const showSideAds = width >= 1180;
   const [authVisible, setAuthVisible] = useState<boolean>(false);
@@ -36,17 +48,35 @@ export default function LiveScreen() {
     setAuthVisible(true);
   };
 
+  const goToSection = (section: SectionName) => {
+    let targetY = 0;
+
+    if (section === 'enlaces') {
+      targetY = footerYRef.current;
+    } else {
+      targetY =
+        pageYRef.current +
+        contentColumnYRef.current +
+        sectionYRef.current[section];
+    }
+
+    scrollRef.current?.scrollTo({
+      y: Math.max(0, targetY - 8),
+      animated: true,
+    });
+  };
+
   const formattedDate = new Date().toLocaleDateString('es-BO', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
   });
 
-  // Entre escritorio y móvil el header original tiene elementos con tamaños fijos.
-  // Reducimos proporcionalmente el header en pantallas intermedias para evitar
-  // que el edificio, logo y botones se monten entre sí.
-const headerScale = width >= 1180 ? 1 : width / 1180;
-const headerHeight = 149 * headerScale;
+  // El encabezado ahora incluye la nueva barra de navegación superior.
+  // 115 + 34 + 38 = 187px en escritorio.
+  const headerScale = width >= 1180 ? 1 : width / 1180;
+  const headerHeight = 187 * headerScale;
+
   return (
     <>
       <Head>
@@ -63,7 +93,11 @@ const headerHeight = 149 * headerScale;
         <meta name="twitter:description" content="Sigue la señal en vivo de Los Tiempos y mantente informado con noticias y contenido de actualidad de Bolivia." />
       </Head>
 
-      <ScrollView style={styles.screen} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        ref={scrollRef}
+        style={styles.screen}
+        contentContainerStyle={styles.scrollContent}
+      >
         <View style={[styles.headerViewport, { height: headerHeight }]}>
           <View
             style={[
@@ -78,11 +112,21 @@ const headerHeight = 149 * headerScale;
               headline="Los Tiempos, señal en vivo - Artemis retorna, Trump y los convenios, Liga boliviana y las ultimas posiciones en las tablas"
               onOpenLogin={handleOpenLogin}
               onOpenRegister={handleOpenRegister}
+              onGoInicio={() => goToSection('inicio')}
+              onGoNoticias={() => goToSection('noticias')}
+              onGoVideos={() => goToSection('videos')}
+              onGoEnlaces={() => goToSection('enlaces')}
             />
           </View>
         </View>
 
-        <View style={styles.page} role="main">
+        <View
+          style={styles.page}
+          role="main"
+          onLayout={(event) => {
+            pageYRef.current = event.nativeEvent.layout.y;
+          }}
+        >
           <View style={[styles.layoutRow, isMobile && styles.layoutRowMobile]}>
             {showSideAds && (
               <View style={styles.adColumn}>
@@ -90,9 +134,19 @@ const headerHeight = 149 * headerScale;
               </View>
             )}
 
-            <View style={[styles.contentColumn, isMobile && styles.contentColumnMobile]}>
+            <View
+              style={[styles.contentColumn, isMobile && styles.contentColumnMobile]}
+              onLayout={(event) => {
+                contentColumnYRef.current = event.nativeEvent.layout.y;
+              }}
+            >
               <View style={[styles.content, isMobile && styles.contentMobile]}>
-                <View style={[styles.videoArea, isMobile && styles.videoAreaMobile]}>
+                <View
+                  style={[styles.videoArea, isMobile && styles.videoAreaMobile]}
+                  onLayout={(event) => {
+                    sectionYRef.current.inicio = event.nativeEvent.layout.y;
+                  }}
+                >
                   {hasActiveStream && (
                     <View style={styles.liveBadge}>
                       <View style={styles.liveDot} />
@@ -112,8 +166,21 @@ const headerHeight = 149 * headerScale;
                 body="Sigue nuestras transmisiones en directo y mantente informado. Disfruta de la señal en vivo, noticias y contenido de actualidad de Los Tiempos."
               />
 
-              <ReelSection />
-              <PromoCardsRow />
+              <View
+                onLayout={(event) => {
+                  sectionYRef.current.videos = event.nativeEvent.layout.y;
+                }}
+              >
+                <ReelSection />
+              </View>
+
+              <View
+                onLayout={(event) => {
+                  sectionYRef.current.noticias = event.nativeEvent.layout.y;
+                }}
+              >
+                <PromoCardsRow />
+              </View>
             </View>
 
             {showSideAds && (
@@ -124,7 +191,13 @@ const headerHeight = 149 * headerScale;
           </View>
         </View>
 
-        <SiteFooter />
+        <View
+          onLayout={(event) => {
+            footerYRef.current = event.nativeEvent.layout.y;
+          }}
+        >
+          <SiteFooter />
+        </View>
 
         <AuthModal
           visible={authVisible}
@@ -164,7 +237,6 @@ const styles = StyleSheet.create({
     gap: 35,
     boxSizing: 'border-box',
   },
-
   layoutRowMobile: { flexDirection: 'column', gap: 14 },
   adColumn: { width: 160, flexShrink: 0, alignSelf: 'stretch' },
   contentColumn: {
@@ -174,14 +246,12 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     boxSizing: 'border-box',
   },
-  
   contentColumnMobile: {
     width: '100%',
     maxWidth: undefined,
     alignSelf: 'stretch',
   },
   content: {
-    flex: 1,
     width: '100%',
     minWidth: 0,
     flexDirection: 'row',
@@ -192,18 +262,21 @@ const styles = StyleSheet.create({
   videoArea: { flex: 1, minWidth: 0, position: 'relative' },
   videoAreaMobile: { width: '100%' },
   chatArea: {
-    flex: 0,
-    flexBasis: 360,
     width: 360,
-    minWidth: 340,
+    minWidth: 280,
     maxWidth: 360,
-    height: 430,
+    flexGrow: 0,
+    flexShrink: 1,
+    alignSelf: 'stretch',
   },
   chatAreaMobile: {
     width: '100%',
     minWidth: 0,
     maxWidth: '100%',
     height: 400,
+    flexBasis: 'auto',
+    flexGrow: 0,
+    flexShrink: 0,
   },
   liveBadge: {
     position: 'absolute',
