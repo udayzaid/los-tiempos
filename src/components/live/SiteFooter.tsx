@@ -59,27 +59,27 @@ const SOCIAL_LINKS: {
 }[] = [
   {
     name: 'facebook-f',
-    url: 'https://facebook.com',
+    url: 'https://www.facebook.com/lostiemposbol1/?locale=es_LA',
   },
   {
     name: 'twitter',
-    url: 'https://twitter.com',
+    url: 'https://x.com/LosTiemposBol',
   },
   {
     name: 'instagram',
-    url: 'https://instagram.com',
+    url: 'https://www.instagram.com/lostiemposbol/?hl=es',
   },
   {
     name: 'youtube',
-    url: 'https://youtube.com',
+    url: 'https://www.youtube.com/@lostiemposbol',
   },
   {
     name: 'tiktok',
-    url: 'https://tiktok.com',
+    url: 'https://www.tiktok.com/@lostiemposbol?lang=es',
   },
   {
     name: 'linkedin-in',
-    url: 'https://linkedin.com',
+    url: 'https://bo.linkedin.com/company/lostiemposbol',
   },
 ];
 
@@ -141,7 +141,7 @@ export function SiteFooter() {
 
             {SOCIAL_LINKS.map((social) => (
               <Pressable
-                key={social.name}
+                key={String(social.name)}
                 onPress={() => Linking.openURL(social.url)}
                 style={styles.socialIcon}
               >

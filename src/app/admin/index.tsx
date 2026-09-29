@@ -25,6 +25,7 @@ import Svg, { Path } from 'react-native-svg';
 import { StreamCredentialsModal } from '@/components/admin/StreamCredentialsModal';
 import { StreamChatHistoryModal } from '@/components/admin/StreamChatHistoryModal';
 import { ContentManagementPanel } from '@/components/admin/ContentManagementPanel';
+import { UserModerationPanel } from '@/components/admin/UserModerationPanel';
 import type { StreamCredentials } from '@/types/stream';
 
 /* =========================================================
@@ -704,12 +705,7 @@ export default function AdminDashboard() {
 
           {/* USUARIOS (placeholder) */}
           {activeSection === 'users' && (
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Usuarios</Text>
-              <Text style={styles.placeholderText}>
-                Aquí irá la gestión de usuarios registrados.
-              </Text>
-            </View>
+            <UserModerationPanel />
           )}
 
         </View>

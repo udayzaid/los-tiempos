@@ -1,13 +1,6 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Head from 'expo-router/head';
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-  useWindowDimensions,
-} from 'react-native';
-
+import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { AdSlot } from '@/components/ads/AdSlot';
 import { AuthModal } from '@/components/auth/AuthModal';
 import { startLogin } from '@/components/auth/authService';
@@ -23,222 +16,181 @@ import { VideoPlayer } from '@/components/live/VideoPlayer';
 export default function LiveScreen() {
   const { width } = useWindowDimensions();
   const { liveInfo } = useLiveHub();
+  const scrollRef = useRef<ScrollView>(null);
+  const [pageY, setPageY] = useState(0);
+  const [sectionY, setSectionY] = useState({
+    inicio: 0,
+    noticias: 0,
+    videos: 0,
+    enlaces: 0,
+  });
 
-  const isMobile = width < 900;
+  const isMobile = width < 1050;
   const showSideAds = width >= 1180;
-
   const [authVisible, setAuthVisible] = useState<boolean>(false);
-  const [initialRegisterMode, setInitialRegisterMode] =
-    useState<boolean>(false);
-
+  const [initialRegisterMode, setInitialRegisterMode] = useState<boolean>(false);
   const hasActiveStream = Boolean(liveInfo?.isLive);
   const streamUrl = liveInfo?.isLive ? liveInfo.urlVideo : '';
 
-  // INICIAR SESIÓN:
-  // El login se realiza directamente mediante el flujo OAuth del backend.
+  const scrollToSection = (section: keyof typeof sectionY) => {
+    scrollRef.current?.scrollTo({
+      y: Math.max(0, sectionY[section] - 8),
+      animated: true,
+    });
+  };
+
   const handleOpenLogin = async () => {
     try {
       await startLogin();
     } catch (err: any) {
-      console.error(
-        'Error iniciando sesión:',
-        err?.message || err
-      );
+      console.error('Error iniciando sesión:', err?.message || err);
     }
   };
 
-  // REGISTRO:
-  // Mantiene el formulario de registro del frontend.
   const handleOpenRegister = () => {
     setInitialRegisterMode(true);
     setAuthVisible(true);
   };
 
+  const formattedDate = new Date().toLocaleDateString('es-BO', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+
+  // El header original ahora incluye también la navegación inferior.
+  // Ajustamos su alto según los breakpoints internos de LiveHeader para
+  // evitar que la navegación quede recortada por el viewport escalado.
+  const headerScale = width >= 1180 ? 1 : width / 1180;
+  const headerBaseHeight = width < 560 ? 197 : width < 700 ? 184 : width < 900 ? 177 : 187;
+  const headerHeight = headerBaseHeight * headerScale;
+
   return (
     <>
       <Head>
         <title>Los Tiempos | Señal en vivo</title>
-        <meta
-          name="description"
-          content="Sigue la señal en vivo de Los Tiempos y mantente informado con noticias y contenido de actualidad de Bolivia."
-        />
+        <meta name="description" content="Sigue la señal en vivo de Los Tiempos y mantente informado con noticias y contenido de actualidad de Bolivia." />
         <meta name="robots" content="index, follow" />
         <meta property="og:type" content="website" />
         <meta property="og:title" content="Los Tiempos | Señal en vivo" />
-        <meta
-          property="og:description"
-          content="Sigue la señal en vivo de Los Tiempos y mantente informado con noticias y contenido de actualidad de Bolivia."
-        />
+        <meta property="og:description" content="Sigue la señal en vivo de Los Tiempos y mantente informado con noticias y contenido de actualidad de Bolivia." />
         <meta property="og:site_name" content="Los Tiempos" />
         <meta property="og:locale" content="es_BO" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Los Tiempos | Señal en vivo" />
-        <meta
-          name="twitter:description"
-          content="Sigue la señal en vivo de Los Tiempos y mantente informado con noticias y contenido de actualidad de Bolivia."
-        />
+        <meta name="twitter:description" content="Sigue nuestras transmisiones en directo y mantente informado." />
       </Head>
 
-      <ScrollView
-      style={styles.screen}
-      contentContainerStyle={styles.scrollContent}
-    >
-      {/* =========================
-          HEADER
-      ========================= */}
-      <LiveHeader
-        headline="Los Tiempos, señal en vivo - Artemis retorna, Trump y los convenios, Liga boliviana y las ultimas posiciones en las tablas"
-        onOpenLogin={handleOpenLogin}
-        onOpenRegister={handleOpenRegister}
-      />
-
-      {/* =========================
-          CONTENIDO PRINCIPAL
-      ========================= */}
-      <View style={styles.page} role="main">
-        {/* =========================
-            FILA PRINCIPAL
-
-            PUBLICIDAD | VIDEO + CHAT | PUBLICIDAD
-        ========================= */}
-        <View
-          style={[
-            styles.layoutRow,
-            isMobile && styles.layoutRowMobile,
-          ]}
-        >
-          {/* =========================
-              PUBLICIDAD IZQUIERDA
-          ========================= */}
-          {showSideAds && (
-            <View style={styles.adColumn}>
-              <AdSlot placement="left" />
-            </View>
-          )}
-
-          {/* =========================
-              COLUMNA CENTRAL
-          ========================= */}
-          <View
-            style={[
-              styles.contentColumn,
-              isMobile && styles.contentColumnMobile,
-            ]}
-          >
-            {/* =========================
-                VIDEO + CHAT
-            ========================= */}
+      <ScrollView ref={scrollRef} style={styles.screen} contentContainerStyle={styles.scrollContent}>
+        <View onLayout={(event) => setSectionY((prev) => ({ ...prev, inicio: event.nativeEvent.layout.y }))}>
+          <View style={[styles.headerViewport, { height: headerHeight }]}>
             <View
               style={[
-                styles.content,
-                isMobile && styles.contentMobile,
+                styles.headerScaled,
+                {
+                  width: width / headerScale,
+                  transform: [{ scale: headerScale }],
+                },
               ]}
             >
-              {/* =========================
-                  VIDEO
-              ========================= */}
-              <View
-                style={[
-                  styles.videoArea,
-                  isMobile && styles.videoAreaMobile,
-                ]}
-              >
-                {/* Si existe un Live del backend,
-                    mostramos la etiqueta EN VIVO. */}
-                {hasActiveStream && (
-                  <View style={styles.liveBadge}>
-                    <View style={styles.liveDot} />
-                    <Text style={styles.liveBadgeText}>
-                      EN VIVO
-                    </Text>
-                  </View>
-                )}
-
-                {/* Si existe una transmisión activa,
-                    usa la URL del backend.
-                    Si no existe, VideoPlayer utiliza
-                    su video de respaldo. */}
-                <VideoPlayer videoUrl={streamUrl} />
-              </View>
-
-              {/* =========================
-                  CHAT
-              ========================= */}
-              <View
-                style={[
-                  styles.chatArea,
-                  isMobile && styles.chatAreaMobile,
-                ]}
-              >
-                <LiveChat />
-              </View>
+              <LiveHeader
+                headline="Los Tiempos, señal en vivo - Artemis retorna, Trump y los convenios, Liga boliviana y las ultimas posiciones en las tablas"
+                onOpenLogin={handleOpenLogin}
+                onOpenRegister={handleOpenRegister}
+                onGoInicio={() => scrollToSection('inicio')}
+                onGoNoticias={() => scrollToSection('noticias')}
+                onGoVideos={() => scrollToSection('videos')}
+                onGoEnlaces={() => scrollToSection('enlaces')}
+              />
             </View>
-
-            {/* =========================
-                DESCRIPCIÓN
-            ========================= */}
-            <LiveDescription
-              title="Transmisión en vivo 13/04/2026"
-              body="Sigue nuestras transmisiones en directo y mantente informado. Disfruta de la señal en vivo, noticias y contenido de actualidad de Los Tiempos."
-            />
-              {/* =========================
-            REELS
-        ========================= */}
-        <ReelSection />
-            {/* =========================
-                PROMOCIONES
-            ========================= */}
-            <PromoCardsRow />
           </View>
-
-          {/* =========================
-              PUBLICIDAD DERECHA
-          ========================= */}
-          {showSideAds && (
-            <View style={styles.adColumn}>
-              <AdSlot placement="right" />
-            </View>
-          )}
         </View>
 
-        
-      </View>
+        <View
+          style={styles.page}
+          role="main"
+          onLayout={(event) => setPageY(event.nativeEvent.layout.y)}
+        >
+          <View style={[styles.layoutRow, isMobile && styles.layoutRowMobile]}>
+            {showSideAds && (
+              <View style={styles.adColumn}>
+                <AdSlot placement="left" />
+              </View>
+            )}
 
-      {/* =========================
-          FOOTER
-      ========================= */}
-      <SiteFooter />
+            <View style={[styles.contentColumn, isMobile && styles.contentColumnMobile]}>
+              <View style={[styles.content, isMobile && styles.contentMobile]}>
+                <View style={[styles.videoArea, isMobile && styles.videoAreaMobile]}>
+                  {hasActiveStream && (
+                    <View style={styles.liveBadge}>
+                      <View style={styles.liveDot} />
+                      <Text style={styles.liveBadgeText}>EN VIVO</Text>
+                    </View>
+                  )}
+                  <VideoPlayer videoUrl={streamUrl} />
+                </View>
 
-      {/* =========================
-          REGISTRO
-      ========================= */}
-      <AuthModal
-        visible={authVisible}
-        onClose={() => setAuthVisible(false)}
-        initialRegister={initialRegisterMode}
-      />
+                <View style={[styles.chatArea, isMobile && styles.chatAreaMobile]}>
+                  <LiveChat />
+                </View>
+              </View>
+              <LiveDescription
+                title={`Transmisión en vivo ${formattedDate}`}
+                body="Sigue nuestras transmisiones en directo y mantente informado. Disfruta de la señal en vivo, noticias y contenido de actualidad de Los Tiempos."
+              />
+
+              <View
+                onLayout={(event) =>
+                  setSectionY((prev) => ({
+                    ...prev,
+                    videos: pageY + event.nativeEvent.layout.y,
+                  }))
+                }
+              >
+                <ReelSection />
+                  </View>
+              <View
+                onLayout={(event) =>
+                  setSectionY((prev) => ({
+                    ...prev,
+                    noticias: pageY + event.nativeEvent.layout.y,
+                  }))
+                }
+              >
+                <PromoCardsRow />
+              </View>
+            </View>
+            {showSideAds && (
+              <View style={styles.adColumn}>
+                <AdSlot placement="right" />
+              </View>
+            )}
+          </View>
+        </View>
+        <View onLayout={(event) => setSectionY((prev) => ({ ...prev, enlaces: event.nativeEvent.layout.y }))}>
+          <SiteFooter />
+        </View>
+
+        <AuthModal
+          visible={authVisible}
+          onClose={() => setAuthVisible(false)}
+          initialRegister={initialRegisterMode}
+        />
       </ScrollView>
     </>
   );
 }
 
-/* =========================================================
-   ESTILOS
-========================================================= */
-
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
+  screen: { flex: 1, backgroundColor: '#FFFFFF' },
+  scrollContent: { flexGrow: 1 },
+  headerViewport: {
+    width: '100%',
+    overflow: 'hidden',
+    alignItems: 'center',
     backgroundColor: '#FFFFFF',
   },
-
-  scrollContent: {
-    flexGrow: 1,
-  },
-
-  /* =========================================================
-     CONTENEDOR GENERAL DE LA PÁGINA
-  ========================================================= */
+  headerScaled: { alignSelf: 'flex-start' },
   page: {
     width: '100%',
     maxWidth: 1680,
@@ -247,106 +199,52 @@ const styles = StyleSheet.create({
     paddingTop: 18,
     paddingBottom: 8,
   },
-
-  /* =========================================================
-     FILA PRINCIPAL
-
-     PUBLICIDAD | VIDEO + CHAT | PUBLICIDAD
-  ========================================================= */
   layoutRow: {
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'stretch',
-    gap: 16,
+    gap: 35,
+    boxSizing: 'border-box',
   },
-
-  layoutRowMobile: {
-    flexDirection: 'column',
-    gap: 14,
-  },
-
-  /* =========================================================
-     PUBLICIDAD LATERAL
-  ========================================================= */
-  adColumn: {
-    width: 160,
-    flexShrink: 1,
-    alignSelf: 'stretch',
-  },
-
-  /* =========================================================
-     COLUMNA CENTRAL
-     VIDEO + CHAT + DESCRIPCIÓN + PROMOCIONES
-  ========================================================= */
+  layoutRowMobile: { flexDirection: 'column', gap: 14 },
+  adColumn: { width: 160, flexShrink: 0, alignSelf: 'stretch' },
   contentColumn: {
     flex: 1,
-    maxWidth: 1120,
+    maxWidth: 1280,
     minWidth: 0,
     alignSelf: 'stretch',
+    boxSizing: 'border-box',
   },
-
-  contentColumnMobile: {
-    width: '100%',
-    maxWidth: undefined,
-    alignSelf: 'stretch',
-  },
-
-  /* =========================================================
-     CONTENIDO CENTRAL
-     VIDEO + CHAT
-  ========================================================= */
+  contentColumnMobile: { width: '100%', maxWidth: undefined, alignSelf: 'stretch' },
   content: {
-    flex: 1,
     width: '100%',
-    maxWidth: 920,
     minWidth: 0,
     flexDirection: 'row',
     alignItems: 'stretch',
     gap: 14,
   },
-
-  contentMobile: {
-    width: '100%',
-    flexDirection: 'column',
-    gap: 14,
-  },
-
-  /* =========================================================
-     VIDEO
-  ========================================================= */
-  videoArea: {
-    flex: 1,
-    minWidth: 0,
-    position: 'relative',
-  },
-
-  videoAreaMobile: {
-    width: '100%',
-  },
-
-  /* =========================================================
-     CHAT
-  ========================================================= */
+  contentMobile: { width: '100%', flexDirection: 'column', gap: 14 },
+  videoArea: { flex: 1, minWidth: 0, position: 'relative' },
+  videoAreaMobile: { width: '100%' },
   chatArea: {
-    flex: 0,
-    flexBasis: 320,
-    width: 320,
+    width: 360,
     minWidth: 280,
-    maxWidth: 320,
-    height: 390,
+    maxWidth: 360,
+    flexGrow: 0,
+    flexShrink: 1,
+    alignSelf: 'stretch',
   },
-
   chatAreaMobile: {
     width: '100%',
     minWidth: 0,
-    maxWidth: 100,
+    maxWidth: '100%',
+    alignSelf: 'stretch',
     height: 400,
+    flexBasis: 'auto',
+    flexGrow: 0,
+    flexShrink: 0,
   },
-
-  /* =========================================================
-     INDICADOR EN VIVO
-  ========================================================= */
   liveBadge: {
     position: 'absolute',
     zIndex: 2,
@@ -360,17 +258,6 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: 3,
   },
-
-  liveDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#FFFFFF',
-  },
-
-  liveBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 10,
-    fontWeight: '800',
-  },
+  liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#FFFFFF' },
+  liveBadgeText: { color: '#FFFFFF', fontSize: 10, fontWeight: '800' },
 });

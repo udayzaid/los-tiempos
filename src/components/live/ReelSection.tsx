@@ -8,6 +8,7 @@ import {
   Linking,
   StyleSheet,
 } from 'react-native';
+import { FontAwesome5 } from '@expo/vector-icons'; // Importamos los iconos de Expo
 import { api, ReelGetDto } from '@/services/api';
 import { ReelCard } from './ReelCard';
 
@@ -64,7 +65,13 @@ export const ReelSection: React.FC = () => {
     <View style={styles.container} role="region" aria-label="Videos cortos">
       <View style={styles.sectionHeader}>
         <View style={styles.headerTitleGroup}>
-          <Text style={styles.tiktokIcon}>♪</Text>
+          {/* AQUÍ REEMPLAZAMOS EL TEXTO "♪" POR EL ICONO OFICIAL */}
+          <FontAwesome5 
+            name="tiktok" 
+            size={18} 
+            color="#111111" 
+            style={styles.tiktokIcon} 
+          />
 
           <Text
             style={styles.sectionTitle}
@@ -133,10 +140,7 @@ const styles = StyleSheet.create({
   },
 
   tiktokIcon: {
-    fontSize: 20,
-    fontWeight: '900',
-    color: '#111',
-    marginRight: 7,
+    marginRight: 8,
   },
 
   sectionTitle: {
