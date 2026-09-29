@@ -16,7 +16,7 @@ import { VideoPlayer } from '@/components/live/VideoPlayer';
 export default function LiveScreen() {
   const { width } = useWindowDimensions();
   const { liveInfo } = useLiveHub();
-  const isMobile = width < 900;
+  const isMobile = width < 1050;
   const showSideAds = width >= 1180;
   const [authVisible, setAuthVisible] = useState<boolean>(false);
   const [initialRegisterMode, setInitialRegisterMode] = useState<boolean>(false);
@@ -45,9 +45,8 @@ export default function LiveScreen() {
   // Entre escritorio y móvil el header original tiene elementos con tamaños fijos.
   // Reducimos proporcionalmente el header en pantallas intermedias para evitar
   // que el edificio, logo y botones se monten entre sí.
-  const headerScale = width >= 1180 ? 1 : Math.max(0.72, width / 1180);
-  const headerHeight = 149 * headerScale;
-
+const headerScale = width >= 1180 ? 1 : width / 1180;
+const headerHeight = 149 * headerScale;
   return (
     <>
       <Head>
@@ -162,8 +161,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'stretch',
-    gap: 16,
+    gap: 35,
+    boxSizing: 'border-box',
   },
+
   layoutRowMobile: { flexDirection: 'column', gap: 14 },
   adColumn: { width: 160, flexShrink: 0, alignSelf: 'stretch' },
   contentColumn: {
@@ -171,7 +172,9 @@ const styles = StyleSheet.create({
     maxWidth: 1280,
     minWidth: 0,
     alignSelf: 'stretch',
+    boxSizing: 'border-box',
   },
+  
   contentColumnMobile: {
     width: '100%',
     maxWidth: undefined,
