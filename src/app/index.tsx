@@ -181,30 +181,45 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
   },
   content: {
-    flex: 1,
-    width: '100%',
-    minWidth: 0,
-    flexDirection: 'row',
-    alignItems: 'stretch',
-    gap: 14,
-  },
+  width: '100%',
+  minWidth: 0,
+  flexDirection: 'row',
+  alignItems: 'stretch',
+  gap: 14,
+},
   contentMobile: { width: '100%', flexDirection: 'column', gap: 14 },
-  videoArea: { flex: 1, minWidth: 0, position: 'relative' },
-  videoAreaMobile: { width: '100%' },
-  chatArea: {
-    flex: 0,
-    flexBasis: 360,
-    width: 360,
-    minWidth: 340,
-    maxWidth: 360,
-    height: 430,
-  },
-  chatAreaMobile: {
-    width: '100%',
-    minWidth: 0,
-    maxWidth: '100%',
-    height: 400,
-  },
+ videoArea: { 
+  flex: 1, 
+  minWidth: 0, 
+  position: 'relative' 
+}, 
+
+videoAreaMobile: { 
+  width: '100%' 
+}, 
+
+chatArea: {
+  width: 360,
+  minWidth: 280,
+  maxWidth: 360,
+
+  flexGrow: 0,
+  flexShrink: 1,
+
+  alignSelf: 'stretch',
+},
+ chatAreaMobile: {
+  width: '100%',
+  minWidth: 0,
+  maxWidth: '100%',
+
+  alignSelf: 'stretch',
+
+  height: 400,
+  flexBasis: 'auto',
+  flexGrow: 0,
+  flexShrink: 0,
+},
   liveBadge: {
     position: 'absolute',
     zIndex: 2,
