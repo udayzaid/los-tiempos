@@ -17,6 +17,7 @@ export default function LiveScreen() {
   const { width } = useWindowDimensions();
   const { liveInfo } = useLiveHub();
   const scrollRef = useRef<ScrollView>(null);
+  const [pageY, setPageY] = useState(0);
   const [sectionY, setSectionY] = useState({
     inicio: 0,
     noticias: 0,
@@ -57,11 +58,12 @@ export default function LiveScreen() {
     year: 'numeric',
   });
 
-  // Entre escritorio y móvil el header original tiene elementos con tamaños fijos.
-  // Reducimos proporcionalmente el header en pantallas intermedias para evitar
-  // que el edificio, logo y botones se monten entre sí.
+  // El header original ahora incluye también la navegación inferior.
+  // Ajustamos su alto según los breakpoints internos de LiveHeader para
+  // evitar que la navegación quede recortada por el viewport escalado.
   const headerScale = width >= 1180 ? 1 : width / 1180;
-  const headerHeight = 149 * headerScale;
+  const headerBaseHeight = width < 560 ? 197 : width < 700 ? 184 : width < 900 ? 177 : 187;
+  const headerHeight = headerBaseHeight * headerScale;
 
   return (
     <>
@@ -76,23 +78,11 @@ export default function LiveScreen() {
         <meta property="og:locale" content="es_BO" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Los Tiempos | Señal en vivo" />
-        <meta name="twitter:description" content="Sigue la señal en vivo de Los Tiempos y mantente informado con noticias y contenido de actualidad de Bolivia." />
+        <meta name="twitter:description" content="Sigue nuestras transmisiones en directo y mantente informado." />
       </Head>
 
-      <ScrollView
-        ref={scrollRef}
-        style={styles.screen}
-        contentContainerStyle={styles.scrollContent}
-        onLayout={() => {
-          // El propio ScrollView usa coordenadas de sus hijos; los valores
-          // concretos se actualizan mediante onLayout en cada sección.
-        }}
-      >
-        <View
-          onLayout={(event) =>
-            setSectionY((prev) => ({ ...prev, inicio: event.nativeEvent.layout.y }))
-          }
-        >
+      <ScrollView ref={scrollRef} style={styles.screen} contentContainerStyle={styles.scrollContent}>
+        <View onLayout={(event) => setSectionY((prev) => ({ ...prev, inicio: event.nativeEvent.layout.y }))}>
           <View style={[styles.headerViewport, { height: headerHeight }]}>
             <View
               style={[
@@ -116,7 +106,11 @@ export default function LiveScreen() {
           </View>
         </View>
 
-        <View style={styles.page} role="main">
+        <View
+          style={styles.page}
+          role="main"
+          onLayout={(event) => setPageY(event.nativeEvent.layout.y)}
+        >
           <View style={[styles.layoutRow, isMobile && styles.layoutRowMobile]}>
             {showSideAds && (
               <View style={styles.adColumn}>
@@ -148,7 +142,10 @@ export default function LiveScreen() {
 
               <View
                 onLayout={(event) =>
-                  setSectionY((prev) => ({ ...prev, noticias: event.nativeEvent.layout.y }))
+                  setSectionY((prev) => ({
+                    ...prev,
+                    noticias: pageY + event.nativeEvent.layout.y,
+                  }))
                 }
               >
                 <PromoCardsRow />
@@ -156,7 +153,10 @@ export default function LiveScreen() {
 
               <View
                 onLayout={(event) =>
-                  setSectionY((prev) => ({ ...prev, videos: event.nativeEvent.layout.y }))
+                  setSectionY((prev) => ({
+                    ...prev,
+                    videos: pageY + event.nativeEvent.layout.y,
+                  }))
                 }
               >
                 <ReelSection />
@@ -171,11 +171,7 @@ export default function LiveScreen() {
           </View>
         </View>
 
-        <View
-          onLayout={(event) =>
-            setSectionY((prev) => ({ ...prev, enlaces: event.nativeEvent.layout.y }))
-          }
-        >
+        <View onLayout={(event) => setSectionY((prev) => ({ ...prev, enlaces: event.nativeEvent.layout.y }))}>
           <SiteFooter />
         </View>
 
@@ -198,9 +194,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
   },
-  headerScaled: {
-    alignSelf: 'flex-start',
-  },
+  headerScaled: { alignSelf: 'flex-start' },
   page: {
     width: '100%',
     maxWidth: 1680,
@@ -226,11 +220,7 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     boxSizing: 'border-box',
   },
-  contentColumnMobile: {
-    width: '100%',
-    maxWidth: undefined,
-    alignSelf: 'stretch',
-  },
+  contentColumnMobile: { width: '100%', maxWidth: undefined, alignSelf: 'stretch' },
   content: {
     width: '100%',
     minWidth: 0,
@@ -239,11 +229,7 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   contentMobile: { width: '100%', flexDirection: 'column', gap: 14 },
-  videoArea: {
-    flex: 1,
-    minWidth: 0,
-    position: 'relative',
-  },
+  videoArea: { flex: 1, minWidth: 0, position: 'relative' },
   videoAreaMobile: { width: '100%' },
   chatArea: {
     width: 360,
