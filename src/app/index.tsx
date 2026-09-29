@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
   ========================================================= */
   adColumn: {
     width: 160,
-    flexShrink: 1,
+    flexShrink: 0,
     alignSelf: 'stretch',
   },
 
@@ -290,7 +290,7 @@ const styles = StyleSheet.create({
   ========================================================= */
   contentColumn: {
     flex: 1,
-    maxWidth: 1120,
+    maxWidth: 1240,
     minWidth: 0,
     alignSelf: 'stretch',
   },
@@ -308,7 +308,6 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     width: '100%',
-    maxWidth: 920,
     minWidth: 0,
     flexDirection: 'row',
     alignItems: 'stretch',
@@ -349,7 +348,7 @@ const styles = StyleSheet.create({
   chatAreaMobile: {
     width: '100%',
     minWidth: 0,
-    maxWidth: 100,
+    maxWidth: '100%',
     height: 400,
   },
 
