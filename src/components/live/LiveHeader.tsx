@@ -49,10 +49,14 @@ export function LiveHeader({
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [passwordFeedback, setPasswordFeedback] = useState<{ kind: 'success' | 'error'; message: string } | null>(null);
 
-  const isNarrow = width < 560;
+  // ---------- BREAKPOINTS ----------
   const isMobile = width < 700;
-  const isCompact = width < 900;
+  const showBuildingLogo = width >= 1180; // primero desaparece el logo del edificio
+  const showBrandLogo = width >= 560;     // luego desaparece el logo de marca
   const isLive = Boolean(liveInfo?.isLive);
+
+  // Los botones conservan tamaño y texto. Bajo 900px pasan debajo del logo.
+  const buttonsOnOwnRow = width < 900;
 
   useEffect(() => {
     const updateDate = () => setCurrentDate(new Date());
@@ -130,42 +134,61 @@ export function LiveHeader({
 
   return (
     <View style={styles.wrapper} role="banner">
-      <View style={[styles.topRow, isCompact && styles.topRowCompact, isMobile && styles.topRowMobile, isNarrow && styles.topRowNarrow]}>
-        <View style={[styles.buildingFrame, isCompact && styles.buildingFrameCompact, isMobile && styles.buildingFrameMobile, isNarrow && styles.buildingFrameNarrow]} pointerEvents="none">
-          <Image source={require('../../../imagenes/logo 2.1.png')} style={[styles.buildingLogo, isCompact && styles.buildingLogoCompact, isMobile && styles.buildingLogoMobile, isNarrow && styles.buildingLogoNarrow]} resizeMode="contain" />
-        </View>
+      {/* FILA SUPERIOR: [izquierda] [centro] [derecha] sin posiciones absolutas */}
+      <View style={[styles.topRow, buttonsOnOwnRow && styles.topRowStacked, !showBrandLogo && styles.topRowNoLogos]}>
+        {/* Columna izquierda: logo del edificio (solo pantallas grandes) */}
+        {showBuildingLogo && (
+          <View style={styles.sideColumn} pointerEvents="none">
+            <Image source={require('../../../imagenes/logo 2.1.png')} style={styles.buildingLogo} resizeMode="contain" />
+          </View>
+        )}
 
-        <View style={[styles.brandFrame, isCompact && styles.brandFrameCompact, isMobile && styles.brandFrameMobile, isNarrow && styles.brandFrameNarrow]} pointerEvents="none">
-          <Image source={require('../../../imagenes/logo 1 (1).png')} style={[styles.logo, isCompact && styles.logoCompact, isMobile && styles.logoMobile, isNarrow && styles.logoNarrow]} resizeMode="contain" />
-        </View>
+        {/* Columna central: conserva su tamaño y luego desaparece */}
+        {showBrandLogo && (
+          <View
+            style={[styles.brandFrame, !showBuildingLogo && styles.brandFrameLeft]}
+            pointerEvents="none"
+          >
+            <Image source={require('../../../imagenes/logo 1 (1).png')} style={styles.brandLogo} resizeMode="contain" />
+          </View>
+        )}
 
-        <View style={[styles.authButtonsContainer, isCompact && styles.authButtonsCompact, isMobile && styles.authButtonsMobile, isNarrow && styles.authButtonsNarrow]}>
+        {/* Columna derecha: botones a tamaño normal */}
+        <View
+          style={[
+            styles.authButtonsContainer,
+            showBuildingLogo && styles.sideColumn,
+            showBuildingLogo && styles.authButtonsInSide,
+            !showBuildingLogo && showBrandLogo && styles.authButtonsBesideLogo,
+            buttonsOnOwnRow && styles.authButtonsOwnRow,
+          ]}
+        >
           {!isAuthenticated ? (
             <>
-              <TouchableOpacity style={[styles.registerBtn, isNarrow && styles.compactButton]} onPress={onOpenRegister} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel="Registrarse">
-                <Ionicons name="person-add-outline" size={isNarrow ? 18 : 17} color={LiveTheme.black} />
-                {!isNarrow && <Text style={styles.registerBtnText}>Registrarse</Text>}
+              <TouchableOpacity style={styles.registerBtn} onPress={onOpenRegister} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel="Registrarse">
+                <Ionicons name="person-add-outline" size={17} color={LiveTheme.black} />
+                <Text style={styles.registerBtnText}>Registrarse</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.loginBtn, isNarrow && styles.compactButton]} onPress={onOpenLogin} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel="Iniciar sesión">
-                <Ionicons name="person-circle-outline" size={isNarrow ? 20 : 23} color={LiveTheme.black} />
-                {!isNarrow && <Text style={styles.loginBtnText}>Iniciar sesión</Text>}
+              <TouchableOpacity style={styles.loginBtn} onPress={onOpenLogin} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel="Iniciar sesión">
+                <Ionicons name="person-circle-outline" size={23} color={LiveTheme.black} />
+                <Text style={styles.loginBtnText}>Iniciar sesión</Text>
               </TouchableOpacity>
             </>
           ) : (
             <>
               {isAdmin && (
-                <TouchableOpacity style={[styles.adminBtn, isNarrow && styles.compactButton]} onPress={handleAdminPress} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel="Administrar">
-                  <Ionicons name="settings-outline" size={isNarrow ? 18 : 19} color={LiveTheme.black} />
-                  {!isNarrow && <Text style={styles.adminBtnText}>{pathname.startsWith('/admin') ? 'Inicio' : 'Administrar'}</Text>}
+                <TouchableOpacity style={styles.adminBtn} onPress={handleAdminPress} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel="Administrar">
+                  <Ionicons name="settings-outline" size={19} color={LiveTheme.black} />
+                  <Text style={styles.adminBtnText}>{pathname.startsWith('/admin') ? 'Inicio' : 'Administrar'}</Text>
                 </TouchableOpacity>
               )}
-              <TouchableOpacity style={[styles.userInfo, isNarrow && styles.compactButton]} onPress={() => setProfileVisible(true)} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel="Ver perfil de usuario">
-                <Ionicons name="person-circle-outline" size={isNarrow ? 20 : 23} color={LiveTheme.black} />
-                {!isNarrow && <Text style={styles.userText} numberOfLines={1}>{profileEmail || userName}</Text>}
+              <TouchableOpacity style={styles.userInfo} onPress={() => setProfileVisible(true)} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel="Ver perfil de usuario">
+                <Ionicons name="person-circle-outline" size={23} color={LiveTheme.black} />
+                <Text style={styles.userText} numberOfLines={1}>{profileEmail || userName}</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.logoutBtn, isNarrow && styles.compactButton]} onPress={logout} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel="Cerrar sesión">
-                <Ionicons name="log-out-outline" size={isNarrow ? 19 : 20} color={LiveTheme.black} />
-                {!isNarrow && <Text style={styles.logoutBtnText}>Cerrar sesión</Text>}
+              <TouchableOpacity style={styles.logoutBtn} onPress={logout} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel="Cerrar sesión">
+                <Ionicons name="log-out-outline" size={20} color={LiveTheme.black} />
+                <Text style={styles.logoutBtnText}>Cerrar sesión</Text>
               </TouchableOpacity>
             </>
           )}
@@ -246,9 +269,7 @@ export function LiveHeader({
         </View>
       </Modal>
 
-       
-   
-            {/* NAVEGACIÓN PRINCIPAL: queda debajo del encabezado original */}
+      {/* NAVEGACIÓN PRINCIPAL */}
       <View style={styles.navigationBar}>
         <ScrollView
           horizontal
@@ -278,30 +299,19 @@ export function LiveHeader({
             accessibilityRole="button"
             accessibilityLabel="Menú"
           >
-            <Ionicons
-              name="menu"
-              size={22}
-              color={LiveTheme.black}
-            />
+            <Ionicons name="menu" size={22} color={LiveTheme.black} />
           </TouchableOpacity>
         </ScrollView>
       </View>
 
-          {/* ESPACIO ENTRE ENCABEZADOS */}
+      {/* ESPACIO ENTRE ENCABEZADOS */}
       <View style={styles.headerSpacing} />
-      
+
       {/* TITULAR / BARRA DE INFORMACIÓN */}
       <View style={styles.headlineBar}>
         <View
-          style={[
-            styles.liveStateDot,
-            isLive && styles.liveStateDotActive,
-          ]}
-          accessibilityLabel={
-            isLive
-              ? 'Transmisión en vivo activa'
-              : 'Sin transmisión en vivo'
-          }
+          style={[styles.liveStateDot, isLive && styles.liveStateDotActive]}
+          accessibilityLabel={isLive ? 'Transmisión en vivo activa' : 'Sin transmisión en vivo'}
         />
 
         <Text style={styles.headlineText} numberOfLines={1}>
@@ -309,52 +319,66 @@ export function LiveHeader({
         </Text>
 
         {!isMobile && (
-          <Text style={styles.dateText}>
+          <Text style={styles.dateText} numberOfLines={1}>
             {displayDate}
           </Text>
         )}
       </View>
     </View>
-    
-    
   );
-   
 }
 
 const styles = StyleSheet.create({
   wrapper: { width: '100%', backgroundColor: LiveTheme.offWhite },
-  navigationBar: { width: '100%', height: 38,backgroundColor: LiveTheme.gold, borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.12)' },
+
+  // ---------- NAVEGACIÓN ----------
+  navigationBar: { width: '100%', height: 38, backgroundColor: LiveTheme.gold, borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.12)' },
   navigationContent: { flexGrow: 1, justifyContent: 'center', alignItems: 'stretch', paddingHorizontal: 8 },
   navigationContentMobile: { flexGrow: 0 },
-  navigationItem: { minHeight: 38, paddingHorizontal: 13, justifyContent: 'center', alignItems: 'center', borderRightWidth: 1, borderRightColor: 'rgba(0,0,0,0.14)' },
+  navigationItem: { minHeight: 38, flexShrink: 0, paddingHorizontal: 13, justifyContent: 'center', alignItems: 'center', borderRightWidth: 1, borderRightColor: 'rgba(0,0,0,0.14)' },
   navigationText: { color: LiveTheme.black, fontSize: 10, fontWeight: '800', letterSpacing: 0.1 },
-  menuButton: { minHeight: 38, minWidth: 44, justifyContent: 'center', alignItems: 'center', marginLeft: 'auto' },
-  topRow: { width: '100%', minHeight: 115, position: 'relative', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: LiveTheme.border },
-  topRowCompact: { minHeight: 105, paddingHorizontal: 12 },
-  topRowMobile: { minHeight: 112, paddingHorizontal: 10, paddingBottom: 42 },
-  topRowNarrow: { minHeight: 125, paddingBottom: 46 },
-  buildingFrame: { position: 'absolute', left: 0, top: 0, width: 350, height: 115, justifyContent: 'center', alignItems: 'flex-start', overflow: 'hidden' },
-  buildingFrameCompact: { width: 245, height: 105 },
-  buildingFrameMobile: { width: 150, height: 78 },
-  buildingFrameNarrow: { width: 105, height: 66 },
-  buildingLogo: { width: 350, height: 120 },
-  buildingLogoCompact: { width: 245, height: 105 },
-  buildingLogoMobile: { width: 150, height: 78 },
-  buildingLogoNarrow: { width: 105, height: 66 },
-  brandFrame: { width: 350, height: 115, justifyContent: 'center', alignItems: 'center' },
-  brandFrameCompact: { width: 285, height: 100 },
-  brandFrameMobile: { width: 220, height: 75 },
-  brandFrameNarrow: { width: 175, height: 62 },
-  logo: { width: 350, height: 115 },
-  logoCompact: { width: 285, height: 100 },
-  logoMobile: { width: 220, height: 75 },
-  logoNarrow: { width: 175, height: 62 },
-  authButtonsContainer: { position: 'absolute', right: 20, bottom: 8, flexDirection: 'row', alignItems: 'center', gap: 8, zIndex: 5 },
-  authButtonsCompact: { right: 12, bottom: 7, gap: 6 },
-  authButtonsMobile: { left: 10, right: 10, bottom: 7, justifyContent: 'flex-end', gap: 6 },
-  authButtonsNarrow: { left: 10, right: 10, bottom: 8, justifyContent: 'center', gap: 8 },
+  menuButton: { minHeight: 38, minWidth: 44, justifyContent: 'center', alignItems: 'center' },
+
+  // ---------- FILA SUPERIOR (flujo normal, sin absolute) ----------
+  topRow: {
+    width: '100%',
+    minHeight: 115,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    gap: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: LiveTheme.border,
+  },
+  // Cuando el logo principal comparte poco espacio con las acciones,
+  // mantiene su tamaño arriba y los botones bajan a una fila propia.
+  topRowStacked: { minHeight: 180, flexDirection: 'column', alignItems: 'stretch', justifyContent: 'space-between', gap: 8 },
+  topRowNoLogos: { minHeight: 72, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'flex-end', paddingBottom: 4 },
+
+  // Columnas laterales (≥ 1180px): izquierda y derecha con el mismo ancho
+  // para que el logo de marca quede centrado de verdad
+  sideColumn: { flex: 1, minWidth: 0 },
+  buildingLogo: { width: 350, height: 115 },
+
+  brandFrame: { flexShrink: 0, justifyContent: 'center', alignItems: 'center' },
+  brandFrameLeft: { alignItems: 'flex-start' },
+  brandLogo: { width: 350, height: 115 },
+
+  // ---------- BOTONES ----------
+  authButtonsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  authButtonsInSide: { justifyContent: 'flex-end' },
+  authButtonsBesideLogo: { flex: 1, minWidth: 0 },
+  authButtonsOwnRow: { width: '100%', justifyContent: 'flex-end' },
+
   registerBtn: { height: 35, paddingHorizontal: 10, backgroundColor: LiveTheme.gold, borderRadius: 10, justifyContent: 'center', alignItems: 'center', flexDirection: 'row', gap: 5 },
-  compactButton: { width: 42, height: 36, paddingHorizontal: 0, borderRadius: 9 },
   registerBtnText: { color: LiveTheme.black, fontSize: 12, fontWeight: '700' },
   loginBtn: { height: 35, paddingHorizontal: 10, backgroundColor: LiveTheme.white, borderWidth: 1, borderColor: '#D9D9D9', borderRadius: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 },
   loginBtnText: { color: LiveTheme.black, fontSize: 12, fontWeight: '500' },
@@ -364,11 +388,16 @@ const styles = StyleSheet.create({
   userText: { color: LiveTheme.black, fontSize: 12, fontWeight: '600', maxWidth: 160 },
   logoutBtn: { height: 35, paddingHorizontal: 10, backgroundColor: LiveTheme.gold, borderRadius: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
   logoutBtnText: { color: LiveTheme.black, fontSize: 12, fontWeight: '700' },
+
+  // ---------- TITULAR ----------
   headlineBar: { width: '100%', height: 34, backgroundColor: LiveTheme.gold, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', gap: 12 },
   headlineText: { flex: 1, color: LiveTheme.black, fontSize: 10, fontWeight: '800' },
-  dateText: { color: LiveTheme.black, fontSize: 9, fontWeight: '700' },
+  dateText: { flexShrink: 1, color: LiveTheme.black, fontSize: 9, fontWeight: '700' },
   liveStateDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: LiveTheme.textMuted },
   liveStateDotActive: { backgroundColor: LiveTheme.liveRed },
+  headerSpacing: { height: 8, width: '100%' },
+
+  // ---------- MODAL DE PERFIL ----------
   profileBackdrop: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20, backgroundColor: 'rgba(0,0,0,0.42)' },
   profileModal: { width: '100%', maxWidth: 380, maxHeight: '90%', borderRadius: LiveTheme.radius.lg, borderWidth: 1, borderColor: LiveTheme.border, backgroundColor: LiveTheme.surface, overflow: 'hidden' },
   profileHeader: { flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: LiveTheme.border },
@@ -396,8 +425,4 @@ const styles = StyleSheet.create({
   passwordFeedbackText: { flex: 1, fontSize: 10, lineHeight: 14 },
   passwordSuccessText: { color: LiveTheme.success },
   passwordErrorText: { color: LiveTheme.error },
-  headerSpacing: {
-  height: 8,
-  width: '100%',
-},
 });

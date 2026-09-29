@@ -28,14 +28,19 @@ export const ReelPreview: React.FC<ReelPreviewProps> = ({
   };
 
   useEffect(() => {
-    if (!active || !ready) {
+    if (!active) {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
         timerRef.current = null;
       }
-      if (ready) sendMessage('pause');
+      if (ready) {
+        sendMessage('pause');
+        setReady(false);
+      }
       return;
     }
+
+    if (!ready) return;
 
     sendMessage('mute');
     sendMessage('play');
@@ -62,6 +67,8 @@ export const ReelPreview: React.FC<ReelPreviewProps> = ({
   const playerUrl =
     `https://www.tiktok.com/player/v1/${videoId}?autoplay=1&muted=1&controls=0&description=0&music_info=0&rel=0&fullscreen_button=0&loop=0&play_button=0&volume_control=0`;
 
+  if (!active) return null;
+
   return (
     <View style={styles.container} pointerEvents="none">
       <iframe
@@ -70,6 +77,7 @@ export const ReelPreview: React.FC<ReelPreviewProps> = ({
         title="TikTok Reel preview"
         style={styles.iframe}
         allow="autoplay; fullscreen"
+        loading="lazy"
         scrolling="no"
         frameBorder="0"
         onLoad={() => setReady(true)}

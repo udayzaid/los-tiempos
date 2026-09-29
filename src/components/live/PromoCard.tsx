@@ -1,12 +1,12 @@
 import React from 'react';
 import {
-  Image,
   Linking,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { LiveTheme } from '@/constants/live-theme';
 
 // Aceptamos las propiedades individuales o un objeto noticia
@@ -87,7 +87,13 @@ export function PromoCard(props: PromoCardProps) {
         onPress={handlePress}
       >
         {img ? (
-          <Image source={{ uri: img }} style={styles.image} />
+          <Image
+            source={{ uri: img }}
+            style={styles.image}
+            contentFit="cover"
+            loading="lazy"
+            priority="low"
+          />
         ) : (
           <View style={styles.imagePlaceholder}>
             <Text style={styles.imagePlaceholderText}>
