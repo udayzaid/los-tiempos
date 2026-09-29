@@ -144,13 +144,9 @@ export function LiveHeader({
         </View>
       </Modal>
 
-      <View style={styles.headlineBar}>
-        <View style={[styles.liveStateDot, isLive && styles.liveStateDotActive]} accessibilityLabel={isLive ? 'Transmisión en vivo activa' : 'Sin transmisión en vivo'} />
-        <Text style={styles.headlineText} numberOfLines={1}>{headline}</Text>
-        {!isMobile && <Text style={styles.dateText}>{displayDate}</Text>}
-      </View>
-
-      {/* NAVEGACIÓN PRINCIPAL: queda debajo del encabezado original */}
+       
+   
+            {/* NAVEGACIÓN PRINCIPAL: queda debajo del encabezado original */}
       <View style={styles.navigationBar}>
         <ScrollView
           horizontal
@@ -173,23 +169,59 @@ export function LiveHeader({
               <Text style={styles.navigationText}>{item.label}</Text>
             </TouchableOpacity>
           ))}
+
           <TouchableOpacity
             style={styles.menuButton}
             activeOpacity={0.75}
             accessibilityRole="button"
             accessibilityLabel="Menú"
           >
-            <Ionicons name="menu" size={22} color={LiveTheme.black} />
+            <Ionicons
+              name="menu"
+              size={22}
+              color={LiveTheme.black}
+            />
           </TouchableOpacity>
         </ScrollView>
       </View>
+
+          {/* ESPACIO ENTRE ENCABEZADOS */}
+      <View style={styles.headerSpacing} />
+      
+      {/* TITULAR / BARRA DE INFORMACIÓN */}
+      <View style={styles.headlineBar}>
+        <View
+          style={[
+            styles.liveStateDot,
+            isLive && styles.liveStateDotActive,
+          ]}
+          accessibilityLabel={
+            isLive
+              ? 'Transmisión en vivo activa'
+              : 'Sin transmisión en vivo'
+          }
+        />
+
+        <Text style={styles.headlineText} numberOfLines={1}>
+          {headline}
+        </Text>
+
+        {!isMobile && (
+          <Text style={styles.dateText}>
+            {displayDate}
+          </Text>
+        )}
+      </View>
     </View>
+    
+    
   );
+   
 }
 
 const styles = StyleSheet.create({
   wrapper: { width: '100%', backgroundColor: LiveTheme.offWhite },
-  navigationBar: { width: '100%', height: 38, backgroundColor: LiveTheme.gold, borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.12)' },
+  navigationBar: { width: '100%', height: 38,backgroundColor: LiveTheme.gold, borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.12)' },
   navigationContent: { flexGrow: 1, justifyContent: 'center', alignItems: 'stretch', paddingHorizontal: 8 },
   navigationContentMobile: { flexGrow: 0 },
   navigationItem: { minHeight: 38, paddingHorizontal: 13, justifyContent: 'center', alignItems: 'center', borderRightWidth: 1, borderRightColor: 'rgba(0,0,0,0.14)' },
@@ -247,4 +279,8 @@ const styles = StyleSheet.create({
   profileField: { padding: 12, borderRadius: LiveTheme.radius.md, borderWidth: 1, borderColor: LiveTheme.border, backgroundColor: LiveTheme.offWhite },
   profileLabel: { color: LiveTheme.textMuted, fontSize: 10, fontWeight: '600', marginBottom: 5 },
   profileValue: { color: LiveTheme.text, fontSize: 13, fontWeight: '600' },
+  headerSpacing: {
+  height: 8,
+  width: '100%',
+},
 });
