@@ -327,7 +327,7 @@ const {
 
         <View style={styles.headerRight}>
           <Text style={styles.connectedText}>
-            1.2 K conectados
+           
           </Text>
 
           <Pressable
@@ -391,7 +391,7 @@ const {
           ) : (
             <View style={styles.statusContainer}>
               <Text style={styles.statusText}>
-                Aún no hay mensajes.
+                Live no inciado 
               </Text>
             </View>
           )

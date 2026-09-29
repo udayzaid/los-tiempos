@@ -227,12 +227,10 @@ footer: {
 
   linksColumns: {
     flex: 1,
-
     flexDirection: 'row',
-
-    justifyContent: 'space-between',
-
+    flexWrap: 'wrap',
     alignItems: 'flex-start',
+    gap: 20,
   },
 
   // =======================================================
@@ -250,9 +248,9 @@ footer: {
   // =======================================================
 
   column: {
-    minWidth: 110,
+    minWidth: 120,
+    marginBottom: 12, 
 
-    flex: 1,
   },
 
   // =======================================================
@@ -332,13 +330,10 @@ footer: {
   // =======================================================
 bottomRow: {
   width: '100%',
-
-  height: 24,
-
+ minHeight: 36,
   flexDirection: 'row',
   alignItems: 'center',
   justifyContent: 'center',
-
   backgroundColor: '#000000',
 },
   // =======================================================
@@ -348,7 +343,7 @@ bottomRow: {
   bottomRowNarrow: {
     flexDirection: 'column',
 
-    alignItems: 'flex-start',
+    alignItems: 'center',
 
     gap: 6,
   },
@@ -358,6 +353,7 @@ bottomRow: {
 copyright: {
   fontSize: 11,
   color: '#FFFFFF',
+  textAlign: 'center',
 },
   // =======================================================
   // CONDICIONES
@@ -365,6 +361,7 @@ copyright: {
   fontSize: 11,
   color: '#FFFFFF',
   textDecorationLine: 'underline',
+  textAlign: 'center',
 },
 
 });
