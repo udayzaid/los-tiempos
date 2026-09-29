@@ -4,11 +4,36 @@ import { useAuth } from '@/context/AuthContext';
 import { useLiveHub } from '@/context/LiveHubContext';
 import { router, usePathname } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Image, Modal, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import {
+  Image,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 
-type Props = { headline: string; onOpenLogin: () => void; onOpenRegister: () => void };
+type Props = {
+  headline: string;
+  onOpenLogin: () => void;
+  onOpenRegister: () => void;
+  onGoInicio?: () => void;
+  onGoNoticias?: () => void;
+  onGoVideos?: () => void;
+  onGoEnlaces?: () => void;
+};
 
-export function LiveHeader({ headline, onOpenLogin, onOpenRegister }: Props) {
+export function LiveHeader({
+  headline,
+  onOpenLogin,
+  onOpenRegister,
+  onGoInicio,
+  onGoNoticias,
+  onGoVideos,
+  onGoEnlaces,
+}: Props) {
   const { width } = useWindowDimensions();
   const pathname = usePathname();
   const { liveInfo } = useLiveHub();
@@ -43,8 +68,58 @@ export function LiveHeader({ headline, onOpenLogin, onOpenRegister }: Props) {
     router.push('/admin');
   };
 
+  const navigationItems = [
+    { label: 'INICIO', action: onGoInicio },
+    { label: 'NOTICIAS', action: onGoNoticias },
+    { label: 'COCHABAMBA', action: onGoNoticias },
+    { label: 'BOLIVIA', action: onGoNoticias },
+    { label: 'DEPORTES', action: onGoNoticias },
+    { label: 'MUNDO', action: onGoNoticias },
+    { label: 'VIDEOS CORTOS', action: onGoVideos },
+    { label: 'ENLACES', action: onGoEnlaces },
+    { label: 'OPINIÓN', action: onGoNoticias },
+    { label: 'ECONOMÍA', action: onGoNoticias },
+    { label: 'CULTURA', action: onGoNoticias },
+    { label: 'SOCIEDAD', action: onGoNoticias },
+    { label: 'MULTIMEDIA', action: onGoVideos },
+  ];
+
   return (
     <View style={styles.wrapper} role="banner">
+      {/* NAVEGACIÓN PRINCIPAL */}
+      <View style={styles.navigationBar}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={[
+            styles.navigationContent,
+            isMobile && styles.navigationContentMobile,
+          ]}
+        >
+          {navigationItems.map((item) => (
+            <TouchableOpacity
+              key={item.label}
+              style={styles.navigationItem}
+              onPress={item.action}
+              activeOpacity={0.75}
+              accessibilityRole="button"
+              accessibilityLabel={item.label}
+              disabled={!item.action}
+            >
+              <Text style={styles.navigationText}>{item.label}</Text>
+            </TouchableOpacity>
+          ))}
+          <TouchableOpacity
+            style={styles.menuButton}
+            activeOpacity={0.75}
+            accessibilityRole="button"
+            accessibilityLabel="Menú"
+          >
+            <Ionicons name="menu" size={22} color={LiveTheme.black} />
+          </TouchableOpacity>
+        </ScrollView>
+      </View>
+
       <View style={[styles.topRow, isCompact && styles.topRowCompact, isMobile && styles.topRowMobile, isNarrow && styles.topRowNarrow]}>
         <View style={[styles.buildingFrame, isCompact && styles.buildingFrameCompact, isMobile && styles.buildingFrameMobile, isNarrow && styles.buildingFrameNarrow]} pointerEvents="none">
           <Image source={require('../../../imagenes/logo 2.1.png')} style={[styles.buildingLogo, isCompact && styles.buildingLogoCompact, isMobile && styles.buildingLogoMobile, isNarrow && styles.buildingLogoNarrow]} resizeMode="contain" />
@@ -114,6 +189,12 @@ export function LiveHeader({ headline, onOpenLogin, onOpenRegister }: Props) {
 
 const styles = StyleSheet.create({
   wrapper: { width: '100%', backgroundColor: LiveTheme.offWhite },
+  navigationBar: { width: '100%', height: 38, backgroundColor: LiveTheme.gold, borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.12)' },
+  navigationContent: { flexGrow: 1, justifyContent: 'center', alignItems: 'stretch', paddingHorizontal: 8 },
+  navigationContentMobile: { flexGrow: 0 },
+  navigationItem: { minHeight: 38, paddingHorizontal: 13, justifyContent: 'center', alignItems: 'center', borderRightWidth: 1, borderRightColor: 'rgba(0,0,0,0.14)' },
+  navigationText: { color: LiveTheme.black, fontSize: 10, fontWeight: '800', letterSpacing: 0.1 },
+  menuButton: { minHeight: 38, minWidth: 44, justifyContent: 'center', alignItems: 'center', marginLeft: 'auto' },
   topRow: { width: '100%', minHeight: 115, position: 'relative', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: LiveTheme.border },
   topRowCompact: { minHeight: 105, paddingHorizontal: 12 },
   topRowMobile: { minHeight: 112, paddingHorizontal: 10, paddingBottom: 42 },
