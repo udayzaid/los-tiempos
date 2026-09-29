@@ -248,16 +248,16 @@ export function LiveChat() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    height: '100%',
-    minHeight: 0,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#C8C8C8',
-    backgroundColor: LiveTheme.chatBg,
-    
-  },
+container: {
+  width: '100%',
+  height: '100%',
+  minHeight: 0,
+
+  borderWidth: 1,
+  borderColor: '#C8C8C8',
+
+  backgroundColor: LiveTheme.chatBg,
+},
   header: {
     backgroundColor: LiveTheme.offWhite,
     borderBottomWidth: 1,
@@ -272,7 +272,7 @@ const styles = StyleSheet.create({
   },
   list: {
     flex: 1,
-    minHeight: 0,
+   minHeight: 0,
   },
   statusContainer: {
     alignItems: 'center',
