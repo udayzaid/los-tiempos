@@ -86,40 +86,6 @@ export function LiveHeader({
 
   return (
     <View style={styles.wrapper} role="banner">
-      {/* NAVEGACIÓN PRINCIPAL */}
-      <View style={styles.navigationBar}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={[
-            styles.navigationContent,
-            isMobile && styles.navigationContentMobile,
-          ]}
-        >
-          {navigationItems.map((item) => (
-            <TouchableOpacity
-              key={item.label}
-              style={styles.navigationItem}
-              onPress={item.action}
-              activeOpacity={0.75}
-              accessibilityRole="button"
-              accessibilityLabel={item.label}
-              disabled={!item.action}
-            >
-              <Text style={styles.navigationText}>{item.label}</Text>
-            </TouchableOpacity>
-          ))}
-          <TouchableOpacity
-            style={styles.menuButton}
-            activeOpacity={0.75}
-            accessibilityRole="button"
-            accessibilityLabel="Menú"
-          >
-            <Ionicons name="menu" size={22} color={LiveTheme.black} />
-          </TouchableOpacity>
-        </ScrollView>
-      </View>
-
       <View style={[styles.topRow, isCompact && styles.topRowCompact, isMobile && styles.topRowMobile, isNarrow && styles.topRowNarrow]}>
         <View style={[styles.buildingFrame, isCompact && styles.buildingFrameCompact, isMobile && styles.buildingFrameMobile, isNarrow && styles.buildingFrameNarrow]} pointerEvents="none">
           <Image source={require('../../../imagenes/logo 2.1.png')} style={[styles.buildingLogo, isCompact && styles.buildingLogoCompact, isMobile && styles.buildingLogoMobile, isNarrow && styles.buildingLogoNarrow]} resizeMode="contain" />
@@ -182,6 +148,40 @@ export function LiveHeader({
         <View style={[styles.liveStateDot, isLive && styles.liveStateDotActive]} accessibilityLabel={isLive ? 'Transmisión en vivo activa' : 'Sin transmisión en vivo'} />
         <Text style={styles.headlineText} numberOfLines={1}>{headline}</Text>
         {!isMobile && <Text style={styles.dateText}>{displayDate}</Text>}
+      </View>
+
+      {/* NAVEGACIÓN PRINCIPAL: queda debajo del encabezado original */}
+      <View style={styles.navigationBar}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={[
+            styles.navigationContent,
+            isMobile && styles.navigationContentMobile,
+          ]}
+        >
+          {navigationItems.map((item) => (
+            <TouchableOpacity
+              key={item.label}
+              style={styles.navigationItem}
+              onPress={item.action}
+              activeOpacity={0.75}
+              accessibilityRole="button"
+              accessibilityLabel={item.label}
+              disabled={!item.action}
+            >
+              <Text style={styles.navigationText}>{item.label}</Text>
+            </TouchableOpacity>
+          ))}
+          <TouchableOpacity
+            style={styles.menuButton}
+            activeOpacity={0.75}
+            accessibilityRole="button"
+            accessibilityLabel="Menú"
+          >
+            <Ionicons name="menu" size={22} color={LiveTheme.black} />
+          </TouchableOpacity>
+        </ScrollView>
       </View>
     </View>
   );
