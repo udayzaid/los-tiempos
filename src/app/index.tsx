@@ -134,22 +134,10 @@ export default function LiveScreen() {
                   <LiveChat />
                 </View>
               </View>
-
               <LiveDescription
                 title={`Transmisión en vivo ${formattedDate}`}
                 body="Sigue nuestras transmisiones en directo y mantente informado. Disfruta de la señal en vivo, noticias y contenido de actualidad de Los Tiempos."
               />
-
-              <View
-                onLayout={(event) =>
-                  setSectionY((prev) => ({
-                    ...prev,
-                    noticias: pageY + event.nativeEvent.layout.y,
-                  }))
-                }
-              >
-                <PromoCardsRow />
-              </View>
 
               <View
                 onLayout={(event) =>
@@ -160,9 +148,18 @@ export default function LiveScreen() {
                 }
               >
                 <ReelSection />
+                  </View>
+              <View
+                onLayout={(event) =>
+                  setSectionY((prev) => ({
+                    ...prev,
+                    noticias: pageY + event.nativeEvent.layout.y,
+                  }))
+                }
+              >
+                <PromoCardsRow />
               </View>
             </View>
-
             {showSideAds && (
               <View style={styles.adColumn}>
                 <AdSlot placement="right" />
@@ -170,7 +167,6 @@ export default function LiveScreen() {
             )}
           </View>
         </View>
-
         <View onLayout={(event) => setSectionY((prev) => ({ ...prev, enlaces: event.nativeEvent.layout.y }))}>
           <SiteFooter />
         </View>
