@@ -46,6 +46,13 @@ export type StreamChatHistoryMessage = {
   avatarColor: string;
 };
 
+export type AdminProfileUser = {
+  nombre: string;
+  apellido: string;
+  correoElectronico: string;
+  username: string;
+};
+
 export interface NoticiaItem {
   id?: number;
   titulo: string;
@@ -86,6 +93,72 @@ export interface StreamHistoryItem {
 }
 
 export const api = {
+  getProfileUserByUsername: async (username: string): Promise<AdminProfileUser> => {
+    const res = await fetch(`${BASE_URL}/api/profile/users/${encodeURIComponent(username)}`, {
+      ...fetchOptions(true),
+      method: 'GET',
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data?.message || data?.mensaje || `Error buscando usuario (${res.status})`);
+    }
+    return data as AdminProfileUser;
+  },
+
+  blockChatUser: async (username: string) => {
+    const res = await fetch(`${BASE_URL}/api/profile/chat/blocked-users`, {
+      ...fetchOptions(true),
+      method: 'POST',
+      body: JSON.stringify({ username }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data?.message || data?.mensaje || `Error bloqueando usuario (${res.status})`);
+    }
+    return data;
+  },
+
+  getBlockedChatUsers: async (): Promise<{ blockedUsers: string[]; count: number }> => {
+    const res = await fetch(`${BASE_URL}/api/profile/chat/blocked-users`, {
+      ...fetchOptions(true),
+      method: 'GET',
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data?.message || data?.mensaje || `Error obteniendo usuarios bloqueados (${res.status})`);
+    }
+    return {
+      blockedUsers: Array.isArray(data?.blockedUsers) ? data.blockedUsers : [],
+      count: Number(data?.count ?? data?.blockedUsers?.length ?? 0),
+    };
+  },
+
+  unblockChatUser: async (username: string) => {
+    const res = await fetch(`${BASE_URL}/api/profile/chat/blocked-users/${encodeURIComponent(username)}`, {
+      ...fetchOptions(true),
+      method: 'DELETE',
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data?.message || data?.mensaje || `Error desbloqueando usuario (${res.status})`);
+    }
+    return data;
+  },
+
+  changeProfilePassword: async (currentPassword: string, newPassword: string) => {
+    const res = await fetch(`${BASE_URL}/api/profile/change-password`, {
+      ...fetchOptions(true),
+      method: 'POST',
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const identityErrors = Array.isArray(data?.errors) ? data.errors.join(' ') : '';
+      throw new Error(data?.message || data?.mensaje || identityErrors || `Error cambiando contraseña (${res.status})`);
+    }
+    return data;
+  },
+
   // 0. GET / -> Endpoint base de salud/inicio
   getPrimer: async () => {
     try {
