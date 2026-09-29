@@ -54,9 +54,6 @@ export function PromoCardsRow() {
     }
   };
 
-  const currentPage = data?.pageIndex ?? 1;
-  const totalPages = data?.totalPages ?? 1;
-
   return (
     <View style={styles.container}>
       <View style={styles.contentRow}>
@@ -82,44 +79,40 @@ export function PromoCardsRow() {
             </View>
           )}
 
-          {/* Flechas sobre la propia zona de tarjetas */}
-          {!loading && data?.hasPreviousPage && (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Noticias anteriores"
-              onPress={handlePrev}
-              disabled={loading}
-              style={({ pressed }) => [
-                styles.overlayArrow,
-                styles.overlayArrowLeft,
-                pressed && styles.overlayArrowPressed,
-              ]}
-            >
-              <Text style={styles.overlayArrowText}>‹</Text>
-            </Pressable>
-          )}
+          {/* Flechas integradas en la zona de tarjetas */}
+          {!loading && (
+            <>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Noticias anteriores"
+                onPress={handlePrev}
+                disabled={!data?.hasPreviousPage}
+                style={({ pressed }) => [
+                  styles.overlayArrow,
+                  styles.overlayArrowLeft,
+                  !data?.hasPreviousPage && styles.overlayArrowDisabled,
+                  pressed && data?.hasPreviousPage && styles.overlayArrowPressed,
+                ]}
+              >
+                <Text style={styles.overlayArrowText}>‹</Text>
+              </Pressable>
 
-          {!loading && data?.hasNextPage && (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Siguientes noticias"
-              onPress={handleNext}
-              disabled={loading}
-              style={({ pressed }) => [
-                styles.overlayArrow,
-                styles.overlayArrowRight,
-                pressed && styles.overlayArrowPressed,
-              ]}
-            >
-              <Text style={styles.overlayArrowText}>›</Text>
-            </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Siguientes noticias"
+                onPress={handleNext}
+                disabled={!data?.hasNextPage}
+                style={({ pressed }) => [
+                  styles.overlayArrow,
+                  styles.overlayArrowRight,
+                  !data?.hasNextPage && styles.overlayArrowDisabled,
+                  pressed && data?.hasNextPage && styles.overlayArrowPressed,
+                ]}
+              >
+                <Text style={styles.overlayArrowText}>›</Text>
+              </Pressable>
+            </>
           )}
-        </View>
-
-        <View style={styles.pagePill}>
-          <Text style={styles.pagePillText}>
-            {currentPage} <Text style={styles.pagePillTextMuted}>/ {totalPages}</Text>
-          </Text>
         </View>
       </View>
     </View>
@@ -174,6 +167,9 @@ const styles = StyleSheet.create({
   overlayArrowRight: {
     right: 2,
   },
+  overlayArrowDisabled: {
+    opacity: 0.35,
+  },
   overlayArrowPressed: {
     backgroundColor: LiveTheme.gold || '#FFD700',
   },
@@ -182,23 +178,5 @@ const styles = StyleSheet.create({
     lineHeight: 28,
     fontWeight: '500',
     color: LiveTheme.black || '#1A1A1A',
-  },
-  pagePill: {
-    minWidth: 42,
-    marginLeft: 6,
-    paddingHorizontal: 9,
-    paddingVertical: 7,
-    borderRadius: 14,
-    backgroundColor: '#F5F1E6',
-    alignItems: 'center',
-  },
-  pagePillText: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: LiveTheme.black || '#1A1A1A',
-  },
-  pagePillTextMuted: {
-    fontWeight: '600',
-    color: LiveTheme.textMuted || '#888888',
   },
 });
