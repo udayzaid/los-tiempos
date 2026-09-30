@@ -30,7 +30,7 @@ export default function LiveScreen() {
   const [authVisible, setAuthVisible] = useState<boolean>(false);
   const [initialRegisterMode, setInitialRegisterMode] = useState<boolean>(false);
   const hasActiveStream = Boolean(liveInfo?.isLive);
-  const streamUrl = liveInfo?.isLive ? liveInfo.urlVideo : '';
+  const streamUrl = liveInfo?.urlVideo ?? '';
 
   const scrollToSection = (section: keyof typeof sectionY) => {
     scrollRef.current?.scrollTo({
