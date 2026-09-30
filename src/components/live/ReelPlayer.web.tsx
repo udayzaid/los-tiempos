@@ -15,7 +15,12 @@ export const ReelPlayer: React.FC<ReelPlayerProps> = ({ videoId }) => {
         <iframe
           src={playerUrl}
           title="TikTok Reel"
-          style={styles.iframe}
+          style={{
+            width: '100%',
+            height: '100%',
+            border: 'none',
+            display: 'block',
+          }}
           allow="fullscreen"
           scrolling="no"
           frameBorder="0"
@@ -34,20 +39,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-
   playerContainer: {
     width: 320,
-    maxWidth: '82vw',
+    maxWidth: '82%' as any, // En React Native se usan porcentajes en string
     aspectRatio: 9 / 16,
     backgroundColor: 'transparent',
     borderRadius: 12,
     overflow: 'hidden',
-  },
-
-  iframe: {
-    width: '100%',
-    height: '100%',
-    border: 'none',
-    display: 'block',
   },
 });
