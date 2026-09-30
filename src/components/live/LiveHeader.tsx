@@ -358,7 +358,7 @@ const styles = StyleSheet.create({
 navigationContent: {
   flexGrow: 1,
   flexDirection: 'row',
-  justifyContent: 'flex-start',
+  justifyContent: 'space-between',
   alignItems: 'stretch',
   paddingHorizontal: 0,
 },
