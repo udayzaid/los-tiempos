@@ -119,73 +119,110 @@ export function PromoCard(props: PromoCardProps) {
 // ESTILOS
 // =========================================================
 const styles = StyleSheet.create({
-  card: {
-    flex: 1,
-    minWidth: 220,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#E2E2E2',
-    borderRadius: 6,
-    backgroundColor: '#FFFFFF',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: LiveTheme.gold,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-  },
+ card: {
+  flex: 1,
+
+  minWidth: 220,
+
+  overflow: 'hidden',
+
+  borderWidth: 1,
+  borderColor: LiveTheme.border,
+
+  borderRadius: 5,
+
+  backgroundColor: LiveTheme.white,
+},
+
+ header: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+
+  backgroundColor: LiveTheme.white,
+
+  paddingRight: 8,
+  paddingVertical: 0,
+
+  minHeight: 32,
+},
+
   category: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: LiveTheme.black,
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
-    flexShrink: 1,
-    marginRight: 8,
-  },
+  fontSize: 13,
+  fontWeight: '800',
+
+  color: LiveTheme.black,
+
+  backgroundColor: LiveTheme.gold,
+
+  paddingHorizontal: 10,
+  paddingVertical: 6,
+
+  textTransform: 'uppercase',
+  letterSpacing: 0.3,
+
+  flexShrink: 1,
+  marginRight: 8,
+},
+
   verMas: {
     fontSize: 11,
     fontWeight: '700',
     color: LiveTheme.black,
   },
+
   verMasPressed: {
     opacity: 0.6,
   },
+
   body: {
-    flex: 1,
-    flexDirection: 'row',
-    gap: 8,
-    padding: 8,
-  },
+  flex: 1,
+  flexDirection: 'row',
+
+  gap: 8,
+
+  padding: 8,
+
+  backgroundColor: LiveTheme.white,
+},
+
   bodyPressed: {
     opacity: 0.85,
   },
+
   image: {
-    width: '38%',
-    aspectRatio: 1,
-    borderRadius: 4,
-    backgroundColor: LiveTheme.chatBorder,
-  },
+  width: '40%',
+  aspectRatio: 1,
+
+  borderRadius: 4,
+
+  backgroundColor: LiveTheme.chatBorder,
+},
+
   imagePlaceholder: {
-    width: '38%',
-    aspectRatio: 1,
-    borderRadius: 4,
-    backgroundColor: '#EFEAE0',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  width: '40%',
+  aspectRatio: 1,
+
+  borderRadius: 4,
+
+  backgroundColor: LiveTheme.surfaceSoft,
+
+  alignItems: 'center',
+  justifyContent: 'center',
+},
+
   imagePlaceholderText: {
     fontSize: 9,
     color: LiveTheme.textMuted,
     fontWeight: '600',
     textAlign: 'center',
   },
+
   textContent: {
     flex: 1,
     justifyContent: 'flex-start',
   },
+
   title: {
     fontSize: 12,
     fontWeight: '700',
@@ -193,6 +230,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     lineHeight: 16,
   },
+
   description: {
     fontSize: 11,
     color: LiveTheme.textMuted,
