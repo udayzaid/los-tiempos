@@ -151,9 +151,7 @@ const cardWidth =
             <View style={styles.loaderContainer}>
               <ActivityIndicator
                 size="large"
-                color={
-                  LiveTheme.gold || '#FFD700'
-                }
+               color={LiveTheme.gold}
               />
             </View>
           ) : (
@@ -308,7 +306,7 @@ const styles = StyleSheet.create({
       'rgba(255,255,255,0.96)',
 
     borderWidth: 1,
-    borderColor: '#D9D9D9',
+   borderColor: LiveTheme.border,
 
     justifyContent: 'center',
     alignItems: 'center',
@@ -335,8 +333,8 @@ const styles = StyleSheet.create({
   },
 
   overlayArrowPressed: {
-    backgroundColor:
-      LiveTheme.gold || '#FFD700',
+    
+    backgroundColor: LiveTheme.white
   },
 
   overlayArrowText: {

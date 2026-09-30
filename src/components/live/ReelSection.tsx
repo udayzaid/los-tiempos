@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { LiveTheme } from '@/constants/live-theme';
 import {
   View,
   Text,
@@ -13,11 +14,15 @@ import { api, ReelGetDto } from '@/services/api';
 import { ReelCard } from './ReelCard';
 
 export const ReelSection: React.FC = () => {
+  const listRef = useRef<FlatList<ReelGetDto>>(null);
   const [reels, setReels] = useState<ReelGetDto[]>([]);
   const [pageIndex, setPageIndex] = useState(1);
   const [hasNextPage, setHasNextPage] = useState(true);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [listOffset, setListOffset] = useState(0);
+  const [listWidth, setListWidth] = useState(0);
+  const [viewportWidth, setViewportWidth] = useState(0);
 
   const fetchReels = async (page: number) => {
     if (loading || (page > 1 && !hasNextPage)) return;
@@ -50,6 +55,18 @@ export const ReelSection: React.FC = () => {
       fetchReels(pageIndex + 1);
     }
   };
+
+  const scrollByCard = (direction: -1 | 1) => {
+    const maxOffset = Math.max(0, listWidth - viewportWidth);
+    const nextOffset = Math.max(
+      0,
+      Math.min(maxOffset, listOffset + direction * 122)
+    );
+    listRef.current?.scrollToOffset({ offset: nextOffset, animated: true });
+  };
+
+  const canScrollPrevious = listOffset > 4;
+  const canScrollNext = listOffset < listWidth - viewportWidth - 4;
 
   if (loading) {
     return (
@@ -98,23 +115,63 @@ export const ReelSection: React.FC = () => {
         </Pressable>
       </View>
 
-      <FlatList
-        data={reels}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        keyExtractor={(item, index) => item.tiktokVideoId + '-' + index}
-        renderItem={({ item }) => <ReelCard item={item} />}
-        onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.5}
-        contentContainerStyle={styles.listContent}
-        ListFooterComponent={
-          loadingMore ? (
-            <View style={styles.footerLoader}>
-              <ActivityIndicator size="small" color="#FF004F" />
-            </View>
-          ) : null
-        }
-      />
+      <View
+        style={styles.listViewport}
+        onLayout={(event) => setViewportWidth(event.nativeEvent.layout.width)}
+      >
+        <FlatList
+          ref={listRef}
+          data={reels}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          keyExtractor={(item, index) => item.tiktokVideoId + '-' + index}
+          renderItem={({ item }) => <ReelCard item={item} />}
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.5}
+          onScrollEndDrag={(event) => setListOffset(event.nativeEvent.contentOffset.x)}
+          onMomentumScrollEnd={(event) => setListOffset(event.nativeEvent.contentOffset.x)}
+          onContentSizeChange={(width) => setListWidth(width)}
+          scrollEventThrottle={16}
+          contentContainerStyle={styles.listContent}
+          ListFooterComponent={
+            loadingMore ? (
+              <View style={styles.footerLoader}>
+                <ActivityIndicator size="small" color="#FF004F" />
+              </View>
+            ) : null
+          }
+        />
+
+        {canScrollPrevious && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Reels anteriores"
+            onPress={() => scrollByCard(-1)}
+            style={({ pressed }) => [
+              styles.overlayArrow,
+              styles.overlayArrowLeft,
+              pressed && styles.overlayArrowPressed,
+            ]}
+          >
+            <Text style={styles.overlayArrowText}>‹</Text>
+          </Pressable>
+        )}
+
+        {canScrollNext && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Siguientes reels"
+            onPress={() => scrollByCard(1)}
+            style={({ pressed }) => [
+              styles.overlayArrow,
+              styles.overlayArrowRight,
+              pressed && styles.overlayArrowPressed,
+            ]}
+          >
+            <Text style={styles.overlayArrowText}>›</Text>
+          </Pressable>
+        )}
+      </View>
     </View>
   );
 };
@@ -182,6 +239,49 @@ const styles = StyleSheet.create({
   listContent: {
     paddingLeft: 16,
     paddingRight: 4,
+  },
+
+  listViewport: {
+    position: 'relative',
+  },
+
+  overlayArrow: {
+    position: 'absolute',
+    top: '50%',
+    marginTop: -18,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.96)',
+    borderWidth: 1,
+    borderColor: '#D9D9D9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 20,
+    shadowColor: '#000000',
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 4,
+  },
+
+  overlayArrowLeft: {
+    left: 6,
+  },
+
+  overlayArrowRight: {
+    right: 6,
+  },
+
+  overlayArrowPressed: {
+    backgroundColor: LiveTheme.gold,
+  },
+
+  overlayArrowText: {
+    fontSize: 27,
+    lineHeight: 29,
+    fontWeight: '600',
+    color: '#1A1A1A',
   },
 
   centerContainer: {

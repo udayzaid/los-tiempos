@@ -54,6 +54,10 @@ export function LiveHeader({
   const showBuildingLogo = width >= 1180; // primero desaparece el logo del edificio
   const showBrandLogo = width >= 560;     // luego desaparece el logo de marca
   const isLive = Boolean(liveInfo?.isLive);
+  const isSmallNav = width < 900;
+  const isMediumNav = width >= 900 && width < 1200;
+  // Los botones conservan tamaño y texto. Bajo 900px pasan debajo del logo.
+  const buttonsOnOwnRow = width < 900;
 
   // Los botones conservan tamaño y texto. Bajo 900px pasan debajo del logo.
   const buttonsOnOwnRow = width < 900;
@@ -268,6 +272,7 @@ export function LiveHeader({
           </View>
         </View>
       </Modal>
+<<<<<<< HEAD
 
       {/* NAVEGACIÓN PRINCIPAL */}
       <View style={styles.navigationBar}>
@@ -277,22 +282,44 @@ export function LiveHeader({
           contentContainerStyle={[
             styles.navigationContent,
             isMobile && styles.navigationContentMobile,
+=======
+{/* NAVEGACIÓN PRINCIPAL */}
+<View style={styles.navigationBar}>
+  <ScrollView
+    horizontal
+    showsHorizontalScrollIndicator={false}
+    contentContainerStyle={styles.navigationContent}
+    keyboardShouldPersistTaps="handled"
+  >
+    {navigationItems.map((item) => (
+      <TouchableOpacity
+        key={item.label}
+        style={[
+          styles.navigationItem,
+          width < 1100 && styles.navigationItemCompact,
+          width < 700 && styles.navigationItemMobile,
+        ]}
+        onPress={item.action}
+        activeOpacity={0.75}
+        accessibilityRole="button"
+        accessibilityLabel={item.label}
+        disabled={!item.action}
+      >
+        <Text
+          style={[
+            styles.navigationText,
+            width < 1100 && styles.navigationTextCompact,
+            width < 700 && styles.navigationTextMobile,
+>>>>>>> develop
           ]}
+          numberOfLines={1}
         >
-          {navigationItems.map((item) => (
-            <TouchableOpacity
-              key={item.label}
-              style={styles.navigationItem}
-              onPress={item.action}
-              activeOpacity={0.75}
-              accessibilityRole="button"
-              accessibilityLabel={item.label}
-              disabled={!item.action}
-            >
-              <Text style={styles.navigationText}>{item.label}</Text>
-            </TouchableOpacity>
-          ))}
+          {item.label}
+        </Text>
+      </TouchableOpacity>
+    ))}
 
+<<<<<<< HEAD
           <TouchableOpacity
             style={styles.menuButton}
             activeOpacity={0.75}
@@ -303,6 +330,22 @@ export function LiveHeader({
           </TouchableOpacity>
         </ScrollView>
       </View>
+=======
+    <TouchableOpacity
+      style={styles.menuButton}
+      activeOpacity={0.75}
+      accessibilityRole="button"
+      accessibilityLabel="Menú"
+    >
+      <Ionicons
+        name="menu"
+        size={22}
+        color={LiveTheme.black}
+      />
+    </TouchableOpacity>
+  </ScrollView>
+</View>
+>>>>>>> develop
 
       {/* ESPACIO ENTRE ENCABEZADOS */}
       <View style={styles.headerSpacing} />
@@ -332,12 +375,71 @@ const styles = StyleSheet.create({
   wrapper: { width: '100%', backgroundColor: LiveTheme.offWhite },
 
   // ---------- NAVEGACIÓN ----------
+<<<<<<< HEAD
   navigationBar: { width: '100%', height: 38, backgroundColor: LiveTheme.gold, borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.12)' },
   navigationContent: { flexGrow: 1, justifyContent: 'flex-end', alignItems: 'stretch', paddingHorizontal: 8 },
   navigationContentMobile: { flexGrow: 0 },
   navigationItem: { minHeight: 38, flexShrink: 0, paddingHorizontal: 13, justifyContent: 'center', alignItems: 'center', borderRightWidth: 1, borderRightColor: 'rgba(0,0,0,0.14)' },
   navigationText: { color: LiveTheme.black, fontSize: 10, fontWeight: '800', letterSpacing: 0.1 },
   menuButton: { minHeight: 38, minWidth: 44, justifyContent: 'center', alignItems: 'center' },
+=======
+  navigationBar: {
+  width: '100%',
+  height: 38,
+  backgroundColor: LiveTheme.gold,
+  borderBottomWidth: 1,
+  borderBottomColor: 'rgba(0,0,0,0.12)',
+},
+
+navigationContent: {
+  flexGrow: 1,
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'stretch',
+  paddingHorizontal: 0,
+},
+
+navigationItem: {
+  minHeight: 38,
+  flexShrink: 0,
+  paddingHorizontal: 13,
+  justifyContent: 'center',
+  alignItems: 'center',
+  borderRightWidth: 1,
+  borderRightColor: 'rgba(0,0,0,0.14)',
+},
+
+navigationItemCompact: {
+  paddingHorizontal: 9,
+},
+
+navigationItemMobile: {
+  paddingHorizontal: 8,
+},
+
+navigationText: {
+  color: LiveTheme.black,
+  fontSize: 10,
+  fontWeight: '800',
+  letterSpacing: 0.1,
+},
+
+navigationTextCompact: {
+  fontSize: 9,
+},
+
+navigationTextMobile: {
+  fontSize: 9,
+},
+
+menuButton: {
+  minHeight: 38,
+  minWidth: 44,
+  paddingHorizontal: 8,
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+>>>>>>> develop
 
   // ---------- FILA SUPERIOR (flujo normal, sin absolute) ----------
   topRow: {
@@ -359,7 +461,15 @@ const styles = StyleSheet.create({
 
   // Columnas laterales (≥ 1180px): izquierda y derecha con el mismo ancho
   // para que el logo de marca quede centrado de verdad
+<<<<<<< HEAD
   sideColumn: { flex: 1, minWidth: 0 },
+=======
+  sideColumn: {
+  width: 350,
+  flexShrink: 0,
+  minWidth: 0,
+},
+>>>>>>> develop
   buildingLogo: { width: 350, height: 115 },
 
   brandFrame: { flexShrink: 0, justifyContent: 'center', alignItems: 'center' },
@@ -374,7 +484,15 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 8,
   },
+<<<<<<< HEAD
   authButtonsInSide: { justifyContent: 'flex-end' },
+=======
+  authButtonsInSide: {
+  justifyContent: 'flex-end',
+  alignItems: 'center',
+  paddingTop: 80,
+},
+>>>>>>> develop
   authButtonsBesideLogo: { flex: 1, minWidth: 0 },
   authButtonsOwnRow: { width: '100%', justifyContent: 'flex-end' },
 

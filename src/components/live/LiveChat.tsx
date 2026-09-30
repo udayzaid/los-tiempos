@@ -3,6 +3,7 @@ import { api, ChatHistoryMessage } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import { useLiveHub, type SignalRChatMessage } from '@/context/LiveHubContext';
 import { useEffect, useRef, useState } from 'react';
+
 import {
   ActivityIndicator,
   FlatList,
@@ -178,6 +179,7 @@ const {
   const [historyError, setHistoryError] = useState(false);
   const [chatNotice, setChatNotice] = useState('');
   const [emojiVisible, setEmojiVisible] = useState(false);
+  const chatListRef = useRef<FlatList<ChatMessageData>>(null);
 
   const profileRef = useRef(profile);
 
@@ -330,15 +332,7 @@ const {
            
           </Text>
 
-          <Pressable
-            style={styles.menuButton}
-            accessibilityRole="button"
-            accessibilityLabel="Opciones del chat"
-          >
-            <Text style={styles.menuText}>
-              ⋮
-            </Text>
-          </Pressable>
+          
         </View>
       </View>
 
@@ -354,23 +348,31 @@ const {
 
       {/* LISTA DEL CHAT */}
       <FlatList
-        data={messages}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <ChatRow item={item} />
-        )}
-        style={styles.list}
-        contentContainerStyle={
-          messages.length === 0
-            ? styles.emptyList
-            : styles.listContent
-        }
-        initialNumToRender={20}
-        maxToRenderPerBatch={20}
-        windowSize={7}
-        removeClippedSubviews
-        keyboardShouldPersistTaps="handled"
-        ListEmptyComponent={
+  ref={chatListRef}
+  data={messages}
+  keyExtractor={(item) => item.id}
+  renderItem={({ item }) => (
+    <ChatRow item={item} />
+  )}
+  style={styles.list}
+  contentContainerStyle={
+    messages.length === 0
+      ? styles.emptyList
+      : styles.listContent
+  }
+  initialNumToRender={20}
+  maxToRenderPerBatch={20}
+  windowSize={7}
+  removeClippedSubviews
+  keyboardShouldPersistTaps="handled"
+
+  onContentSizeChange={() => {
+    chatListRef.current?.scrollToEnd({
+      animated: true,
+    });
+  }}
+
+  ListEmptyComponent={
           loading ? (
             <View style={styles.statusContainer}>
               <ActivityIndicator
@@ -489,17 +491,17 @@ const {
 
 const styles = StyleSheet.create({
   container: {
-    width: '100%',
-    height: '100%',
-    minHeight: 0,
+  width: '100%',
+  flex: 1,
+  minHeight: 0,
 
-    borderWidth: 1,
-    borderColor: '#C8C8C8',
+  borderWidth: 1,
+  borderColor: '#C8C8C8',
 
-    backgroundColor: '#FFFFFF',
+  backgroundColor: '#FFFFFF',
 
-    overflow: 'hidden',
-  },
+  overflow: 'hidden',
+},
 
   header: {
     height: 42,
