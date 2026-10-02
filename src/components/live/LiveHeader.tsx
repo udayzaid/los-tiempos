@@ -440,7 +440,7 @@ menuButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
-    flexWrap: 'nowrap',
+    flexWrap: 'wrap',
     gap: 8,
   },
   authButtonsInSide: {
