@@ -8,10 +8,14 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+type FooterLink = {
+  label: string;
+  url: string;
+};
 
 type LinkColumn = {
   heading: string;
-  links: string[];
+  links: FooterLink[];
 };
 
 // =========================================================
@@ -21,31 +25,58 @@ type LinkColumn = {
 const COLUMNS: LinkColumn[] = [
   {
     heading: 'Los Tiempos',
-    links: ['Staff', 'Contactos'],
+    links: [
+      { label: 'Staff', url: 'https://www.lostiempos.com/staff' },
+      { label: 'Contactos', url: 'https://www.lostiempos.com/contacto' },
+    ],
   },
   {
     heading: 'Click - Tu Mirada',
-    links: ['Farándula', 'Servicios', 'Hemeroteca'],
+    links: [
+      { label: 'Farándula', url: 'https://www.lostiempos.com/doble-click/farandula' },
+      { label: 'Servicios', url: 'https://www.lostiempos.com/doble-click/' },
+      { label: 'Hemeroteca', url: 'https://www.lostiempos.com/hemeroteca' },
+    ],
   },
-  {
-    heading: 'Deportes',
-    links: ['Entretiempo', 'Fútbol', 'Fútbol Int.'],
-  },
+ {
+  heading: 'Deportes',
+  links: [
+    { label: 'Entretiempo', url: 'https://www.lostiempos.com/deportes/entretiempo' },
+    { label: 'Fútbol', url: 'https://www.lostiempos.com/deportes/futbol' },
+    { label: 'Fútbol Int.', url: 'https://www.lostiempos.com/deportes/futbol-int' },
+  ],
+},
   {
     heading: 'Doble Click',
-    links: ['Cultura', 'Cine', 'Conectados'],
+    links: [
+      { label: 'Cultura', url: 'https://www.lostiempos.com/doble-click/cultura' },
+      { label: 'Cine', url: 'https://www.lostiempos.com/doble-click/cine' },
+      { label: 'Conectados', url: 'https://www.lostiempos.com/doble-click/conectados' },
+    ],
   },
   {
     heading: 'Oh!',
-    links: ['Paparazzi', 'Tendencias'],
+    links: [
+      { label: 'Paparazzi', url: 'https://www.lostiempos.com/oh/paparazzi' },
+      { label: 'Tendencias', url: 'https://www.lostiempos.com/oh/tendencias' },
+    ],
   },
   {
     heading: 'Décimos Oh!',
-    links: ['Tendencias', 'Interesante', 'Ciencia', 'Cocina'],
+    links: [
+      { label: 'Tendencias', url: 'https://www.lostiempos.com/oh/tendencias' },
+      { label: 'Interesante', url: 'https://www.lostiempos.com/tendencias/interesante' },
+      { label: 'Ciencia', url: 'https://www.lostiempos.com/tendencias/ciencia' },
+      { label: 'Cocina', url: 'https://www.lostiempos.com/tendencias/cocina' },
+    ],
   },
   {
     heading: 'Actualidad',
-    links: ['Mundo', 'Editorial', 'Puntos de Vista'],
+    links: [
+      { label: 'Mundo', url: 'https://www.lostiempos.com/actualidad/mundo' },
+      { label: 'Editorial', url: 'https://www.lostiempos.com/actualidad/opinion' },
+      { label: 'Puntos de Vista', url: 'https://www.lostiempos.com/actualidad/opinion' },
+    ],
   },
 ];
 
@@ -108,29 +139,31 @@ export function SiteFooter() {
 
         {/* COLUMNAS DE ENLACES */}
 
-        <View style={styles.linksColumns}>
-          {COLUMNS.map((col) => (
-            <View
-              key={col.heading}
-              style={styles.column}
-            >
+<View style={styles.linksColumns}>
+  {COLUMNS.map((col) => (
+    <View
+      key={col.heading}
+      style={styles.column}
+    >
 
-              <Text style={styles.columnHeading}>
-                {col.heading}
-              </Text>
+      <Text style={styles.columnHeading}>
+        {col.heading}
+      </Text>
 
-              {col.links.map((link) => (
-                <Text
-                  key={link}
-                  style={styles.columnLink}
-                >
-                  {link}
-                </Text>
-              ))}
+      {col.links.map((link) => (
+        <Pressable
+          key={link.label}
+          onPress={() => Linking.openURL(link.url)}
+        >
+          <Text style={styles.columnLink}>
+            {link.label}
+          </Text>
+        </Pressable>
+      ))}
 
-            </View>
-          ))}
-        </View>
+    </View>
+  ))}
+</View>
 
         {/* =================================================
             REDES SOCIALES
