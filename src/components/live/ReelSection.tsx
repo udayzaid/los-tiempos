@@ -57,13 +57,23 @@ export const ReelSection: React.FC = () => {
   };
 
   const scrollByCard = (direction: -1 | 1) => {
-    const maxOffset = Math.max(0, listWidth - viewportWidth);
-    const nextOffset = Math.max(
-      0,
-      Math.min(maxOffset, listOffset + direction * 122)
-    );
-    listRef.current?.scrollToOffset({ offset: nextOffset, animated: true });
-  };
+  const maxOffset = Math.max(0, listWidth - viewportWidth);
+
+  const nextOffset = Math.max(
+    0,
+    Math.min(
+      maxOffset,
+      listOffset + direction * 122
+    )
+  );
+
+  listRef.current?.scrollToOffset({
+    offset: nextOffset,
+    animated: true,
+  });
+
+  setListOffset(nextOffset);
+};
 
   const canScrollPrevious = listOffset > 4;
   const canScrollNext = listOffset < listWidth - viewportWidth - 4;
